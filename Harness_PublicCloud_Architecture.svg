@@ -1,0 +1,75 @@
+
+
+<svg width="100%" viewBox="0 0 680 248" xmlns="http://www.w3.org/2000/svg" role="img" style="font-family: Arial, sans-serif; background: #ffffff;">
+<title>Harness IDP to Public Cloud Integration Architecture</title>
+<desc>Left-to-right flow: Harness IDP to Hoover adapter to Harness Pipeline to Harness Delegate to Public Cloud Jenkins, with dashed return paths showing results and logs captured back to Pipeline and workflow completion returned to IDP.</desc>
+
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- Header -->
+<text font-size="14" font-weight="500" fill="#1a1a1a" x="340" y="20" text-anchor="middle" font-family="Arial, sans-serif">Harness IDP → Public Cloud · Integration Architecture</text>
+<text font-size="12" fill="#6b7280" x="340" y="36" text-anchor="middle" font-family="Arial, sans-serif">Native push-and-wait · Hoover adapter · No changes to Public Cloud pipeline</text>
+<line x1="20" y1="46" x2="660" y2="46" stroke="#d1d5db" stroke-width="0.5"/>
+
+<!-- Step numbers -->
+<text font-size="12" fill="#9ca3af" x="142" y="61" text-anchor="middle" font-family="Arial, sans-serif">1</text>
+<text font-size="12" fill="#9ca3af" x="274" y="61" text-anchor="middle" font-family="Arial, sans-serif">2</text>
+<text font-size="12" fill="#9ca3af" x="406" y="61" text-anchor="middle" font-family="Arial, sans-serif">3</text>
+<text font-size="12" fill="#9ca3af" x="538" y="61" text-anchor="middle" font-family="Arial, sans-serif">4</text>
+
+<!-- Return dashed paths (draw before boxes so boxes sit on top) -->
+<path d="M604,128 L604,158 L340,158 L340,128" fill="none" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrow)" opacity="0.7"/>
+<path d="M208,128 L208,184 L76,184 L76,128" fill="none" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrow)" opacity="0.7"/>
+
+<!-- Forward arrows -->
+<line x1="131" y1="99" x2="151" y2="99" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="263" y1="99" x2="283" y2="99" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="395" y1="99" x2="415" y2="99" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrow)"/>
+<line x1="527" y1="99" x2="547" y2="99" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+<!-- BOX 1: Harness IDP (teal) -->
+<rect x="21" y="70" width="110" height="58" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text font-size="14" font-weight="500" fill="#085041" x="76" y="93" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Harness IDP</text>
+<text font-size="12" fill="#0F6E56" x="76" y="111" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Self-service</text>
+
+<!-- BOX 2: Hoover (amber) -->
+<rect x="153" y="70" width="110" height="58" rx="8" fill="#FAEEDA" stroke="#854F0B" stroke-width="0.5"/>
+<text font-size="14" font-weight="500" fill="#633806" x="208" y="93" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Hoover</text>
+<text font-size="12" fill="#854F0B" x="208" y="111" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Adapter</text>
+
+<!-- BOX 3: Harness Pipeline (green) -->
+<rect x="285" y="70" width="110" height="58" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+<text font-size="14" font-weight="500" fill="#27500A" x="340" y="93" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Pipeline</text>
+<text font-size="12" fill="#3B6D11" x="340" y="111" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Orchestrator</text>
+
+<!-- BOX 4: Harness Delegate (purple) -->
+<rect x="417" y="70" width="110" height="58" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text font-size="14" font-weight="500" fill="#3C3489" x="472" y="93" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Delegate</text>
+<text font-size="12" fill="#534AB7" x="472" y="111" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">In-network agent</text>
+
+<!-- BOX 5: Public Cloud (gray) -->
+<rect x="549" y="70" width="110" height="58" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"/>
+<text font-size="14" font-weight="500" fill="#2C2C2A" x="604" y="93" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Public Cloud</text>
+<text font-size="12" fill="#5F5E5A" x="604" y="111" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Jenkins</text>
+
+<!-- Return path labels -->
+<text font-size="12" fill="#6b7280" x="472" y="150" text-anchor="middle" font-family="Arial, sans-serif">Logs · status · artifacts captured</text>
+<text font-size="12" fill="#6b7280" x="142" y="176" text-anchor="middle" font-family="Arial, sans-serif">Workflow complete</text>
+
+<!-- Badge 1: Harness waits natively (teal) -->
+<rect x="20" y="204" width="180" height="28" rx="14" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text font-size="12" fill="#085041" x="110" y="218" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Harness waits natively</text>
+
+<!-- Badge 2: Public Cloud unchanged (green) -->
+<rect x="250" y="204" width="180" height="28" rx="14" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"/>
+<text font-size="12" fill="#27500A" x="340" y="218" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Public Cloud unchanged</text>
+
+<!-- Badge 3: Platform-owned reports (purple) -->
+<rect x="480" y="204" width="180" height="28" rx="14" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text font-size="12" fill="#3C3489" x="570" y="218" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif">Platform-owned reports</text>
+
+</svg>
