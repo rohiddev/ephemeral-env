@@ -1,0 +1,43 @@
+Phase 1 — IDP core (you, weeks 1–4)
+This is entirely in your hands. No dependencies.
+Build the self-service workflow in Harness IDP: a form that takes app name + version, calls the version compatibility registry YAML, resolves dependencies, and generates the env_id and manifest. Start with a static YAML registry — don't build an API yet. Get the manifest output right first.
+Deliverable: User picks Loan App v1 → IDP spits out a manifest YAML with env_id, versions, and infra flags.
+
+Phase 2 — K8s pipelines (you, weeks 3–6, overlaps Phase 1)
+You already interact with K8s pipelines, so this is yours to build. The pattern is:
+
+IDP triggers your existing Harness pipeline, passing env_id, namespace, app name, and version as runtime inputs
+Pipeline creates namespace env-loan-v1-abc123, deploys Helm chart with overridden values (image tag, config pointing to env-scoped DB/MQ)
+Pipeline emits a readiness signal back to IDP when pods are healthy
+
+What you need to define upfront: the standard set of runtime inputs every app pipeline must accept. Lock this interface down early — it becomes the contract between IDP and every app team.
+
+Phase 3 — EC2 team (dependency, weeks 4–7)
+This is your biggest external dependency. You need them to build a parameterised Terraform pipeline — not a custom one per env, but one that accepts env_id, instance_type, ami_id, and purpose as inputs and tags every resource with env_id.
+Your ask to the EC2 team (be specific):
+
+Parameterised Terraform pipeline callable via Harness API or webhook
+All EC2 assets tagged with env_id
+A destroy pipeline triggered by IDP at cleanup/TTL expiry
+Estimated provision time SLA (critical for your UX — if it's 30 min, pre-warm pooling is mandatory)
+
+If the EC2 team is slow to deliver, you can unblock yourself by stubbing — have IDP skip EC2 provisioning in Phase 1 and add it later.
+
+Phase 4 — Platform integrations (weeks 6–10, negotiate with each team)
+Each of these is a separate conversation. Here's how to frame each one:
+API Gateway team
+Ask for: a pipeline or API endpoint that creates a route/stage scoped to env_id (e.g. loan-v1-abc123.test.company.com) and a corresponding destroy call. You don't manage the gateway — you just call their automation.
+Database team
+Ask for: a schema clone job that takes a source snapshot (masked prod) and creates a schema named loan_env_abc123. They need to expose this as a callable pipeline step. The hardest part is clone time — push for a pre-warm pool if it exceeds 15 minutes.
+MQ team (IBM MQ)
+This is your highest-risk integration. IBM MQ doesn't namespace as easily as RabbitMQ. Ask them to expose: a script or pipeline that creates a dedicated queue prefix (env-loan-v1-abc123.*) and provides credentials back to IDP. Don't try to own MQ config yourself — the MQ team must own the isolation model. Your job is to trigger it and receive the connection string.
+Money EPP / Money Transfer
+Ask for: a sandbox endpoint per env. If they don't have that capability, the fallback is a mock service you deploy into the K8s namespace — you control this, no dependency needed.
+SFTP
+Ask for: a folder creation API or pipeline step that creates /test/env-loan-v1-abc123 with isolated credentials. This is usually the simplest integration — most SFTP platforms have basic API or CLI access.
+
+Your dependency management strategy
+Don't wait for all teams before starting. Run in parallel:
+WeekYou buildYou negotiate1–2IDP form + registryEC2 team kickoff3–4Manifest gen + K8s pipelineDB team, MQ team5–6K8s end-to-end workingAPI GW, SFTP, EPP7–8Wire in EC2 + DBMQ isolation design9–10MQ + EPP + SFTPTTL/cleanup sign-off11–12Full end-to-end testCost reporting, governance
+The single most important thing you control is the integration contract — the exact API or pipeline inputs each team must expose to IDP. Define those contracts in week 2 and give them to each team. That's what unblocks parallel delivery.
+Want me to draft the contract spec you'd hand to each team?
