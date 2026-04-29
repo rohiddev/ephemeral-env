@@ -1,0 +1,67 @@
+ Easy parts
+
+  Adding a new resource — just edit one YAML file and run two commands:
+  # edit environments/idp-p2.yaml, add entry
+  terraform apply -var-file=environments/p2.tfvars
+  No code changes, no pipeline edits. This is as simple as it gets.
+
+  Repeating a promotion — identical command, different env. Muscle memory after first run.
+
+  ---
+  Friction points
+
+  First-time setup is manual and fiddly:
+  - Fill account IDs into 3 YAML files
+  - Create 3 tfvars files from examples
+  - Vault token expires — need to re-authenticate every session
+  - AWS SSO session also expires independently
+  - terraform init -reconfigure easy to forget when switching envs — wrong state if skipped
+
+  The null_resource trigger limitation:
+  - If you update a workflow YAML in GitHub but don't change the identifier/branch, Terraform sees no-op and skips it
+  - Requires a manual -replace flag to force re-run — not obvious to a new user
+
+  No visibility into what's actually in Harness:
+  - Terraform state only tracks that the curl ran, not what Harness accepted
+  - If a registration fails silently, state says "done" but Harness doesn't have it
+  - Must manually check the Harness UI to confirm
+
+  ---
+  Verdict
+
+  Good for: Platform engineers who run it occasionally and know Terraform basics.
+
+  Not great for: Anyone who needs to promote frequently, or teams who want a simple button-click experience.
+
+  If you want simpler, the better UX would be a Harness pipeline with a workflow_dispatch-style trigger — select env, click run, done. No Vault token management, no init commands, no state to think
+  about. That's the Harness IaC approach we discussed earlier.
+
+  Want to build that pipeline as an alternative alongside this?
+
+❯ I want team to know Terraform. so we want to this technology
+
+⏺ Good call. Terraform is a core platform skill worth investing in. To make the learning curve smoother for the team, here's what would help:
+
+  ---
+  What's already in place
+
+  - Clear README with step-by-step instructions
+  - .tfvars.example files — copy and fill in
+  - GitHub Actions for plan/apply — team can observe runs without touching CLI first
+  - Module structure mirrors the company's own CFG-PLATFORM — familiar patterns
+
+  ---
+  Suggested additions to make team onboarding easier
+
+  1. A Makefile wrapper — hides the init -reconfigure and -var-file flags:
+  p2:
+      terraform init -reconfigure -backend-config=environments/p2.backend.hcl
+      terraform apply -var-file=environments/p2.tfvars
+  Team runs make p2 instead of remembering the full command.
+
+  2. A CONTRIBUTING.md — explains how to add a new resource end-to-end with screenshots of where to find Harness account IDs.
+
+  3. A dry-run mode — make plan-p2 that only plans, never applies. Safe for team members learning.
+
+  ---
+  Want me to build the Makefile with targets for plan-p2, apply-p2, plan-p1, apply-p1, plan-prod, apply-prod? That alone removes 80% of the CLI friction for new Terraform users.

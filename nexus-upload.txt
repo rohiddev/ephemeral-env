@@ -1,0 +1,26 @@
+ The cleanest bank-regulation-friendly approach that fits your setup:
+
+  IDP workflow page 1
+    → hoover-service generates a short-lived token (e.g. 2hr expiry)
+    → link shown to user includes token:
+      https://upload.internal.bank.com/nexus-upload?token=NX-20260429-a3f9
+
+  Upload page loads
+    → validates token with hoover-service (is it real, is it expired?)
+    → if invalid/expired → page shows error, no upload allowed
+    → if valid → file picker shown
+
+  User uploads file
+    → token tied to upload reference in hoover-service
+    → token marked used — cannot upload again with same token
+
+  User returns to IDP workflow
+    → pastes upload reference NX-20260429-a3f9
+    → pipeline validates reference exists in hoover-service before proceeding
+
+  This gives you:
+  - Only IDP workflow users can get a token
+  - Token expires (audit + regulation)
+  - Single-use — no replay
+  - No username/password on the page
+  - Full audit trail: token → user → artifact → pipeline run
