@@ -1,0 +1,18 @@
+pc VPC API — three categories:
+
+  1. Question set POSTs (/latest/path/<form>/) — the only calls that matter for IDP.
+  Return questionSet[n].answerOptions for all dropdowns. Schema-driven, stable version
+  tokens, multi-step chains via version propagation. ~21 forms confirmed.
+  2. Branch GETs (/latest/branch/?urlPath=...&sectionName=...) — two purposes:
+    - Static dropdown GETs (availableService, toEnvironment): needed for IDP
+    - Conditional section rendering GETs (yesOnPrem, NotQ, AWS, etc.): Jarvis UI-only, irrelevant for IDP
+  3. Utility GETs (new today):
+    - GET /latest/ad/query/?nid=corp/<id> — AD user lookup for approver fields
+    - Jarvis frontend calls to jarvis.p.ocp.citizensbank.com — pure UI rendering, ignore
+
+  The adapter only needs to implement:
+  - Cache-warm all questionSet POSTs at startup + 06:00 daily
+  - Serve GET endpoints that read from cache
+  - Two Branch GETs (availableService + toEnvironment) for SG form
+
+  Everything else in DevTools is Jarvis rendering its own React UI.

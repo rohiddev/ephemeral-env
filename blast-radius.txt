@@ -1,0 +1,12 @@
+ Self-maintaining service list — no hardcoded SYSIDs. The pipeline queries bank.com/tier: "1" or "2" annotations from the IDP catalog. Any team that registers a Tier-1
+  service in catalog-info.yaml gets included automatically next Monday.
+
+  Dual audience:
+  - Leaders get the weekly summary — executive summary + at-risk table ranked by blast radius + full ranking
+  - Service owners get a direct email the same morning — "your service is on the at-risk list, fix before end of week"
+
+  Risk ranking logic — the at-risk table sorts by blast radius descending, not by score. A service at 85% with 47 upstream dependents ranks above a service at 60% with 2
+  dependents. Leaders see the highest-risk items first.
+
+  Blast radius note: Level 4 (blast radius preview from ServiceNow CMDB) works today even without the finalised now.yaml schema — it just queries cmdb_rel_ci directly. The
+   richer dependency data improves once now.yaml is live in June.
