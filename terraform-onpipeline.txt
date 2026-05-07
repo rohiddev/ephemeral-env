@@ -1,0 +1,43 @@
+ workflows/deploy-idp-resources.yaml — 2-page wizard
+
+  ┌──────┬────────────────┬───────────────────────────────────────────────────────────┐
+  │ Page │     Field      │                          Detail                           │
+  ├──────┼────────────────┼───────────────────────────────────────────────────────────┤
+  │ 1    │ Target Account │ Dropdown: P-2 / P-1 / P with source branch shown in label │
+  ├──────┼────────────────┼───────────────────────────────────────────────────────────┤
+  │ 1    │ Action         │ Plan Only (safe preview) or Plan and Apply                │
+  ├──────┼────────────────┼───────────────────────────────────────────────────────────┤
+  │ 2    │ GitHub Org     │ The org owning the repos in idp.yaml                      │
+  └──────┴────────────────┴───────────────────────────────────────────────────────────┘
+
+  ---
+  pipelines/deploy_idp_resources.yaml — 3 stages
+
+  Stage 1 — Preview
+  - Resolves source branch from account (p2→develop, p1→qa, prod→master)
+  - Prints a clear summary: account, branch, backend state key, what resource types will be registered
+  - Outputs source_branch variable used by all downstream stages
+
+  Stage 2 — Terraform Plan
+  - Fetches terraform config from the resolved branch (not hardcoded develop)
+  - Fetches terraform.tfvars from the same branch
+  - Runs terraform plan — output visible in step logs showing exactly which null_resource registrations will change
+  - Exports plan JSON for downstream use
+
+  Stage 3 — Approve and Apply (skipped when Plan Only selected)
+  - HarnessApproval gate with context showing account, branch, and execution ID so the approver knows exactly what they are approving
+  - TerraformApply with InheritFromPlan — no second plan, applies the exact plan from Stage 2
+
+  Key design decision: Stage 2 uses the source_branch output from Stage 1 rather than hardcoding develop. This means running the workflow targeting p1 fetches config from qa branch, and targeting
+   prod fetches from master — which is the correct promotion behaviour.
+
+  One thing to fill in: ACCOUNT_ID in the workflow trigger URL, and account.platform_engineering with your actual approver user group identifier.
+
+  Since the project rule is all secrets via HashiCorp Vault, the correct setup is:
+
+    1. Configure Vault as a secret manager connector in Harness
+    2. Create the three secrets in Harness pointing to Vault paths:
+      - vault_token → secret/data/platform/vault-token#value
+      - harness_account_id → secret/data/platform/harness-<env>#account_id
+      - github_pat → secret/data/platform/github#pat
+
