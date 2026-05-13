@@ -10,3 +10,106 @@
 
   Blast radius note: Level 4 (blast radius preview from ServiceNow CMDB) works today even without the finalised now.yaml schema — it just queries cmdb_rel_ci directly. The
    richer dependency data improves once now.yaml is live in June.
+
+   ===
+   What it covers for the Head of Cloud:
+     - The problem today — CMDB drift, inaccurate blast radius
+     - Three signals explained simply — code, production, declared
+     - Exactly what each signal catches and what it misses
+     - What teams see in the catalog (confidence level, findings)
+     - The production gate — discrepancies block prod deploy
+     - Why now.yaml can wait — no RapDev dependency
+     - Build estimate — 2 weeks, self-contained
+
+     The key message for the presentation: "Three automated signals validate what teams declare. When they disagree, teams are blocked from production until resolved — making dependency accuracy a
+     hard requirement, not a courtesy."
+
+
+    ====
+     One caveat: SBOM misses sidecar/service-mesh connections and config-only repos. For those, the workflow override page is the escape hatch.
+
+      Want me to add the SBOM annotations to the catalog-info seed template and the layout, and add the override page to the workflow?
+
+      ===
+      How Dynatrace topology discovery works:
+
+        Dynatrace OneAgent auto-discovers service-to-service calls and DB connections via SmartScape. You query it:
+
+        GET /api/v2/topology/processes/{entityId}/relationships
+        GET /api/v2/smartscape/services/{serviceId}
+
+        For a service with dynatrace.com/entity-id: SERVICE-abc123 in its catalog annotation, this returns the actual upstream and downstream dependencies observed in production — including which
+        databases it connects to, which services it calls, and which MQ endpoints it hits.
+
+        ==
+          What it catches:
+
+          Dynatrace: loan-app → person-app (observed, real traffic)
+          CMDB:      loan-app has no relationship to person-app
+          Finding:   BLAST RADIUS INCOMPLETE — person-app not declared as dependency
+
+          CMDB:      loan-app → legacy-auth-service
+          Dynatrace: no traffic to legacy-auth-service in 90 days
+          Finding:   STALE DECLARATION — relationship may be decommissioned
+
+          ---
+          Database-specific discovery:
+
+          Dynatrace OneAgent detects DB connections automatically — no need to query the database itself. It shows:
+
+          - Which service connects to which DB host
+          - DB engine type (PostgreSQL, Oracle, etc.)
+          - Query volume and latency
+
+
+             ===
+             How this integrates with what we're building:
+
+               The dynatrace.com/entity-id annotation the workflow now collects becomes the join key. The nightly pipeline uses it to pull topology, cross-references against CMDB, and writes findings back as
+               catalog annotations:
+
+               annotations:
+                 dynatrace.com/entity-id: "SERVICE-abc123"
+                 blast-radius/last-validated: "2026-05-07"
+                 blast-radius/undeclared-deps: "person-app,payments-gateway"
+                 blast-radius/stale-deps: "legacy-auth-service"
+
+               These surface directly in the existing blast radius tab in the catalog — no new UI needed.
+
+               Recommendation: build this as a weekly scheduled pipeline alongside the existing blast radius report. It runs after the Dynatrace topology pull, outputs discrepancies, and feeds the Monday
+               morning report that leaders and service owners already receive. Want me to design that pipeline?
+
+               =====
+                How Datadog discovers dependencies:
+
+                 Datadog builds its topology from APM distributed traces rather than a network agent. It has three relevant APIs:
+
+                 GET /api/v1/service_dependencies   — service-to-service calls (APM traces)
+                 GET /api/v2/apm/services           — all instrumented services
+                 Datadog Database Monitoring        — which services hit which databases
+
+                 The join key is datadog.com/service-name annotation — already in the catalog from the workflow.
+
+                 Same cross-reference pipeline, different API call:
+
+                 import requests
+
+                 # Pull observed dependencies for a service
+                 r = requests.get(
+                     "https://api.datadoghq.com/api/v1/service_dependencies",
+                     headers={
+                         "DD-API-KEY": "<+secrets.getValue('datadog_api_key')>",
+                         "DD-APPLICATION-KEY": "<+secrets.getValue('datadog_app_key')>"
+                     },
+                     params={
+                         "service": "loan-app",       # from datadog.com/service-name annotation
+                         "env": "production",
+                         "start": week_ago_timestamp,
+                         "end": now_timestamp
+                     }
+                 )
+                 # returns upstream + downstream services observed in traces
+
+                 Same logic after that — compare observed vs CMDB declared, flag gaps.
+
+                 ==
