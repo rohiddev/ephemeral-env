@@ -1,0 +1,49 @@
+ Kubernetes by Spotify — developer-facing (start here)
+
+  What it gives developers in IDP:
+  - Live pod health, restart counts, crash loops — on their Component page
+  - No kubectl access needed; dev sees their service without cluster permissions
+  - Works across multiple clusters simultaneously (prod + dr)
+
+  ===
+  Kubernetes by Spotify — Developer Productivity Benefits
+
+    1. Eliminate context switching
+    Developers stay in IDP instead of switching between kubectl, Lens, Rancher, or asking SRE for cluster access. Pod health is on the same page as the service catalog entry.
+
+    2. No cluster access required
+    Junior devs and contractors see their service's pod status without needing kubeconfig or namespace RBAC. SRE stops fielding "is my pod running?" questions.
+
+    3. Faster incident response
+    During a P1 the developer sees — immediately in IDP — whether their pods are crashing, stuck in pending, or OOMKilled. No war-room delay waiting for SRE to check.
+
+    4. Cross-environment visibility in one view
+    Dev, QA, and prod pod counts visible together. Developers know if their last deploy actually rolled out everywhere or only hit one cluster.
+
+    5. Self-service debugging
+    Container restart count, last termination reason, resource limit hits — all visible without a support ticket. Developers diagnose their own "why did my pod restart 47 times" before escalating.
+
+    6. Deployment confidence
+    After a pipeline run, developer confirms pods are healthy directly in IDP without switching to Harness CD or asking ops. Closes the deploy→verify loop.
+
+    7. Onboarding acceleration
+    New team member joins, opens the service in IDP, sees exactly which clusters and namespaces their service runs in — no documentation hunting.
+
+    ---
+    Quantifiable impact at your scale
+
+    With 80% apps on K8s and ~40 forms migrating from Jarvis, the biggest time sinks eliminated are:
+
+    ┌─────────────────────────────────────────────┬──────────────────────┐
+    │                Current pain                 │      Time saved      │
+    ├─────────────────────────────────────────────┼──────────────────────┤
+    │ "Is my pod running?" → SRE ticket           │ ~30 min per incident │
+    ├─────────────────────────────────────────────┼──────────────────────┤
+    │ Post-deploy verification across clusters    │ ~15 min per deploy   │
+    ├─────────────────────────────────────────────┼──────────────────────┤
+    │ P1 initial diagnosis (is it infra or code?) │ ~20 min per P1       │
+
+    ====
+    At scale across hundreds of services, this is the highest-ROI single plugin enablement available in the marketplace.
+
+    ===
