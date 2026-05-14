@@ -1,0 +1,118 @@
+workaround. Retrieve button to pull all the rows from backend. This solves one of the limitation.
+
+⏺ Good instinct. ValidateAndFetch button solves the visibility half. Here's exactly what it can and cannot do:
+
+  What the Retrieve button gives you:
+  - Calls the backend, gets all 18 rows
+  - Displays them as read-only reference so user knows what exists
+  - User then uses the editable array below to declare only what they want to change
+
+  What it still cannot do:
+  - Pre-populate the editable array rows (no RJSF mechanism to inject API data into array items)
+
+  ---
+  Concrete implementation:
+
+  Add a /apptier-names endpoint to the mock API returning a flat string (ContextViewer can't render arrays):
+
+  // In mock-api — new endpoint
+  r.GET("/apptier-names", func(c *gin.Context) {
+      config := buildAppTierConfig()
+      names := make([]string, 0, len(config))
+      for k := range config {
+          names = append(names, k)
+      }
+      sort.Strings(names)
+      c.JSON(200, gin.H{"names": strings.Join(names, ", ")})
+  })
+
+  Workflow YAML pattern:
+
+  # Step 1 — Retrieve button (ValidateAndFetch, field level NOT ui:options)
+  retrieveAppTiers:
+    title: Current App Tiers
+    type: string
+    ui:field: ValidateAndFetch
+    button: Retrieve App Tiers
+    path: proxy/mock-api/apptier-names
+    method: GET
+    setContextData:
+      appTierNames: names
+
+  # Step 2 — Display retrieved list
+  appTierList:
+    title: Available Repos
+    type: string
+    ui:field: ContextViewer
+    readonly: true
+    ui:options:
+      getContextData: '{{formContext.appTierNames}}'
+
+  # Step 3 — Editable array (user adds only rows they want to touch)
+  appTiers:
+    title: App Tier Changes
+    description: Add rows to update existing repos or add new ones
+    type: array
+    items:
+      type: object
+      required: [repositoryName]
+      properties:
+        repositoryName:
+          title: Repository Name
+          type: string
+          description: Copy name from the list above
+        instanceSize:
+          title: Instance Size
+          type: string
+          enum: [small, medium, large, xlarge]
+        loadbalancer:
+          title: Load Balancer
+          type: string
+          enum: [ALB, NLB, None]
+        os:
+          title: OS
+          type: string
+          enum: [linux, windows]
+
+  ---
+  User flow with this pattern:
+
+  1. Click Retrieve App Tiers → sees "payments-service, fraud-service, ledger-service, ..."
+  2. Adds one array item, copies payments-service from the display → edits instance size
+  3. Adds another item, copies fraud-service → edits load balancer
+  4. Adds a third item, types new-repo-19 → fills all fields
+
+  Pipeline receives the array, distinguishes update vs. create by checking if the repo name exists in the master list.
+
+  ---
+  Remaining gap: user still has to type/copy the repo name into each array item. The retrieve button doesn't auto-fill the array — it's a reference display only. That gap can only be closed with
+  a custom plugin.
+
+✻ Brewed for 1m 2s · 1 shell still running
+
+❯ can user update 2 rows and add a 3 row.
+
+⏺ Yes. The type: array of objects with plain text/enum fields (no SelectFieldFromApi inside) does NOT have the override bug — each item is stored independently at its own array index.
+
+  User clicks Add Item 3 times:
+
+  ┌─────┬──────────────────┬──────────────┬──────────────┬────────────────────┐
+  │  #  │  repositoryName  │ instanceSize │ loadbalancer │ What pipeline does │
+  ├─────┼──────────────────┼──────────────┼──────────────┼────────────────────┤
+  │ 1   │ payments-service │ large        │ ALB          │ Update existing    │
+  ├─────┼──────────────────┼──────────────┼──────────────┼────────────────────┤
+  │ 2   │ fraud-service    │ medium       │ NLB          │ Update existing    │
+  ├─────┼──────────────────┼──────────────┼──────────────┼────────────────────┤
+  │ 3   │ new-repo-19      │ small        │ None         │ Create new         │
+  └─────┴──────────────────┴──────────────┴──────────────┴────────────────────┘
+
+  Pipeline receives:
+  [
+    { "repositoryName": "payments-service", "instanceSize": "large", "loadbalancer": "ALB" },
+    { "repositoryName": "fraud-service", "instanceSize": "medium", "loadbalancer": "NLB" },
+    { "repositoryName": "new-repo-19", "instanceSize": "small", "loadbalancer": "None" }
+  ]
+
+  Pipeline logic: call /apptier-config/:repo — if it exists → update, if 404 → create. Three independent operations, no override.
+
+  The override bug only happens with SelectFieldFromApi inside arrays. Plain type: string text fields and enum dropdowns inside array objects are fine.
