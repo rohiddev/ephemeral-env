@@ -203,3 +203,30 @@ Here is the safe path clearly:
     └── addTiers           (array of objects — repositoryName: string, all config: enum)                                                                                                           
                                                                                                                                                                                                    
   No custom plugin. No override risk. All four operations covered. 
+
+Exactly what the array pattern handles.
+
+In one form submission:
+
+updateTiers array — click Add Item twice:                                                                                                                                                        
+Item 1: repositoryName = "app-tier-repo-2"  instanceSize = "Large"   loadbalancer = "NLB"                                                                                                        
+Item 2: repositoryName = "app-tier-repo-5"  instanceSize = "Medium"  loadbalancer = "ALB"
+
+addTiers array — click Add Item twice:                       
+Item 1: repositoryName = "app-tier-repo-19"  os = "Linux"  instanceSize = "Small"  ...                                                                                                           
+Item 2: repositoryName = "app-tier-repo-20"  os = "Linux"  instanceSize = "Medium" ...
+
+Pipeline receives both arrays in one shot:
+
+updateTiers: [                                                                                                                                                                                   
+{ "repositoryName": "app-tier-repo-2", "instanceSize": "Large", "loadbalancer": "NLB" },                                                                                                       
+{ "repositoryName": "app-tier-repo-5", "instanceSize": "Medium", "loadbalancer": "ALB" }                                                                                                       
+]
+
+addTiers: [                                                  
+{ "repositoryName": "app-tier-repo-19", "os": "Linux", "instanceSize": "Small", ... },                                                                                                         
+{ "repositoryName": "app-tier-repo-20", "os": "Linux", "instanceSize": "Medium", ... }
+]
+
+No limit on how many items per array. 
+2 updates + 2 adds, or 5 updates + 1 add — same pattern, just more array items. The pipeline loops through each array independently.  
