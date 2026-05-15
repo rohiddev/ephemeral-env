@@ -229,4 +229,5 @@ addTiers: [
 ]
 
 No limit on how many items per array. 
+
 2 updates + 2 adds, or 5 updates + 1 add — same pattern, just more array items. The pipeline loops through each array independently.  
