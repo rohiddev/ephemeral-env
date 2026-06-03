@@ -3,3 +3,123 @@
 
   Catalog (Component)
   Overview | CI/CD | Code Quality | Security Scan | Wiz | Kubernetes | Observability | Cloud Cost | On-call / Incidents | Blast Radius | Database | Docs
+
+
+  System Level
+
+    The System page gives platform owners and SREs a single-pane view of an entire platform — not one service, but everything that platform encompasses.
+
+    ---
+    Overview
+    The entry point for any System entity. Shows the platform's ownership, the components that belong to it, and the APIs it exposes. System owners can confirm at a glance that all services are
+    registered and correctly attributed. New developers onboarding to a platform immediately understand its shape — who owns it, what it contains, and what it provides — without reading any
+    documentation or asking anyone.
+
+    ---
+    Telemetry
+    Surfaces the system-level aggregate dashboards from Datadog or Dynatrace directly inside IDP. Platform owners no longer need to maintain a separate bookmark list or explain to new engineers
+    which dashboard covers which platform. A single link, in context, reduces the time to find the right monitoring view from minutes to seconds.
+
+    ---
+    Wiz
+    Provides a platform-wide cloud security posture view — open issues, severity distribution, and trend charts scoped to the Wiz project that covers all services in this system. System owners can
+    track security debt at the platform level without stitching together individual service reports. Developers see the aggregate signal and understand where their platform stands without needing
+    Wiz access.
+
+    ---
+    Blast Radius
+    Visualises the full dependency graph for the platform and surfaces the output of the nightly cross-reference validation pipeline. System owners can see which downstream systems depend on this
+    platform, how many tier-1 dependents it has, and whether any declared dependencies have gone stale. This turns change risk from a manual spreadsheet exercise into a live, always-current view —
+    directly reducing the preparation time before major changes or incidents.
+
+    ---
+    Chaos Engineering
+    Shows the platform's resilience score, number of configured Harness Chaos Engineering experiments, and the date of the last chaos run. System owners can track whether resilience testing is
+    keeping pace with growth. Developers can see the score and understand the confidence level of the platform before deploying a change. Surfaces accountability — a declining score is visible to
+    everyone, not just the SRE running the experiments.
+
+    ---
+    K8s Ops
+    An SRE-facing view of the platform's full Kubernetes footprint, powered by Rafay. Shows all clusters registered to this platform's project, namespace count across clusters, and last fleet sync
+    timestamp. SREs can verify cluster health and namespace inventory without leaving IDP or logging into the Rafay console separately. Reduces context-switching during incidents and gives platform
+     owners an accurate count of their infrastructure scope.
+
+    ---
+    On-call / Incidents
+    Displays who is on-call for the platform, links to the rotation schedule, and links to the incident dashboard. During an incident, time spent finding the right contact is eliminated — any
+    engineer can open the System page and immediately know who owns recovery. System owners can confirm rotation details are current. Reduces mean time to escalate during production issues.
+
+    ------
+    Component (Service) Level
+
+    The Component page is the primary surface for an individual service. It serves developers, architects, and service owners — the single source of truth for everything about one service.
+
+    ---
+    Overview
+    The starting point for any service. Shows the service's owner, the APIs it provides, and its current scorecard score. A developer joining a team can immediately confirm ownership, understand
+    what the service exposes, and see its quality gate status. Service owners use this to verify the service is correctly classified and connected to its platform. The scorecard score on the
+    Overview creates a visible quality signal without anyone needing to dig for it.
+
+    ---
+    CI/CD
+    Surfaces the Harness pipeline execution history directly on the service page. Developers can see recent builds and deployments without switching to the Harness CI/CD module. Reduces the context
+     switch that slows down debugging — a developer investigating a production issue can check the last deployment in the same tab where they're reading service documentation. Removes the question
+    of "what was deployed last?" from incident conversations.
+
+    ---
+    Code Quality
+    Shows the SonarQube quality gate status, project key, coverage target, and a link to the DORA metrics dashboard. Developers can verify code health without opening SonarQube separately. Tech
+    leads and service owners can track whether coverage targets are being met. DORA metrics on the same page connect delivery performance to code quality — giving a complete picture of engineering
+    health in one place.
+
+    ---
+    Security Scan
+    Displays the most recent security scan result — quality gate status, vulnerability count, and scan date. Developers can confirm whether a recent change introduced vulnerabilities without
+    leaving IDP. Service owners can use this as a quick compliance check before a release. Surfaces security signals into the developer's daily workflow rather than keeping them in a separate
+    security tool that most developers never open.
+
+    ---
+    Wiz
+    Live cloud security posture for this specific service — open issues, severity chart, and issue trend. Developers working on infrastructure changes can see the security impact on their service
+    directly. Service owners can track Wiz issues alongside other service health signals rather than context-switching to the Wiz console. Brings security into the developer workflow at the service
+     level, not just the platform level.
+
+    ---
+    Kubernetes
+    Live pod health, deployment status, and restart counts for this service, powered by the Kubernetes by Spotify plugin. Developers can check whether their service is running without kubectl
+    access or a separate Kubernetes dashboard. During an incident, pod status is one click away from the service page. Reduces the number of people who need direct cluster access — a significant
+    security and governance improvement at scale.
+
+    ---
+    Observability
+    Links to the Datadog or Dynatrace dashboard for this specific service, alongside the service name or entity ID. Developers can jump directly to the right dashboard without searching for which
+    dashboard covers their service. Eliminates the common time-waster of opening the wrong dashboard during an incident. Each team fills whichever observability tool they use — the tab is the same
+    regardless of tooling choice.
+
+    ---
+    Cloud Cost
+    Shows monthly Kubernetes namespace spend from Kubecost and AWS spend from Cost Explorer, written nightly by the cost pipeline. Developers and service owners can see the financial footprint of
+    their service without requesting a report or involving FinOps. Cost accountability moves from quarterly reviews to a daily visible signal. Architects making infrastructure decisions can see
+    cost impact without leaving the service page.
+
+    ---
+    On-call / Incidents
+    Shows who is on-call for this service, the rotation schedule, and the incident dashboard. Any engineer — inside or outside the team — can find the right contact in seconds during an incident.
+    Reduces escalation time. Service owners can keep rotation details current in one place that everyone already looks at, rather than maintaining a separate wiki page that goes stale.
+
+    ---
+    Blast Radius
+    Dependency graph for this service, plus SBOM signals detected from the codebase and nightly validation findings. Developers can see what their service depends on and whether those dependencies
+    are declared correctly in the catalog. Before a deployment or breaking change, the blast radius graph shows which other services might be affected. Surfaces undeclared dependencies — hidden
+    risks that only become visible during incidents — before they cause an outage.
+
+    ---
+    Database
+    Documents the database engine, schema name, backup policy, last migration date, and DBA runbook link. Developers onboarding to a service can understand its data layer without a handover
+    session. During an incident involving data, the DBA runbook is one click away from the service page. Service owners maintain this in one canonical place rather than buried in Confluence.
+
+    ---
+    Docs
+    TechDocs rendered directly inside IDP from the service repo — architecture decisions, runbooks, onboarding guides. Developers find service documentation in the same place they find everything
+    else about a service. Documentation is versioned with the code so it cannot drift. Eliminates the question of "where are the docs for this service?" which costs new team members hours during
+    onboarding.
