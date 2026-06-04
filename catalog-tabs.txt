@@ -123,3 +123,96 @@
     TechDocs rendered directly inside IDP from the service repo — architecture decisions, runbooks, onboarding guides. Developers find service documentation in the same place they find everything
     else about a service. Documentation is versioned with the code so it cannot drift. Eliminates the question of "where are the docs for this service?" which costs new team members hours during
     onboarding.
+
+
+    =====
+    Catalog Automation — Workflow Map
+
+      There are two classes of workflow: team-triggered (a person initiates it) and pipeline-automated (runs on a schedule or event with no human input). Together they keep every annotation in the
+      catalog current without teams maintaining anything manually.
+
+      ---
+      Team-Triggered Workflows
+
+      1. Catalog Seeder
+      - Trigger: run once per service at onboarding time, or by the platform team on a batch basis
+      - What it does: pulls service metadata from ServiceNow CMDB (SYSID, tier, team, repo) and stamps a catalog-info.yaml into the service repo using the seed template
+      - Feeds: Overview, all tabs (creates the entity)
+      - Without this: teams write catalog-info.yaml by hand — inconsistent, slow, error-prone at 19K repos
+
+      2. Update Catalog Entry (already exists in IDP)
+      - Trigger: developer or service owner submits the IDP self-service workflow
+      - What it does: lets teams enrich their catalog entry — observability URLs, on-call contacts, database details, Kubernetes annotations, SonarQube project key
+      - Feeds: Observability, On-call / Incidents, Database, Kubernetes, Code Quality tabs
+      - Without this: teams raise infra tickets or edit YAML directly — no governance, no audit trail
+
+      ---
+      Pipeline-Automated Workflows
+
+      3. SBOM Scanner
+      - Trigger: GitHub Actions on every pull request
+      - What it does: scans the repo's package manifest and dependency tree, detects Kafka, MQ, database, FTP, and API usage, writes sbom/* annotations back to the catalog entry
+      - Feeds: Blast Radius tab (SBOM Signals card)
+      - Frequency: every PR
+      - Without this: dependency declarations in spec.dependsOn are manual and drift silently
+
+      4. Blast Radius Validator
+      - Trigger: nightly scheduled pipeline
+      - What it does: cross-references every service's declared spec.dependsOn against the SBOM signals detected in that repo, flags undeclared dependencies and stale declarations, writes
+      blast-radius/* annotations at both Component and System level
+      - Feeds: Blast Radius tab (both Component and System)
+      - Frequency: nightly
+      - Without this: the dependency graph in IDP is static and cannot be trusted for change impact analysis
+
+      5. Security Scan Writer
+      - Trigger: Harness CI pipeline on every build (post-SonarQube stage)
+      - What it does: reads SonarQube quality gate result and vulnerability count from the SonarQube API after every build, writes security-scan/* annotations to the catalog entry
+      - Feeds: Security Scan tab
+      - Frequency: every build
+      - Without this: security scan results live only in SonarQube — invisible to developers browsing the catalog
+
+      6. Cloud Cost Aggregator
+      - Trigger: nightly scheduled pipeline
+      - What it does: queries Kubecost for namespace-level K8s spend and AWS Cost Explorer for EC2/RDS/S3 spend per service, writes cloud-cost/* annotations to the catalog entry
+      - Feeds: Cloud Cost tab
+      - Frequency: nightly
+      - Without this: cost data requires a FinOps request or manual Cost Explorer query — never seen by developers
+
+      7. Chaos Metrics Sync
+      - Trigger: nightly scheduled pipeline
+      - What it does: queries the Harness Chaos Engineering API for each system's HCE project, pulls resilience score, experiment count, and last run date, writes chaos.harness.io/* annotations to
+      the System entity
+      - Feeds: Chaos Engineering tab (System level)
+      - Frequency: nightly
+      - Without this: resilience scores are only visible inside the HCE module — not surfaced to system owners in context
+
+      8. Rafay Fleet Sync
+      - Trigger: nightly scheduled pipeline (or on Rafay webhook if available)
+      - What it does: queries the Rafay API for each system's project, counts registered clusters and total namespaces, writes rafay.dev/* annotations to the System entity
+      - Feeds: K8s Ops tab (System level)
+      - Frequency: nightly
+      - Without this: SREs have no fleet summary in IDP and must log into Rafay console separately
+
+      ---
+      Summary Table
+
+      ┌────────────────────────┬────────────────────────────┬────────────────────┬────────────────────────────────────────────────────────────┐
+      │        Workflow        │        Who Triggers        │     Frequency      │                          Tabs Fed                          │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Catalog Seeder         │ Platform team              │ Once at onboarding │ All (creates entity)                                       │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Update Catalog Entry   │ Developer / service owner  │ On demand          │ Observability, On-call, Database, Kubernetes, Code Quality │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ SBOM Scanner           │ GitHub Actions (automated) │ Every PR           │ Blast Radius                                               │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Blast Radius Validator │ Scheduled pipeline         │ Nightly            │ Blast Radius (Component + System)                          │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Security Scan Writer   │ CI pipeline (automated)    │ Every build        │ Security Scan                                              │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Cloud Cost Aggregator  │ Scheduled pipeline         │ Nightly            │ Cloud Cost                                                 │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Chaos Metrics Sync     │ Scheduled pipeline         │ Nightly            │ Chaos Engineering (System)                                 │
+      ├────────────────────────┼────────────────────────────┼────────────────────┼────────────────────────────────────────────────────────────┤
+      │ Rafay Fleet Sync       │ Scheduled pipeline         │ Nightly            │ K8s Ops (System)                                           │
+      └────────────────────────┴────────────────────────────┴────────────────────┴────────────────────────────────────────────────────────────┘
+
