@@ -113,3 +113,113 @@
                  Same logic after that — compare observed vs CMDB declared, flag gaps.
 
                  ==
+
+                 1. How Does Blast Radius Get Populated?
+                 Blast radius is not a single thing — it's a derived view assembled from multiple data sources. There are two surfaces where it appears in your architecture:
+                 In the IDP Catalog (Harness IDP — Blast Radius Tab)
+                 This is populated from catalog-info.yaml relationship declarations:
+                 yaml# In catalog-info.yaml
+                 spec:
+                   dependsOn:
+                     - component:payments-db
+                     - component:payment-events-kafka
+                     - component:partner-sftp
+                 Harness IDP reads these declarations and builds the dependency graph automatically. No pipeline needed — it's a live query against the catalog entity graph every time a developer opens the tab.
+                 What populates it:
+
+                 spec.dependsOn — what this service consumes
+                 spec.providesApis — what this service exposes
+                 spec.consumesApis — what APIs this service calls
+                 System membership (spec.system) — which platform owns this service
+
+                 Limitation: Only as accurate as what teams have declared in catalog-info.yaml. This is exactly why drift detection matters — undeclared dependencies = invisible blast radius.
+                 In ServiceNow (ITOM Service Map / Blast Radius)
+                 This is populated from now.yaml relationship declarations via RapDev sync:
+                 yaml# In now.yaml
+                 dependencies:
+                   databases:
+                     - name: payments-db
+                   kafka:
+                     - topic: payment-events
+                 RapDev syncs these to ServiceNow CMDB as CI relationship records (cmdb_rel_ci). ITOM Visibility then builds the service map from those relationships.
+                 What populates it:
+
+                 Every dependency declared in now.yaml becomes a CI relationship in CMDB
+                 ITOM Visibility reads CI relationships to draw the service map
+                 Blast radius = all CIs downstream of a given CI in that graph
+
+
+                 2. Does a Pipeline Need to Run Periodically?
+                 Yes — but different pipelines for different purposes:
+                 PipelineTriggerWhat it doesRapDev syncOn now.yaml change (webhook) or scheduledPushes now.yaml declarations to ServiceNow CMDBSBOM scanNightly (scheduled)Generates SBOM per repo, cross-references against now.yamlTelemetry pullNightly (scheduled)Pulls Datadog/Dynatrace APM data, cross-references against now.yamlDrift categorisationAfter SBOM + telemetry runCompares both signals, tiers alertsIDP catalog refreshOn catalog-info.yaml change (webhook)Updates entity graph in Harness IDPScorecard evaluationNightly or on-demandRe-scores all services against completeness rules
+                 The key timing question: RapDev can sync on commit (webhook-triggered) so CMDB is updated within minutes of a now.yaml change. The SBOM and telemetry pipelines run nightly because they're heavy — scanning 20k repos and pulling APM data can't run on every commit.
+                 Practical implication: There will always be a lag between:
+
+                 A team declaring a new Kafka dependency in now.yaml → committed at 2pm
+                 SBOM scan confirming the library is present → runs at midnight
+                 Telemetry confirming the connection is active → runs at midnight
+
+                 That lag is acceptable — the important thing is the nightly cadence is consistent and teams know to expect alerts the morning after a deployment, not immediately.
+
+                 3. What Happens to a Tier 1 Application?
+                 This is the most important question — Tier 1 apps need special treatment because the blast radius consequences are greatest.
+                 What "Tier 1" Means in Your Context
+                 A Tier 1 application is your highest criticality service — typically:
+
+                 Customer-facing or revenue-generating
+                 Has the most downstream dependents
+                 A P1 incident on a Tier 1 app triggers the highest severity response
+                 Likely covered by regulatory/compliance requirements
+
+                 How Tier 1 is Declared
+                 In catalog-info.yaml:
+                 yamlmetadata:
+                   annotations:
+                     tier: "1"
+                 In now.yaml:
+                 yamlservice:
+                   tier: 1
+                 Both files need to agree on tier. Inconsistency between them should itself be a drift flag.
+                 What Changes for Tier 1 in Drift Detection
+                 BehaviourStandard ServiceTier 1 ApplicationTier 1 alert urgencyLowElevated — immediate notificationTier 2 alert urgencyHighCritical — escalated immediatelySuppression approvalTeam leadService owner + Platform Engineering sign-offAuto-expiry on suppression90 days30 days — more frequent reviewScorecard penaltyStandardWeighted — counts more toward overall scoreSBOM scan frequencyNightlyConsider twice daily for Tier 1Telemetry checkNightlyNear real-time for critical servicesServiceNow change recordAuto-createdAuto-created + Change Advisory Board notified
+                 Blast Radius Implications for Tier 1
+                 If a Tier 1 app has an undeclared dependency (Tier 2 drift), the consequences are severe:
+                 Tier 1 service: payments-api
+                 Undeclared dependency: oracle-payments-db (not in now.yaml)
+
+                 oracle-payments-db goes down
+                       ↓
+                 ITOM has no record of payments-api depending on it
+                       ↓
+                 Blast radius report: "No services impacted"
+                       ↓
+                 On-call team doesn't page payments-api team
+                       ↓
+                 Customer-facing payments fail
+                       ↓
+                 Manual investigation finds the missing dependency
+                       ↓
+                 30 minutes of avoidable downtime
+                 This is the most compelling argument for enforcing drift resolution SLAs on Tier 1 — not 48 hours, but same business day.
+                 Recommended Tier 1 Governance Rules
+
+                 Tier 1 services cannot have open Tier 2 drift alerts for more than 4 hours during business hours
+                 All Tier 1 suppressions require Platform Engineering co-approval — not just team lead
+                 Tier 1 blast radius is reviewed monthly — even if no drift detected, confirm the dependency graph is current
+                 Tier 1 services are seeded first in the 20k repo batch rollout — get the most critical services covered before lower tiers
+                 Tier 1 catalog entries are mandatory — IDP scorecard gates: a Tier 1 service with incomplete catalog-info.yaml is an automatic escalation
+
+                 The Tier 1 Batch Seeding Priority
+                 When you run the batch program across 20k repos, don't do it alphabetically or randomly. Phase it by tier:
+                 Phase 1: All Tier 1 services (highest risk, highest value)
+                 Phase 2: Tier 2 services
+                 Phase 3: Tier 3 and below
+                 This means your ITOM service maps are most accurate for the services that matter most, earliest.
+
+                 Summary
+                 QuestionAnswerHow is blast radius populated in IDP?Live query of catalog-info.yaml relationship graph —
+                  no pipeline neededHow is blast radius populated in ServiceNow?RapDev syncs now.yaml
+                  relationships to CMDB CI records — ITOM builds the mapDoes a pipeline need to run
+                  periodically?Yes — RapDev sync on commit, SBOM + telemetry nightlyWhat changes for Tier
+                  1?Shorter SLAs, elevated alert urgency, double approval on suppressions, 30-day expiry,
+                  seeded first in batch
