@@ -1,0 +1,89 @@
+ i am getting connection time out in 2 of my api end points when it takes 2 minutes to complete. these  calls are sync calls. making it async and using http step in the pipeline to make asycn
+  call would it solve the problem
+
+⏺ Yes, it solves the problem completely. Here's why and how.
+
+  ---
+  Why sync times out
+
+  A synchronous HTTP call holds an open TCP connection for the full 2 minutes. Load balancers, proxies, and the Harness delegate gateway all have idle connection timeouts — typically 30-60
+  seconds — that will kill the connection before your API responds, regardless of what timeout you set in the step.
+
+  ---
+  Why async + poll fixes it
+
+  No single HTTP call holds a connection open for more than ~1 second:
+
+  1. Trigger call — POST returns a jobId in under a second
+  2. Poll loop — GET /status/{jobId} every 15s, each call completes in < 1s
+  3. Done — poll exits when status is complete
+
+  Every call is short-lived. Nothing can time out.
+
+  ---
+  The Harness HTTP step polling pattern
+
+  # Step 1 — trigger
+  - step:
+      type: Http
+      name: Trigger Job
+      spec:
+        url: https://your-api/endpoint
+        method: POST
+        requestBody: '{"param": "value"}'
+        outputVariables:
+          - name: jobId
+            value: <+json.select("jobId", httpResponseBody)>
+            type: String
+
+  # Step 2 — poll until complete
+  - step:
+      type: Http
+      name: Poll Job Status
+      spec:
+        url: https://your-api/status/<+execution.steps.TriggerJob.output.outputVariables.jobId>
+        method: GET
+        assertion: <+httpResponseCode> == 200 && <+json.select("status", httpResponseBody)> == "complete"
+      failureStrategies:
+        - onFailure:
+            errors:
+              - AllErrors
+        requestBody: '{"param": "value"}'
+        outputVariables:
+          - name: jobId
+            value: <+json.select("jobId", httpResponseBody)>
+            type: String
+
+  # Step 2 — poll until complete
+  - step:
+      type: Http
+      name: Poll Job Status
+      spec:
+        url: https://your-api/status/<+execution.steps.TriggerJob.output.outputVariables.jobId>
+        method: GET
+        assertion: <+httpResponseCode> == 200 && <+json.select("status", httpResponseBody)> == "complete"
+      failureStrategies:
+        - onFailure:
+            errors:
+              - AllErrors
+            action:
+              type: Retry
+              spec:
+                retryCount: 20        # 20 x 15s = up to 5 minutes
+                retryIntervals:
+                  - 15s
+                onRetryFailure:
+                  action:
+                    type: Abort
+
+  assertion: false causes the step to fail → retry fires → polls again. Once assertion passes the step succeeds and execution continues.
+
+  ---
+  What you need on the API side
+
+  The two endpoints need to change from:
+  - POST /do-thing → wait 2 min → return result
+
+  To:
+  - POST /do-thing → return {"jobId": "abc123"} immediately
+  - GET /status/abc123 → return {"status": "pending|complete|failed", "result": {...}}
