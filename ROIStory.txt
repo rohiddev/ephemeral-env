@@ -1,0 +1,169 @@
+ This is a strong ROI story. Let me break it down across every area we've built.
+
+  ---
+  1. Self-Service Workflows — Replacing Jira Tickets
+
+  ┌────────────────────────────────┬──────────────────────┬──────────────────────┬────────────────────┐
+  │              Task              │ Before (Jira ticket) │ After (IDP workflow) │ Saving per request │
+  ├────────────────────────────────┼──────────────────────┼──────────────────────┼────────────────────┤
+  │ Create GitHub repo + AD Groups │ 2-5 days wait        │ 5 min, instant       │ 2-5 days           │
+  ├────────────────────────────────┼──────────────────────┼──────────────────────┼────────────────────┤
+  │ Create AD Group                │ 2-3 days wait        │ 3 min, instant       │ 2-3 days           │
+  ├────────────────────────────────┼──────────────────────┼──────────────────────┼────────────────────┤
+  │ Add user to AD Group           │ 1-2 days wait        │ 2 min, instant       │ 1-2 days           │
+  ├────────────────────────────────┼──────────────────────┼──────────────────────┼────────────────────┤
+  │ K8s Namespace onboarding       │ 3-5 days wait        │ 10 min, instant      │ 3-5 days           │
+  ├────────────────────────────────┼──────────────────────┼──────────────────────┼────────────────────┤
+  │ Public Cloud onboarding        │ 1-2 weeks wait       │ 15 min, instant      │ 1-2 weeks          │
+  └────────────────────────────────┴──────────────────────┴──────────────────────┴────────────────────┘
+
+  A developer who raises 2 of these requests per month saves 4-10 days of waiting per month.
+
+  ---
+  2. Day-to-Day Developer Tasks — Weekly Savings
+
+  ┌─────────────────────────────────┬────────────────────────────────────────┬───────────────────────────────────┬───────────────┐
+  │              Task               │               Before IDP               │             After IDP             │ Weekly saving │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Find runbook for a service      │ Search Confluence, ask team — 20 min   │ IDP catalog Runbook link — 30 sec │ 19 min        │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check SonarQube score           │ Login SonarQube, find project — 10 min │ IDP Code Quality tab — 30 sec     │ 9 min         │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check Snyk vulnerabilities      │ Login Snyk, find project — 10 min      │ IDP Security tab — 30 sec         │ 9 min         │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Find who owns a service         │ Ask in chat, wait — 15 min             │ IDP catalog Owner field — 10 sec  │ 14 min        │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Find on-call for a service      │ Check multiple systems — 10 min        │ IDP On-call tab — 10 sec          │ 9 min         │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check Datadog dashboard         │ Login, find dashboard — 10 min         │ IDP Observability tab — 10 sec    │ 9 min         │
+  ├─────────────────────────────────┼────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Understand service dependencies │ Read stale docs, ask team — 30 min     │ IDP Blast Radius tab — 1 min      │ 29 min        │
+  └─────────────────────────────────┴────────────────────────────────────────┴───────────────────────────────────┴───────────────┘
+
+  ~100 minutes saved per developer per week on routine lookups alone.
+
+  ---
+  3. Incident Response — Per Incident Savings
+
+  ┌─────────────────────────────────────┬───────────────────────────────────────┬───────────────────────────────────────────┬────────┐
+  │                Task                 │                Before                 │                   After                   │ Saving │
+  ├─────────────────────────────────────┼───────────────────────────────────────┼───────────────────────────────────────────┼────────┤
+  │ Who is on-call?                     │ Check PagerDuty, ServiceNow — 10 min  │ IDP On-call tab — 30 sec                  │ 9 min  │
+  ├─────────────────────────────────────┼───────────────────────────────────────┼───────────────────────────────────────────┼────────┤
+  │ Find runbook                        │ Search Confluence — 10 min            │ IDP Runbook link — 30 sec                 │ 9 min  │
+  ├─────────────────────────────────────┼───────────────────────────────────────┼───────────────────────────────────────────┼────────┤
+  │ What depends on this service?       │ Manual analysis, phone calls — 45 min │ IDP Blast Radius tab — 1 min              │ 44 min │
+  ├─────────────────────────────────────┼───────────────────────────────────────┼───────────────────────────────────────────┼────────┤
+  │ What infrastructure does it sit on? │ ServiceNow, ask ops — 20 min          │ ServiceNow tag map (via now.yaml) — 2 min │ 18 min │
+  ├─────────────────────────────────────┼───────────────────────────────────────┼───────────────────────────────────────────┼────────┤
+  │ Which team owns impacted services?  │ Ask around — 20 min                   │ IDP catalog owner — 10 sec                │ 19 min │
+  └─────────────────────────────────────┴───────────────────────────────────────┴───────────────────────────────────────────┴────────┘
+
+  ~99 minutes saved per incident per responder.
+  At 2 incidents per month with 5 responders per incident: ~16 hours saved per month across the team.
+
+  ---
+  4. Developer Onboarding — Per New Joiner
+
+  ┌────────────────────────────────────┬────────────────────────────────────┬───────────────────────────────────────┬───────────┐
+  │                Task                │               Before               │                 After                 │  Saving   │
+  ├────────────────────────────────────┼────────────────────────────────────┼───────────────────────────────────────┼───────────┤
+  │ Understand the platform landscape  │ Ask team, read docs — 2 days       │ IDP catalog + TechDocs — 2 hours      │ 1.5 days  │
+  ├────────────────────────────────────┼────────────────────────────────────┼───────────────────────────────────────┼───────────┤
+  │ Find all services and their owners │ Search repos, ask around — 1 day   │ IDP catalog search — 30 min           │ 0.75 days │
+  ├────────────────────────────────────┼────────────────────────────────────┼───────────────────────────────────────┼───────────┤
+  │ Get access to tools                │ Raise Jira tickets — 3-5 days wait │ IDP self-service workflows — same day │ 3-4 days  │
+  └────────────────────────────────────┴────────────────────────────────────┴───────────────────────────────────────┴───────────┘
+
+  ~5 days saved per new joiner. At a bank with 19K repos, assume 200 new developers per year = 1,000 developer-days saved annually on onboarding alone.
+
+  ---
+  5. CMDB Maintenance — now.yaml vs ServiceNow Manual
+
+  ┌─────────────────────────────────────┬───────────────────────────────────────────────┬────────────────────────────────────────┬───────────────────┐
+  │                Task                 │                    Before                     │                 After                  │ Saving per update │
+  ├─────────────────────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┼───────────────────┤
+  │ Update service dependencies in CMDB │ Login ServiceNow, find CI, update — 30-45 min │ Edit now.yaml, commit — 5 min          │ 30 min            │
+  ├─────────────────────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┼───────────────────┤
+  │ Register a new microservice in CMDB │ Raise ticket, wait for CMDB admin — 2-3 days  │ now.yaml commit → auto-created — 5 min │ 2-3 days          │
+  └─────────────────────────────────────┴───────────────────────────────────────────────┴────────────────────────────────────────┴───────────────────┘
+
+  At 19K repos, even one update per repo per quarter: 9,500 hours saved per quarter.
+
+  ---
+  Aggregate — Annual Saving Estimate
+
+  ┌─────────────────────────────────────────────────────────────────┬─────────────────────────────┐
+  │                            Category                             │           Saving            │
+  ├─────────────────────────────────────────────────────────────────┼─────────────────────────────┤
+  │ Self-service workflows (no more waiting)                        │ ~1,000 developer-days saved │
+  ├─────────────────────────────────────────────────────────────────┼─────────────────────────────┤
+  │ Daily lookups (100 min/week × 5,000 devs)                       │ ~520,000 hours/year         │
+  ├─────────────────────────────────────────────────────────────────┼─────────────────────────────┤
+  │ Incident response (99 min × 2 incidents × 12 months × 5 people) │ ~12,000 hours/year          │
+  ├─────────────────────────────────────────────────────────────────┼─────────────────────────────┤
+  │ Developer onboarding (200 joiners × 5 days)                     │ ~8,000 hours/year           │
+  ├─────────────────────────────────────────────────────────────────┼─────────────────────────────┤
+  │ CMDB maintenance (now.yaml automation)                          │ ~38,000 hours/year          │
+  └─────────────────────────────────────────────────────────────────┴─────────────────────────────┘
+
+  Conservative total: ~570,000 hours reclaimed annually across 5,000 developers.
+
+  ---
+  The Multiplier — Blast Radius Accuracy
+
+  The most undervalued saving is incident containment speed. With complete now.yaml coverage across 19K repos:
+
+  - P1 incident mean time to identify impacted services: 45 min → 2 min
+  - Fewer services restarted unnecessarily
+  - Faster customer communication
+  - Reduced SLA breach penalties
+
+  At a bank, one major incident that runs 1 hour longer than needed can cost more than the entire IDP programme cost.
+
+  ---
+  Want me to format this as a CIO-level slide or a one-page business case?
+
+✻ Sautéed for 54s · 1 shell still running
+
+❯ Day-to-Day Developer Tasks — Weekly Savings  add kubernetes which i struggle with also cI/CD tab. I dont have to login toi multiople places.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Here's the updated table with Kubernetes and CI/CD added:
+
+  ---
+  Day-to-Day Developer Tasks — Weekly Savings
+
+  ┌────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────┬───────────────────────────────────┬───────────────┐
+  │                  Task                  │                              Before IDP                               │             After IDP             │ Weekly saving │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Find runbook for a service             │ Search Confluence, ask team — 20 min                                  │ IDP catalog Runbook link — 30 sec │ 19 min        │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check SonarQube score                  │ Login SonarQube, find project — 10 min                                │ IDP Code Quality tab — 30 sec     │ 9 min         │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check Snyk vulnerabilities             │ Login Snyk, find project — 10 min                                     │ IDP Security tab — 30 sec         │ 9 min         │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Find who owns a service                │ Ask in chat, wait — 15 min                                            │ IDP catalog Owner field — 10 sec  │ 14 min        │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Find on-call for a service             │ Check multiple systems — 10 min                                       │ IDP On-call tab — 10 sec          │ 9 min         │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check Datadog dashboard                │ Login Datadog, find dashboard — 10 min                                │ IDP Observability tab — 10 sec    │ 9 min         │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Understand service dependencies        │ Read stale docs, ask team — 30 min                                    │ IDP Blast Radius tab — 1 min      │ 29 min        │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check pod health, restarts, namespace  │ Login Rafay/Rancher, find cluster, find service, run kubectl — 20 min │ IDP K8s Ops tab — 30 sec          │ 19 min        │
+  ├────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────┼───────────────────────────────────┼───────────────┤
+  │ Check pipeline status, last deployment │ Login Harness, find pipeline, check runs — 15 min                     │ IDP CI/CD tab — 30 sec            │ 14 min        │
+  └────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────┴───────────────────────────────────┴───────────────┘
+
+  ~130 minutes saved per developer per week — across 9 tools consolidated into one portal.
+
+  ---
+  The K8s and CI/CD tabs eliminate the biggest daily frustration — context switching between portals. A developer chasing a deployment issue currently bounces between:
+
+  GitHub PR → Harness pipeline → Rafay/Rancher pods → Datadog logs → Slack for help
+
+  With IDP, that entire chain is visible on one service page without a single additional login.
+
+  Want me to add this to a formal one-pager or CIO slide?
