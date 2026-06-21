@@ -1,0 +1,170 @@
+---
+  What's New + What It Changes
+
+  The biggest thing here: AIDA can generate complete Workflow YAML from a natural language description. You describe what you want, it writes the YAML.
+
+  Practical use for us right now:
+
+  "Generate a Harness IDP Workflow that:
+  - Takes a SYSID and GitHub repo URL as inputs
+  - Calls a Jenkins API to list pipelines for that SYSID
+  - Triggers a pipeline called jenkins_conversion with the selected pipeline ID
+  - Shows the result back to the user"
+
+  AIDA writes the draft 02-convert.yaml. We review and fix. Much faster than writing from scratch.
+
+  Other useful things confirmed:
+  - Workflows can be executed directly from the IDP chat — teams don't need to navigate to the Workflows page to run the migration
+  - Scorecard failures explained in plain English — "Why is my migration check failing for SYSID-06534?" gets a direct answer
+  - TechDocs semantic search needs a feature flag (IDP_TECH_DOCS_SEMANTIC_SEARCH) — worth requesting from Harness Support
+
+  AIDA correction stands: still UI-only, not callable from pipeline steps — the Harness Agents step is still the right approach for programmatic AI inside pipelines.
+
+✻ Baked for 51s
+
+❯ can this help with helping a person discover things on catalog system
+
+⏺ Yes — this is one of the strongest use cases for it. Here's what it enables:
+
+  ---
+  Catalog Discovery via AI Chat
+
+  Finding services they don't know exist
+
+  "Are there any services that handle payment processing?"
+  "What APIs are available for authentication?"
+  "Show me all services owned by team-payments"
+  No need to know the exact service name — semantic search finds it.
+
+  ---
+  Understanding a service they just landed on
+
+  "What does payments-service do?"
+  "Who do I contact if auth-service is down?"
+  "What repo does payments-service deploy from?"
+  "Which Kubernetes cluster is this running on?"
+  Pulls owner, repo, cluster, team — all from catalog metadata in one answer.
+
+  ---
+  Understanding dependencies
+
+  "What services does payments-service depend on?"
+  "Which services call auth-service?"
+  "If fraud-detection-api goes down, what breaks?"
+  Traverses spec.dependsOn and spec.dependencyOf relationships — blast radius in plain English.
+
+  ---
+  Scorecard status
+
+  "Why is payments-service failing its production readiness scorecard?"
+  "What do I need to fix to get auth-service to 100%?"
+  "Which services in my team have failing DORA checks?"
+
+  ---
+  Finding the right workflow for their task
+
+  "I need to create a new GitHub repo — is there a workflow for that?"
+  "How do I onboard a new service to Kubernetes?"
+  "I want to migrate a Jenkins pipeline — where do I start?"
+  AIDA suggests the workflow and can trigger it directly from chat.
+
+  ---
+  Why This Matters at Scale
+
+  With 19K repos and 100K pipelines, no developer can browse the catalog manually. AI search turns the catalog from a database into a conversational interface. The person doesn't need to know how
+   the catalog is structured — they just ask.
+
+  ---
+  One Gap to Flag
+
+  This only works well if catalog entities are populated and accurate — owner, spec.dependsOn, scorecard checks, TechDocs. Garbage in = garbage out. The better your catalog quality, the better
+  the AI answers.
+
+  That's exactly why the now.yaml + scorecard gate initiative matters — it forces catalog quality before production, which then makes the AI search genuinely useful.
+
+  Want to add a "catalog AI discoverability" section to the Jenkins migration factory scorecard? Teams that complete migration + have full catalog data get an AI-searchable service as the reward.
+
+
+===========================
+   What AIDA Reads to Discover Workflows
+
+   1. description — most important field
+
+   metadata:
+     description: >
+       Migrates a Jenkins pipeline to Harness. Detects stack type from hoover.yaml,
+       converts using AI, runs validation, and marks the pipeline as migrated on success.
+       Use this when your team has a Jenkins pipeline that needs to move to Harness CI/CD.
+
+   Write it like you're answering: "When should I use this workflow?"
+   AIDA uses this to match against user queries like "I want to migrate a Jenkins pipeline."
+
+   ---
+   2. name — plain English, not an identifier
+
+   # Bad — hard for AI to match
+   name: harness-idp-jenkins-conv-wf-02
+
+   # Good — AIDA can match "migrate jenkins" or "convert pipeline"
+   name: Migrate Jenkins Pipeline to Harness
+
+   ---
+   3. tags — categorisation signals
+
+   metadata:
+     tags:
+       - migration
+       - jenkins
+       - ci-cd
+       - self-service
+   AIDA uses tags to group and filter workflows in response to category questions like "show me all migration workflows."
+
+   ---
+   4. Parameter descriptions — help AIDA suggest inputs
+
+   parameters:
+     properties:
+       sysId:
+         title: SYSID
+         description: Your application SYSID (e.g. SYSID-06534). Found in Jarvis.
+       pipelineName:
+         title: Jenkins Pipeline Name
+         description: The name of the Jenkins pipeline you want to migrate.
+   When a user asks AIDA to run the workflow, it reads these descriptions to prompt the user for the right inputs.
+
+   ---
+   5. TechDocs (optional — but enables semantic search)
+
+   If you write a docs/index.md for the workflow and link it in catalog-info.yaml, the TechDocs semantic search can answer deep questions:
+   "How does the Jenkins migration workflow handle Groovy shared libraries?"
+   This requires the IDP_TECH_DOCS_SEMANTIC_SEARCH feature flag to be on.
+
+   ---
+   Summary — What to Write, What to Skip
+
+   ┌───────────────────────┬───────────────────────────────────────────────┬────────────────────────────────────────┐
+   │         Field         │                  Write this                   │                  Why                   │
+   ├───────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┤
+   │ name                  │ Plain English, action-verb first              │ AIDA matches against it                │
+   ├───────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┤
+   │ description           │ "Use this when…" + what it does               │ Primary discovery signal               │
+   ├───────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┤
+   │ tags                  │ 3-5 relevant keywords                         │ Grouping + filtering                   │
+   ├───────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┤
+   │ Parameter description │ What the input is + where to find it          │ AIDA suggests inputs to user           │
+   ├───────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┤
+   │ TechDocs              │ How-to guide                                  │ Semantic search (needs FF)             │
+   ├───────────────────────┼───────────────────────────────────────────────┼────────────────────────────────────────┤
+   │ Step name             │ Clear action: "Fetch Jenkinsfile from GitHub" │ Shown in execution view + AI summaries │
+   └───────────────────────┴───────────────────────────────────────────────┴────────────────────────────────────────┘
+
+   ---
+   You Don't Need To
+
+   - Repeat information that's in the catalog entity (AIDA reads both)
+   - Write a separate AI config or prompt file
+   - Register anything special — AIDA reads all registered workflows automatically
+
+   The rule: treat description like documentation for a colleague who has never seen the workflow. If they could find the right workflow from the description alone, AIDA can too.
+
+ ✻ Cooked for 29s

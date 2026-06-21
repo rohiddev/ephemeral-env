@@ -1,0 +1,246 @@
+ADK (Agent Development Kit) — Memory Notes
+🔷 Core Idea
+
+Google ADK = open-source framework to build AI agents & multi-agent systems
+Moves from:
+
+❌ pipelines → ✅ intelligent agent workflows
+
+
+Think:
+
+Microservices → Agents
+Pipelines → Agent orchestration
+
+
+
+
+Mental shortcut: if microservices were the unit of compute in your old architecture, agents are the unit of compute in this one. If pipelines wired microservices together, orchestration wires agents together.
+
+
+🔷 Key Characteristics
+
+✅ Multi-modal, multi-agent system support (complex but powerful)
+✅ Model-agnostic + deployment-agnostic
+
+Runs locally or in the cloud
+Integrates with other agents (interoperability)
+
+
+✅ Production-ready agent framework
+✅ Built for enterprise workflows, not just prompts
+
+
+🔷 Real-Time & Multimodal Capabilities
+
+Native bi-directional audio + video streaming
+Agents can:
+
+👂 Hear
+👀 See
+🧠 Reason
+⚡ Respond in real-time
+
+
+No need for additional libraries → this is a native capability
+
+Goal: truly interactive, real-time agent experience.
+
+🔷 Developer Experience (DX Focus)
+
+✅ Minimal setup → no complex dependency management
+✅ Build locally with minimal infra
+✅ Test & debug locally
+✅ SDK includes:
+
+Playground (built-in experimentation)
+Web UI for testing & visualization
+
+
+✅ Event tab → shows full agent workflow
+
+
+🔷 Core Concepts
+1. Agent (the "brain")
+
+LLM-powered (Gemini or others)
+Has:
+
+name
+instruction (its goal)
+tools
+
+
+Executes reasoning + actions
+
+pythonfrom google.adk import Agent
+from google.adk.tools import google_search
+
+agent = Agent(
+    name="researcher",
+    model="gemini-flash-latest",
+    instruction="You help users research topics thoroughly.",
+    tools=[google_search],
+)
+2. Tools (Capabilities)
+
+APIs, functions, systems
+Examples:
+
+Google Search
+Kubernetes API
+Internal platform APIs
+
+
+
+
+Tools = how agents take action.
+
+3. Memory & State
+
+In-memory sessions
+Artifact storage
+Enables continuity + context across interactions
+
+4. Workflows (Orchestration)
+Agents can run:
+
+Sequential
+Parallel
+Loop
+
+Workflow types:
+
+LLM Agent (orchestrator)
+Workflow Agent (structured execution)
+Custom Agent
+
+5. Execution / Runtime
+Agents can run in 4 modes:
+
+CLI (adk run)
+Web UI
+API Server
+Python execution
+
+6. Events (Execution Model)
+
+Any action involving an agent = an event
+Event stream shows:
+
+execution path
+tool calls
+workflow steps
+
+
+
+
+🔷 Multi-Agent Architecture
+Structure
+
+Root Agent (orchestrator)
+Sub-agents (specialized)
+
+Example:
+
+Inventory Agent
+Logistics Agent
+Finance Agent
+
+
+Root agent coordinates + delegates.
+
+State Passing
+
+output_key → pass data between agents
+
+Example (tool-based agent)
+pythonfrom google.adk.agents.llm_agent import Agent
+
+def get_current_time(city: str) -> dict:
+    return {"status": "success", "city": city, "time": "10:30 AM"}
+
+root_agent = Agent(
+    model='gemini-flash-latest',
+    name='root_agent',
+    instruction="Tell time using tool",
+    tools=[get_current_time],
+)
+
+🔷 Orchestration Model
+
+LLM Agent = orchestrator
+Sub-agents = execution units
+
+
+Similar to:
+
+Airflow (but intelligent)
+Harness pipelines (but dynamic)
+
+
+
+🔷 Advanced Concepts
+✅ A2A (Agent-to-Agent)
+
+Agents communicate across:
+
+systems
+languages
+networks
+
+
+Example: Inventory agent → triggers finance agent
+
+✅ MCP / Tool Proxy Layer
+
+Acts as connector to multiple tools
+Simplifies integrations
+
+✅ Graph-Based Agents (ADK 2.0)
+
+Define workflows as graphs:
+
+START → classifier → router → agent
+
+
+Supports:
+
+dynamic routing
+conditional execution
+
+
+
+✅ Human-in-the-Loop
+
+Agents can pause for approval
+Example: if transaction > $100 → require human
+
+
+🔷 Key Design Philosophy
+
+Modular → break into smaller agents
+Composable → reuse agents + workflows
+Flexible → deterministic + dynamic workflows
+
+
+🔷 Simple Mental Model
+ConceptEquivalentAgentAI microservice (brain + decision)ToolAPI / backend capabilityWorkflowPipeline / orchestrationOrchestratorController agentA2AService-to-service communication
+
+🔷 Enterprise Use Cases (Relevant to You)
+
+Developer portal automation (IDP workflows)
+Kubernetes onboarding
+Repo + AD group creation
+Service mapping / CMDB
+Infra provisioning agents
+
+Mapping to your platform
+Your SystemADKIDP workflowsAgent workflowsJenkins / HarnessAgent orchestrationAPIsToolsPortalAgent UI layer
+
+🔷 Key Takeaways (Exec-Ready)
+
+"ADK turns workflows into intelligent agents"
+"Agents replace pipelines with decision-making systems"
+"Multi-agent orchestration = next-gen platform architecture"
+"Platform APIs become tools for AI agents"
