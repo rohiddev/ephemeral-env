@@ -1,0 +1,377 @@
+Security & Identity
+
+  ---
+  1. What is the difference between IAM roles in GCP and AWS?
+
+  In AWS, you attach policies (lists of permissions) to users, groups, or roles. In GCP, you assign roles (pre-packaged sets of permissions) to members on specific resources.
+
+  The GCP model: WHO + WHAT ROLE + ON WHICH RESOURCE.
+
+  Example: "Give Sarah the role roles/storage.objectViewer on bucket my-docs-bucket." Sarah can read that bucket only — nothing else.
+
+  This resource-level binding is more precise than AWS. In AWS you often grant access to a whole service. In GCP you can grant access to a single bucket, a single Cloud Run service, or a single
+  Pub/Sub topic.
+
+  ---
+  2. What is Workload Identity Federation and why is it better than service account keys?
+
+  A service account key is a JSON file with long-lived credentials. If it leaks — in code, a log, a screenshot — an attacker has permanent access until you manually rotate it. Companies have had
+  major breaches from leaked service account keys.
+
+  Workload Identity Federation eliminates keys entirely. Instead: your workload (a GitHub Actions job, a Kubernetes pod, an AWS Lambda) proves its identity using its own platform's credentials.
+  GCP trusts that proof and issues a short-lived token automatically.
+
+  No file to leak. Credentials expire in an hour. No rotation needed.
+
+  Rule: never create service account keys for production workloads. If a system requires a key file, that's a design problem to fix — not a reason to create keys.
+
+  ---
+  3. What is the principle of least privilege in GCP and how do you enforce it?
+
+  Every service account, user, and group gets only the permissions they need for their specific job — nothing more.
+
+  In practice:
+  - Never use roles/owner or roles/editor on production resources
+  - Use predefined roles (roles/storage.objectViewer) over basic roles (roles/viewer)
+  - Create custom roles when predefined roles give too much
+  - Grant at the most specific resource level possible — not at project or organization level unless required
+  - Review permissions quarterly using IAM Recommender — GCP automatically tells you which permissions are unused
+
+  The test: if a service account is compromised, what's the worst an attacker can do? That answer should be "very little."
+
+  ---
+  4. What is VPC Service Controls and when do you need it?
+
+  VPC Service Controls draws a security perimeter around your GCP services. Even if an attacker steals valid credentials, they cannot use those credentials from outside the perimeter.
+
+  Without it: stolen credentials work from anywhere in the world.
+  With it: stolen credentials only work from inside your defined perimeter (your VPC, your corporate IP range, your specific GCP projects).
+
+  You also control data movement: data in a project inside the perimeter cannot be copied to a project outside the perimeter — even by accident. Critical for preventing data exfiltration.
+
+  When you need it: any workload handling regulated data (PCI, HIPAA, financial data). Any system where credential theft is a realistic threat. Required by most enterprise security teams before
+  approving AI/ML workloads on Vertex AI.
+
+  ---
+  5. What is CMEK and when does a company need it?
+
+  CMEK stands for Customer-Managed Encryption Keys. By default, GCP encrypts all data at rest using keys that Google manages. With CMEK, you provide your own key stored in Cloud KMS.
+
+  The difference: if Google is compromised, your data is still protected because they don't hold your key. You also control access — revoke the key and the data becomes unreadable to everyone,
+  including Google.
+
+  When you need it:
+  - Regulated industries (healthcare, finance, government)
+  - Contracts that require "you never have access to our keys"
+  - Compliance frameworks that require key custody to be separate from data custody
+
+  The tradeoff: if you lose your key, you lose your data permanently. Key management becomes a critical operational responsibility.
+
+  ---
+  6. How do you handle secrets in GCP?
+
+  Use Secret Manager — GCP's managed secrets store. Store database passwords, API keys, and certificates there. Access them in code by name at runtime.
+
+  Never store secrets in:
+  - Environment variables (appear in logs, visible to anyone with IAM access to the service)
+  - Source code or config files (end up in git history forever)
+  - Container images (extractable by anyone who pulls the image)
+
+  Secret Manager gives you: encryption at rest, version history, automatic rotation hooks, audit logs of every access (who read what secret, when), and fine-grained IAM control per secret.
+
+  In Cloud Run or GKE, mount secrets as environment variables or volume mounts — GCP injects them at runtime, your code never calls Secret Manager directly.
+
+  ---
+  ---
+  Networking
+
+  ---
+  7. What is a VPC in GCP and how is it different from AWS?
+
+  In AWS, a VPC is regional — you create separate VPCs per region and connect them with peering.
+
+  In GCP, a VPC is global — one VPC spans all regions automatically. You create subnets per region, but they all belong to the same VPC. A VM in us-central1 can talk to a VM in europe-west1 over
+  private IPs without any extra configuration.
+
+  This makes multi-region architectures simpler. One set of firewall rules, one VPC, resources worldwide. The tradeoff: mistakes in firewall rules affect all regions at once — be careful with
+  broad rules.
+
+  ---
+  8. What is Private Google Access and why does every production subnet need it?
+
+  Private Google Access lets VMs without external IP addresses call Google APIs (Cloud Storage, BigQuery, Pub/Sub, etc.) over private networking — without going through the internet.
+
+  Without it: a VM in a private subnet that needs to write to Cloud Storage must either have a public IP (bad for security) or route through a NAT gateway (extra cost, extra latency).
+
+  With it: the VM calls storage.googleapis.com and the traffic stays entirely inside Google's network. Faster, cheaper, more secure.
+
+  How to enable: one checkbox per subnet in the VPC settings. There is no reason not to enable it on every private subnet.
+
+  ---
+  9. What is Cloud Armor and what does it protect against?
+
+  Cloud Armor is GCP's Web Application Firewall (WAF) and DDoS protection service. It sits in front of your Cloud Load Balancer and filters traffic before it reaches your application.
+
+  What it protects against:
+  - DDoS attacks — absorbs volumetric attacks before they reach your servers (GCP's global network absorbs the traffic)
+  - OWASP Top 10 — SQL injection, XSS, and other common web attacks via pre-built rule sets
+  - Geographic restrictions — block traffic from specific countries
+  - Rate limiting — block IPs that make too many requests per second
+  - Bot protection — challenge suspicious automated traffic with CAPTCHA
+
+  When to use it: any public-facing web application or API. It's the first line of defence — all traffic passes through it before your application sees it.
+
+  ---
+  10. What is Cloud NAT and what problem does it solve?
+
+  VMs in private subnets have no external IP address — good for security, but they can't reach the internet for software updates, external API calls, or downloading packages.
+
+  Cloud NAT (Network Address Translation) lets private VMs make outbound internet connections without exposing them to inbound connections. Like VPC NAT Gateway in AWS — private VMs go out
+  through Cloud NAT, the internet can never initiate a connection back in.
+
+  GCP-specific advantage: Cloud NAT is a fully managed, software-defined service. There's no NAT instance to manage, patch, or scale. It scales automatically based on traffic. One configuration
+  per region covers all subnets you specify.
+
+  ---
+  ---
+  Compute
+
+  ---
+  11. When do you choose Cloud Run vs GKE vs Compute Engine?
+
+  Cloud Run — you give GCP a container, GCP runs everything. Scales to zero (pay nothing when idle), scales up in seconds when traffic arrives. No clusters, no nodes, no Kubernetes to manage.
+  Best for: APIs, event-driven services, microservices with variable traffic.
+
+  GKE (Google Kubernetes Engine) — managed Kubernetes. You manage pods and deployments; GCP manages the control plane and nodes. Best for: complex microservice systems, workloads that need
+  fine-grained resource control, teams already using Kubernetes.
+
+  Compute Engine — virtual machines. You manage everything: OS, patching, scaling. Best for: lift-and-shift of existing applications, workloads that need specific OS configurations, legacy
+  software that can't be containerized.
+
+  Rule of thumb: start with Cloud Run. Move to GKE when Cloud Run's constraints (request timeout, stateless requirement) don't fit. Use Compute Engine only when you have a specific reason.
+
+  ---
+  12. What is Cloud Run's scale-to-zero and why does it matter for cost?
+
+  When no requests are coming in, Cloud Run reduces your instances to zero — no containers running, no cost. The moment a request arrives, GCP starts a container in milliseconds.
+
+  For a service that handles 100 requests during business hours and nothing overnight, you pay for 8 hours of compute instead of 24. For dev and staging environments that sit idle most of the
+  time, this can cut compute costs by 80%.
+
+  The tradeoff: the first request after a period of inactivity experiences a "cold start" — a delay of a few hundred milliseconds while the container initializes. Mitigate with minimum instances
+  (keep one instance warm at all times) for latency-sensitive services.
+
+  ---
+  13. What are Preemptible VMs and Spot VMs and when should you use them?
+
+  Both are Compute Engine VMs that use GCP's spare capacity at a significant discount (60-90% cheaper than standard VMs).
+
+  The catch: GCP can terminate them with 30 seconds notice when it needs that capacity back.
+
+  Preemptible — older, always terminated after 24 hours maximum, 80% discount.
+  Spot VMs — newer, no 24-hour limit, similar discount, can run indefinitely if GCP has spare capacity.
+
+  Use them for: batch processing, data pipelines, ML training jobs, video transcoding — anything that can be interrupted, checkpointed, and resumed. Never use them for: databases, stateful
+  services, anything that cannot tolerate sudden termination.
+
+  In GKE, use Spot node pools for non-critical workloads and regular node pools for production services. GKE automatically reschedules pods when a Spot node is terminated.
+
+  ---
+  14. What is GKE Autopilot and how is it different from Standard GKE?
+
+  Standard GKE — you manage node pools. You decide how many VMs, what size, when to scale. GCP manages the Kubernetes control plane. You pay for the nodes whether or not pods are using them.
+
+  GKE Autopilot — you deploy pods, GCP manages everything else. No nodes to configure. GCP automatically provisions exactly the right resources for your pods and charges you per pod, not per
+  node. Nodes you never see or manage.
+
+  Benefits of Autopilot: no wasted capacity (you pay for what pods use), automatic security hardening (nodes are locked down by GCP), no node management toil.
+
+  When to choose Standard: workloads that need specific node configurations, GPUs, custom OS images, or fine-grained node-level control. For most new workloads — choose Autopilot.
+
+  ---
+  ---
+  Storage & Database
+
+  ---
+  15. What is the difference between Cloud Storage classes?
+
+  Cloud Storage (GCS) has four storage classes based on how often you access data:
+
+  - Standard — accessed frequently. Highest cost, no retrieval fee. Use for active data, website assets, ML datasets being trained on.
+  - Nearline — accessed less than once a month. Lower storage cost, small retrieval fee. Use for monthly reports, backups you might need.
+  - Coldline — accessed less than once a quarter. Lower still, higher retrieval fee. Use for quarterly audit data.
+  - Archive — accessed less than once a year. Cheapest storage, highest retrieval cost, 12-hour SLA. Use for compliance archives, disaster recovery data.
+
+  Automate transitions with Object Lifecycle Management rules: move to Nearline after 30 days, Coldline after 90 days, Archive after 365 days, delete after 7 years. Set it once per bucket, never
+  touch it again.
+
+  ---
+  16. When do you choose Cloud SQL vs Spanner vs Firestore vs Bigtable?
+
+  Cloud SQL — managed MySQL, PostgreSQL, SQL Server. Standard relational database. Best for: existing applications using SQL, moderate scale (up to a few TB), complex queries with joins. Single
+  region or cross-region read replicas.
+
+  Spanner — Google's globally distributed relational database. SQL + horizontal scaling + global consistency + 99.999% SLA. Best for: financial systems, global applications that need relational
+  data at massive scale. Expensive — use only when you need it.
+
+  Firestore — NoSQL document database. Scales automatically, real-time sync for mobile/web clients. Best for: user profiles, app data, real-time features, mobile backends. No SQL, no joins.
+
+  Bigtable — wide-column NoSQL, petabyte scale, millisecond latency. Best for: time-series data, IoT sensor data, AdTech, anything with billions of rows and simple access patterns.
+
+  Quick decision: relational + moderate scale = Cloud SQL. Relational + global + massive scale = Spanner. Hierarchical documents + mobile = Firestore. Time-series + petabytes = Bigtable.
+
+  ---
+  17. What is BigQuery and what makes it different from a traditional database?
+
+  BigQuery is GCP's data warehouse — built for analytics, not transactions. You run SQL queries against terabytes or petabytes of data in seconds.
+
+  What makes it different:
+  - Serverless — no clusters to manage, no capacity to provision. Run a query, get results, pay per TB scanned.
+  - Columnar storage — data is stored by column, not by row. A query on one column of a 100-column table reads only that column — 100x less data read.
+  - Separates storage from compute — data sits in GCS (cheap), compute spins up only when you query (fast). You don't pay for idle compute.
+
+  What it's NOT for: transactional workloads (INSERT/UPDATE every second), low-latency lookups (< 100ms response), replacing Cloud SQL. It's an analytics engine — for answering "how many users
+  did X over the last 6 months."
+
+  ---
+  ---
+  Observability
+
+  ---
+  18. What is the GCP observability stack and how do the pieces fit together?
+
+  Three tools, one picture:
+
+  Cloud Logging — the diary. Every log line from every service (Cloud Run, GKE, Compute Engine, Cloud Functions) automatically flows here. Search, filter, export, and alert on logs. Think of it
+  as the "what happened" record.
+
+  Cloud Monitoring — the dashboard. Metrics (CPU, request count, error rate, latency) visualized over time. Create dashboards and alerting policies. Think of it as the "how is it performing"
+  view.
+
+  Cloud Trace — the timeline. Shows a single request's journey through all your services — API gateway, backend, database — with timing for each step. Think of it as the "where is it slow"
+  investigation tool.
+
+  They connect: a log entry links to a trace. A monitoring alert links to the logs that triggered it. You can jump from "alert fired" → "relevant logs" → "trace of the slow request" without
+  leaving the GCP console.
+
+  ---
+  19. What is Error Reporting and how is it different from just searching logs?
+
+  Cloud Error Reporting automatically groups similar exceptions together, counts their frequency, tracks when they first appeared, and alerts you on new error types.
+
+  Without it: you have 10,000 log lines and have to search for severity=ERROR, manually figure out which errors are the same, and guess which ones matter most.
+
+  With it: you see a ranked list — "this NullPointerException has occurred 2,847 times today, first seen 3 hours ago, affecting 143 users." Click it to see a stack trace, linked logs, and the
+  code line that caused it.
+
+  It's not a replacement for logging — it's a layer on top that makes errors actionable instead of buried.
+
+  ---
+  20. What is an uptime check and SLO in Cloud Monitoring?
+
+  Uptime check — Cloud Monitoring pings your service from multiple locations around the world every 1-5 minutes. If it doesn't respond correctly, you get an alert. This catches outages even if
+  your own monitoring infrastructure is down — the check comes from outside your system.
+
+  SLO (Service Level Objective) — a target you set for reliability. "99.9% of requests should succeed" or "99th percentile latency should be under 500ms." Cloud Monitoring tracks your SLO in real
+   time and shows your error budget — how much more failure you can afford before breaching the SLO.
+
+  When your error budget is burning fast (many failures, SLO at risk), you get an alert before you actually breach. This gives you time to fix the problem proactively, not after customers are
+  already affected.
+
+  ---
+  ---
+  Infrastructure as Code & CI/CD
+
+  ---
+  21. What is Cloud Build and how does it fit into a GCP CI/CD pipeline?
+
+  Cloud Build is GCP's managed CI/CD service. You define a pipeline as a YAML file (cloudbuild.yaml). Each step is a container that runs a command — build, test, scan, push, deploy.
+
+  It integrates natively with:
+  - Artifact Registry — stores built container images
+  - Cloud Deploy — manages progressive rollouts to GKE or Cloud Run
+  - Secret Manager — injects secrets into build steps without exposing them in logs
+  - Cloud Source Repositories / GitHub / GitLab — triggers builds on push or pull request
+
+  You pay per build minute — no always-on agents to manage. For most teams this is cheaper and simpler than running Jenkins.
+
+  ---
+  22. What is Cloud Deploy and how is it different from just running gcloud deploy?
+
+  gcloud deploy is a one-step command — it deploys and you hope it works.
+
+  Cloud Deploy is a managed delivery pipeline that enforces progression through environments. You define: deploy to dev → wait for approval → deploy to staging → run tests → wait for approval →
+  deploy to production.
+
+  Key features:
+  - Approval gates — a human must approve before moving to the next environment
+  - Rollback in one click — if production breaks, roll back to the previous release instantly
+  - Audit trail — who approved what, when, and what was deployed
+  - Canary and blue/green deployments — route 5% of traffic to new version, verify it's healthy, then shift 100%
+
+  The difference: gcloud deploy is a command. Cloud Deploy is a governance framework.
+
+  ---
+  23. What is Artifact Registry and why is it better than Docker Hub for enterprise?
+
+  Artifact Registry is GCP's private repository for container images, Maven packages, npm packages, and Python packages.
+
+  Why not Docker Hub:
+  - Private by default — your proprietary code stays in your GCP project, not on a public registry
+  - IAM integration — access controlled by the same IAM roles as everything else in GCP
+  - Vulnerability scanning — every image scanned automatically on push, results visible before deployment
+  - VPC-local — pulling images in GKE or Cloud Run never leaves Google's network (no egress cost, faster pulls)
+  - Regional — store images in the same region as your clusters for the lowest latency pulls
+
+  In a regulated environment, using a public registry for production images is a compliance risk — you can't control what's in Docker Hub or audit who has pulled your images.
+
+  ---
+  ---
+  Cost Optimization
+
+  ---
+  24. What are Committed Use Discounts and when should you use them?
+
+  Committed Use Discounts (CUDs) give you 20-55% off Compute Engine and Cloud SQL in exchange for committing to use a certain amount of resource for 1 or 3 years.
+
+  Resource-based CUDs — commit to a specific number of vCPUs and GB of RAM in a region. Good for stable, predictable workloads.
+
+  Spend-based CUDs — commit to a dollar amount of spend per hour. More flexible — applies across instance types.
+
+  When to use: any workload running 24/7 in production. A database that's been running for 6 months at the same size will likely run for another year — commit and save 30-55%.
+
+  When not to use: dev/test environments (use Preemptible/Spot instead), highly variable workloads, anything you might sunset within a year.
+
+  ---
+  25. What is the biggest cause of unexpected GCP bills?
+
+  Data egress — charges for data leaving GCP.
+
+  Most people don't realize:
+  - Data leaving GCP to the internet is charged per GB
+  - Data moving between regions is charged
+  - Data going to a different GCP project can be charged
+
+  This surprises teams when: a BigQuery export sends 10TB to an analytics tool, a GCS bucket in us-central1 serves assets to users in Europe, or cross-region replication runs on a large database.
+
+  Mitigations:
+  - Use Cloud CDN for serving assets to users worldwide — CDN caches at the edge, reducing origin transfers
+  - Keep services that talk to each other in the same region
+  - Use Private Google Access and VPC Service Controls to keep data inside GCP's network
+  - Set up Budget Alerts to get notified before a bill is a surprise
+
+  ---
+  26. What is GCP's Well-Architected guidance equivalent?
+
+  GCP uses the Google Cloud Architecture Framework, organized into six pillars:
+
+  1. Operational Excellence — automate deployments, use IaC, run post-mortems
+  2. Security, Privacy, and Compliance — least privilege, CMEK, VPC Service Controls, audit logging
+  3. Reliability — multi-region, health checks, circuit breakers, load testing
+  4. Cost Optimization — right-size, Committed Use Discounts, budget alerts, unused resource cleanup
+  5. Performance Optimization — caching (Memorystore), CDN, right database for the access pattern
+  6. System Design — loose coupling, managed services over self-managed, design for failure
+
+  GCP also provides the Architecture Center — a library of reference architectures for common patterns (event-driven, multi-tier web, ML pipelines). Use these before designing from scratch — the
+  patterns encode years of production lessons.
+

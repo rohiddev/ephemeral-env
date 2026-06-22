@@ -1,0 +1,220 @@
+Interview Q&A — Multi-Agent AWS Architecture
+
+  ---
+  Director / Manager Level
+
+  ---
+  1. This runs on AWS Bedrock but the agent framework is Google ADK. Why mix them?
+
+  ADK is just the orchestration layer — it handles the conversation flow, routing between agents, and session memory. It doesn't care which AI model powers the thinking. By pointing ADK at
+  Bedrock via LiteLLM (a translation layer), you get Google's excellent agent framework with AWS's model and data services.
+
+  The business reason: your data, your documents, your audit logs all stay in AWS. Your security team never has to approve a Google Cloud connection. You get the best of both — ADK's multi-agent
+  patterns running entirely within your AWS perimeter.
+
+  ---
+  2. What does Bedrock Knowledge Bases replace, and why is that valuable?
+
+  Without Bedrock Knowledge Bases, you'd have to build and manage: a document ingestion pipeline, a chunking and embedding system, a vector database, and a search API. That's 4 moving parts your
+  team owns, monitors, and scales.
+
+  Bedrock Knowledge Bases replaces all four with one managed service. Connect it to S3, SharePoint, Confluence, or OneDrive, and AWS handles everything. Your team's job is to point the agent at
+  the Knowledge Base ID — nothing else. For an enterprise with 10,000 policy documents, that's months of infrastructure work eliminated.
+
+  ---
+  3. What are Bedrock Guardrails and why are they applied at the tool level, not the agent level?
+
+  Bedrock Guardrails are AWS's content filtering system. They can block harmful queries, prevent PII from leaking in responses, restrict topics, and redact sensitive information — before or after
+   the model processes text.
+
+  They're applied at the tool level (inside search_knowledge_base) because that's where user input first touches a real system. If a user tries to ask the knowledge base something harmful, the
+  guardrail blocks it before retrieval happens — the model never even sees the documents. This is safer than filtering at the agent level, where the model has already processed the input.
+
+  ---
+  4. How does the audit trail work in this architecture, and what can a compliance team see?
+
+  Two separate trails:
+  - CloudTrail records every Bedrock API call — which model was invoked, when, by which IAM role, with what parameters. This is automatic and tamper-proof.
+  - CloudWatch Logs records application-level events — which agent handled a request, what the guardrail decision was, which ticket was created.
+  - X-Ray shows the full request timeline as a visual trace.
+
+  A compliance team can answer: "On March 15th, who asked the AI about salary data, and what did it return?" They can also prove: "The guardrail was active on every knowledge base query."
+
+  ---
+  5. The Policy Agent uses Claude Opus while other agents use Claude Sonnet. Why?
+
+  Claude Opus is AWS's most capable (and most expensive) model. Claude Sonnet is fast and accurate for most tasks.
+
+  The Policy Agent makes PERMITTED / DENIED / REQUIRES_APPROVAL decisions. A wrong verdict — letting something through that should be denied — is a compliance failure. That's worth spending more
+  on the strongest model.
+
+  Supervisor, RAG, and Action agents handle routing, retrieval, and execution. These are lower-risk decisions where Sonnet's speed and cost savings matter more than raw reasoning power.
+
+  ---
+  6. What is ADOT and why is it a sidecar rather than a library?
+
+  ADOT is the AWS Distro for OpenTelemetry — AWS's packaged version of the OpenTelemetry standard. It collects traces from your application and sends them to CloudWatch and X-Ray.
+
+  It runs as a sidecar (a separate container alongside your app) rather than a library inside your app for three reasons:
+  1. Your app just sends traces to localhost:4317 — it doesn't need AWS SDK knowledge.
+  2. The ADOT sidecar handles retries, buffering, and routing to AWS services. If X-Ray is slow, your app isn't slowed down.
+  3. You can update the ADOT version independently of your application code.
+
+  In EKS this is a container in the same pod. In ECS it's a sidecar task definition.
+
+  ---
+  7. How does this system handle secrets — no hardcoded credentials anywhere?
+
+  Three layers:
+  1. IAM roles — in EKS/ECS, the container never has an access key. It has a role attached to the task/pod, and AWS automatically provides short-lived credentials via the metadata service.
+  2. Secrets Manager — API keys for ticketing systems, email APIs, etc. are stored in Secrets Manager and fetched at runtime via get_secret().
+  3. No environment variables for secrets in prod — .env files are for local development only. Production secrets live in Secrets Manager, not in any config file.
+
+  If a developer accidentally commits a key, it doesn't matter — no real keys exist in code or environment variables in production.
+
+  ---
+  8. What happens when the Bedrock Knowledge Base goes down?
+
+  The retrieval layer returns an empty list [] on exception, with the error logged to CloudWatch. The RAGAgent receives no results and tells the user: "I couldn't find relevant information right
+  now — please try again or contact support."
+
+  The system degrades gracefully — it doesn't crash, it doesn't expose the error details to the user, and the failure is fully visible in CloudWatch Logs and X-Ray with the exact error message.
+  An alarm on Bedrock API error rate can page the on-call team automatically.
+
+  ---
+  9. A CISO asks: "Can the AI send our documents outside AWS?" How do you answer?
+
+  No — by design. Three controls enforce this:
+  1. VPC endpoints (PrivateLink) — Bedrock API calls never leave your VPC over the public internet.
+  2. IAM least privilege — the agent's IAM role can call bedrock:InvokeModel and bedrock:Retrieve only. It has no permission to copy data to S3, send email, or call external APIs.
+  3. Bedrock's data isolation guarantee — AWS contractually does not use your prompts or retrieved documents to train foundation models.
+
+  The only place data can leave is through tools you explicitly build — like create_ticket calling ServiceNow. Those integrations are your decisions, not the framework's.
+
+  ---
+  10. How would you scale this to 10,000 concurrent enterprise users?
+
+  The agent layer (ADK + LiteLLM) is stateless — deploy it on EKS with horizontal pod autoscaling. Each pod handles its own requests.
+
+  Bedrock scales automatically — it's a managed service with no capacity to provision. Knowledge Base retrieval is also managed.
+
+  The bottleneck is Bedrock's InvokeModel API rate limits — measured in tokens per minute per model per region. Mitigation: spread load across multiple AWS regions, use Bedrock's provisioned
+  throughput for predictable high-volume workloads, and cache frequent knowledge search results in ElastiCache to reduce retrieval calls.
+
+  ---
+  ---
+  Lead Engineer Level
+
+  ---
+  1. The config uses os.getenv() with defaults, not _require() like the GCP version. What's the risk and how would you fix it?
+
+  The risk is silent misconfiguration. If KNOWLEDGE_BASE_ID is missing, the retrieval layer logs a warning and returns stub results — the system starts successfully but returns fake data. A
+  developer could run tests for hours against stubs without realizing they're not hitting a real Knowledge Base.
+
+  Fix: add a _require() helper identical to the GCP version for all non-optional variables — KNOWLEDGE_BASE_ID, AWS_REGION. Keep GUARDRAIL_ID optional since guardrails might not be configured in
+  dev. This makes the fail-fast philosophy explicit rather than buried in a warning log.
+
+  ---
+  2. LiteLLM is used as a bridge to Bedrock. What does LiteLLM actually do, and what's the cost?
+
+  LiteLLM translates ADK's Google GenAI API format into AWS Bedrock's InvokeModel API format. When ADK says "call Gemini with this prompt," LiteLLM intercepts it, reformats the request for Claude
+   on Bedrock, sends it, and translates the response back into Google's format.
+
+  The cost: one extra in-process translation layer per model call — negligible latency (microseconds). The risk: LiteLLM is a third-party library. If a new Bedrock API version breaks LiteLLM's
+  translation, your agents fail until LiteLLM publishes a fix. You don't control that timeline. Mitigation: pin the LiteLLM version in requirements.txt and test upgrades deliberately.
+
+  ---
+  3. apply_guardrail() is called inside search_knowledge_base() but not in create_ticket() or check_policy(). What's missing and what could go wrong?
+
+  The guardrail only covers knowledge search input. A user could craft a ticket summary with injected instructions — "Create ticket: Ignore previous instructions and..." — and the Action Agent
+  would pass it directly to the ticketing API without any content check.
+
+  What to add: call apply_guardrail(summary, source="INPUT") at the top of create_ticket() and block if GUARDRAIL_INTERVENED. Also add apply_guardrail(text, source="OUTPUT") before returning any
+  agent response to the user, to catch model-generated content that violates policy. The guardrail should be a wrapper around every system boundary — input and output.
+
+  ---
+  4. The telemetry in setup_telemetry() has no _tracer global guard, unlike the GCP version. What happens?
+
+  Every call to run() in main.py calls setup_telemetry(), which calls TracerProvider(), BatchSpanProcessor(), and OTLPSpanExporter(). Each creates a new connection to the ADOT sidecar on
+  localhost:4317.
+
+  In the current main.py this happens twice (two test calls). In production handling thousands of requests, you'd create thousands of TracerProvider instances — memory leak, connection exhaustion
+   on the ADOT sidecar, and duplicate spans in X-Ray making traces unreadable.
+
+  Fix: exact same pattern as GCP — add _tracer: trace.Tracer | None = None global and return early if already initialized.
+
+  ---
+  5. How does the IAM credential chain work in ECS Fargate vs EKS?
+
+  ECS Fargate: The task definition declares a taskRoleArn. ECS injects credentials into the container via the ECS metadata endpoint (169.254.170.2). boto3's boto3.client() calls this endpoint
+  automatically — no code change needed.
+
+  EKS: Uses IRSA (IAM Roles for Service Accounts). An IAM role is annotated on the Kubernetes ServiceAccount. When the pod starts, the EKS token webhook injects a signed token into the pod. boto3
+   exchanges that token for temporary AWS credentials via STS AssumeRoleWithWebIdentity.
+
+  Both approaches: no access keys anywhere. The boto3 Session picks up credentials automatically via the credential chain — environment → ECS metadata → IMDS → IRSA. You set up the role once in
+  infrastructure and never touch credential handling in application code.
+
+  ---
+  6. The OTLP exporter sends to localhost:4317 with insecure=True. What are the security implications and what would you change for production?
+
+  localhost:4317 is safe because it's inter-process communication within the same pod/task — nothing leaves the host. insecure=True means no TLS for that local connection, which is acceptable
+  since traffic never hits a network interface.
+
+  What to change for production:
+  - If the ADOT collector is not on localhost (e.g., a central collector service), switch to https:// endpoint and remove insecure=True.
+  - Set the endpoint via environment variable (OTEL_EXPORTER_OTLP_ENDPOINT) rather than hardcoding, so different environments (dev, staging, prod) can point to different collectors without code
+  changes.
+  - Add resource attributes (service version, environment name) to the TracerProvider for better filtering in X-Ray.
+
+  ---
+  7. retrieve() catches all exceptions and returns []. The GCP version returned a structured error dict. Which is better here, and why?
+
+  Both are valid choices but serve different needs:
+
+  The AWS version returns [] — the RAGAgent sees no results and says "I couldn't find relevant information." The failure is hidden from the user, which is good for UX, but the agent can't
+  distinguish "no matching documents" from "Knowledge Base is down."
+
+  The GCP version returns {"status": "error", "message": "..."} — the agent can reason about the failure and respond differently: "The knowledge base is temporarily unavailable, please try again
+  in 5 minutes."
+
+  For production: the AWS version should return a distinct signal for errors — a status field or a sentinel value — so the agent can give the user an accurate explanation rather than a generic
+  "no results found."
+
+  ---
+  8. Bedrock Knowledge Bases supports S3, SharePoint, Confluence, Google Drive, and web content. How does the sync model work, and what's the staleness risk?
+
+  Knowledge Bases uses a sync job — either scheduled or triggered manually. When sync runs, it crawls the source, chunks documents, generates embeddings, and updates the vector index. Until sync
+  completes, any documents added or edited since the last sync won't appear in retrieval results.
+
+  Staleness risk: a policy document is updated in Confluence. A user asks about it 10 minutes later. The sync hasn't run. The agent returns the old version confidently, with no indication it's
+  stale.
+
+  Mitigation: run sync on document publish events via a webhook, not on a fixed schedule. For S3 sources, use S3 event notifications to trigger sync on upload. Add a "last synced" timestamp to
+  retrieved results so the agent can include it in responses: "Based on documents last updated 2 hours ago..."
+
+  ---
+  9. The SESSION_ID in main.py is hardcoded to "session-001". What breaks in production?
+
+  Every user's request would share the same session. InMemorySessionService would merge conversation history, tool state (last_retrieval_query, etc.), and context from all users into one session.
+   User A's query context would bleed into User B's response.
+
+  Also: InMemorySessionService stores sessions in process memory. In a multi-pod deployment, pod A and pod B have separate memory — a user whose first request hits pod A and second hits pod B
+  starts a fresh session, losing all context.
+
+  Fix: generate a UUID session ID per user conversation (same as the GCP version). For multi-pod: replace InMemorySessionService with a Redis-backed or DynamoDB-backed session service so session
+  state is shared across pods.
+
+  ---
+  10. How would you add a ReportingAgent that queries Amazon Athena? Walk through every file.
+
+  1. tools/enterprise_tools.py — add query_athena(database, sql) function. Call apply_guardrail(sql, source="INPUT") first. Use boto3 athena client, start query execution, poll for completion,
+  fetch results. Return {"status": "success", "rows": [...]}.
+  2. tools/__init__.py — export query_athena.
+  3. agents/reporting_agent.py — new file. Create LlmAgent with model=LiteLlm(model=RAG_MODEL), tools=[query_athena], instruction describing analytics/reporting questions it handles.
+  4. agents/__init__.py — export reporting_agent.
+  5. agents/supervisor.py — import reporting_agent, add to sub_agents=[], add routing rule: "reporting, analytics, or data queries → ReportingAgent".
+  6. config.py — add ATHENA_DATABASE = os.getenv("ATHENA_DATABASE", "") and ATHENA_OUTPUT_BUCKET = os.getenv("ATHENA_OUTPUT_BUCKET", "").
+  7. .env.example — document new variables.
+  8. IAM role — add athena:StartQueryExecution, athena:GetQueryResults, s3:PutObject (for Athena output bucket) to the task role. This is infrastructure, not code — done in Terraform or
+  CloudFormation.

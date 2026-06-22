@@ -1,0 +1,212 @@
+ Fundamentals
+
+  ---
+  1. What is a pipeline and why does it matter?
+
+  A pipeline is a series of automatic steps that take code from a developer's laptop to running in production — without anyone doing it manually.
+
+  Before pipelines: a developer writes code, emails it to someone, that person manually copies it to a server, tests it by hand, and hopes nothing breaks. That takes days and breaks constantly.
+
+  With a pipeline: developer pushes code, the pipeline automatically tests it, builds it, scans it for security issues, and deploys it — in minutes. Everyone on the team sees the same result
+  every time. No "it worked on my machine."
+
+  ---
+  2. What is CI/CD and what is the difference between the two?
+
+  CI — Continuous Integration: Every time a developer saves their work, the pipeline automatically checks that it doesn't break anything. Think of it as a spell-checker running on every
+  keystroke.
+
+  CD — Continuous Delivery/Deployment: Once code passes checks, it automatically moves toward production. Delivery means it's ready to deploy with one click. Deployment means it goes live
+  automatically.
+
+  The key idea: small changes go out frequently (daily, even hourly) rather than big releases every few months. Small changes are easier to test, easier to fix if something breaks, and less scary
+   to deploy.
+
+  ---
+  3. What makes a good pipeline vs a bad one?
+
+  Bad pipeline:
+  - Takes 45 minutes to run
+  - Nobody knows when it fails because alerts go to a shared inbox nobody reads
+  - Has 12 manual approval steps for a simple config change
+  - Breaks for unrelated reasons (flaky tests, expired credentials)
+
+  Good pipeline:
+  - Runs in under 15 minutes for most changes
+  - Fails loudly with a clear message telling exactly what broke and where
+  - Only has manual approval where it genuinely matters (production deployment)
+  - Is idempotent — running it twice gives the same result as running it once
+
+  The test: can a new team member push a change and have it in production without asking anyone for help?
+
+  ---
+  4. What is automation and where does it save the most time?
+
+  Automation is replacing a human doing a repetitive task with a system that does it the same way every time.
+
+  It saves the most time where work is:
+  - High frequency — done dozens of times a day (running tests, checking code quality)
+  - Error-prone — humans make mistakes on repetitive tasks (copying config values, updating version numbers)
+  - Blocking — someone has to wait for a person to approve or respond before they can continue
+
+  The biggest hidden savings: not just the time of the task itself, but the waiting time. A test that takes 10 minutes but runs automatically saves 4 hours of "I forgot to run tests, now I'm
+  blocked on review."
+
+  ---
+  5. What does "connecting the dots" mean in an engineering context?
+
+  It means making systems talk to each other automatically so information flows without human handoffs.
+
+  Example without connection: Developer closes a Jira ticket → manually sends Slack message → manually updates the deployment spreadsheet → manually notifies the on-call team.
+
+  Example with connection: Developer closes Jira ticket → Jira webhook fires → pipeline automatically triggers → deployment runs → monitoring dashboard updates → on-call team gets one automated
+  notification with everything they need.
+
+  Every manual handoff is a place where things get delayed, forgotten, or done inconsistently. Connecting systems eliminates those gaps.
+
+  ---
+  ---
+  Problem Solving
+
+  ---
+  6. A pipeline that used to take 10 minutes now takes 45 minutes. How do you find the problem?
+
+  Don't guess. Look at the data first.
+
+  1. Open the last 10 pipeline runs and find which step grew. Is it tests? Build? Deployment?
+  2. Compare a fast run from 2 weeks ago with a slow run today — what changed between them?
+  3. Check if it's consistent (always slow) or intermittent (sometimes slow) — those are different problems.
+
+  Common causes: someone added 500 new tests without removing old ones, a dependency download step lost its cache, an external API the pipeline calls is now slow, or a new security scan step was
+  added without anyone realizing the cost.
+
+  Fix the biggest single bottleneck first. A 35-minute pipeline can often be cut to 15 minutes by parallelizing tests or caching dependencies — without changing any test logic.
+
+  ---
+  7. How do you automate something that has never been automated before?
+
+  Start by doing it manually three times and writing down every step. You'll notice things you didn't know were steps — like "log into the VPN first" or "wait 30 seconds for the server to
+  restart."
+
+  Then ask: which steps are always identical? Automate those first. Which steps require a human decision? Leave those for now.
+
+  Build the simplest automation that removes the most pain. Don't try to automate every edge case on day one. Get the 80% case working reliably, then add edge case handling based on what actually
+   breaks — not what you think might break.
+
+  ---
+  8. Your automation works perfectly in dev but breaks in production. Why does this happen and how do you prevent it?
+
+  The environments are different in a way you didn't account for. Common culprits:
+
+  - Different credentials — dev uses a personal account with admin access, prod uses a service account with restricted permissions
+  - Different data — dev has 100 test records, prod has 10 million and the query times out
+  - Different config — a URL, port, or feature flag is set differently
+  - Different versions — the library version in dev and prod don't match
+
+  Prevention: make environments as identical as possible using containers (Docker). Store all config differences in environment variables, never in code. Test on a staging environment that
+  mirrors production before deploying. Run the same pipeline for all environments — only the config changes.
+
+  ---
+  9. How do you decide what to automate vs what to leave manual?
+
+  Automate when: the task happens frequently, the steps are identical every time, errors are costly, and it's blocking people from doing more valuable work.
+
+  Leave manual when: the task happens rarely, it requires genuine judgment that changes each time, or the cost of building the automation exceeds the cost of doing it manually for the next year.
+
+  Quick calculation: if a task takes 2 hours and happens weekly, that's 100 hours per year. If automation takes 40 hours to build and 5 hours to maintain yearly, you break even in 6 months. If it
+   takes 200 hours to build — skip it.
+
+  The trap: automating something that happens once a quarter just because it feels like it should be automated.
+
+  ---
+  10. A team says "we already have automation, but it's not helping us." What do you look for?
+
+  This usually means one of four things:
+
+  1. It's not trusted — it fails often enough that people run it manually to be safe, then ignore pipeline results
+  2. It's not visible — results go somewhere nobody checks (shared inbox, old Slack channel)
+  3. It's too slow — the pipeline takes 2 hours so developers don't wait for it, they deploy anyway
+  4. It covers the wrong things — tests pass but the thing that actually breaks in production isn't tested
+
+  Ask the team: "When did you last deploy and something broke that the pipeline didn't catch?" That answer tells you exactly what's missing. Fix trust before adding more features.
+
+  ---
+  ---
+  Efficiency & Scale
+
+  ---
+  11. What does "shift left" mean and why do companies talk about it?
+
+  Shift left means finding problems earlier in the process — closer to when code is written, not after it's deployed.
+
+  Picture a timeline: Write code → Test → Build → Deploy → Monitor.
+
+  If a security vulnerability is found at the Monitor stage (after deployment), it costs 10x more to fix than if it's found at the Test stage, and 100x more than if it's found while the developer
+   is still writing code.
+
+  Shift left: run security scans, code quality checks, and tests at the Write stage — before the developer even finishes. The developer fixes it immediately, before it becomes anyone else's
+  problem.
+
+  ---
+  12. How do you improve a pipeline without breaking the teams that depend on it?
+
+  Three rules:
+
+  1. Don't remove steps, make them optional first. Mark a failing step as "warning" rather than blocking for 2 weeks while teams adapt.
+  2. Change one thing at a time. If you change the test runner, the build tool, and the deployment method in the same week and something breaks, you won't know which change caused it.
+  3. Announce and document. A pipeline change that breaks 50 developers' workflows with no warning destroys trust. Write one paragraph explaining what's changing, why, and what to do if it
+  breaks.
+
+  The goal: pipelines should feel invisible to developers. They push code, something good happens automatically. They only notice the pipeline when it catches a real problem.
+
+  ---
+  13. What is an API and why does it matter for automation?
+
+  An API is a door that one system opens so other systems can talk to it — using a defined, predictable language.
+
+  Without APIs: you automate by screen-scraping — your script clicks buttons on a website, reads text from the screen. It breaks every time the website redesigns.
+
+  With APIs: your script sends a structured request ("give me all open tickets") and gets back a structured response. It works regardless of what the website looks like, as long as the API
+  contract doesn't change.
+
+  For automation and connecting systems, APIs are the foundation. If a tool doesn't have an API, automating it is fragile and expensive. When evaluating tools to buy, "does it have a good API?"
+  is as important as "does it have the features we need?"
+
+  ---
+  14. What is idempotency and why should every automation have it?
+
+  Idempotency means: running the same automation twice gives the same result as running it once. No duplicate tickets created. No double-charges. No extra resources spun up.
+
+  Without it: a network blip causes your automation to retry. Now there are two tickets for the same issue, two servers running the same service, two emails sent to the customer.
+
+  With it: the automation checks "does this already exist?" before creating. Or it uses a unique key so creating the same thing twice is harmless — the second call just returns "already exists."
+
+  Real example: a pipeline that provisions a cloud server should check if that server already exists before creating a new one. Otherwise a retry after a timeout creates two servers and nobody
+  knows which one is real.
+
+  ---
+  15. How do you measure whether automation is actually improving efficiency?
+
+  Measure before and after — not just "we feel faster."
+
+  Metrics that matter:
+  - Lead time: time from code written to code in production (target: hours, not days)
+  - Deployment frequency: how often do you deploy? (target: daily or more)
+  - Mean time to recover (MTTR): when something breaks, how fast do you fix it?
+  - Change failure rate: what percentage of deployments cause an incident?
+
+  These four (from the DORA research framework) are the industry standard. High performers deploy 200x more frequently than low performers, with 24x faster recovery time.
+
+  The trap: measuring pipeline speed (minutes per run) instead of business outcomes (how fast does value reach users). A 5-minute pipeline that deploys twice a year is worse than a 20-minute
+  pipeline that deploys daily.
+
+  ---
+  16. Someone asks you to "just add one more step" to a critical pipeline. How do you respond?
+
+  Ask three questions before saying yes:
+
+  1. What happens if this step fails? Does it block the entire team? Every step you add is a new way the pipeline can fail.
+  2. How long does it add? A pipeline that grows from 10 minutes to 20 minutes because of 20 "just one more" requests is a pipeline nobody trusts.
+  3. Can it run in parallel with existing steps? Most new steps don't need to be sequential. A security scan can run at the same time as a build — not after it.
+
+  The right answer is never automatic "yes" or "no" — it's "let me understand the impact and find the right way to add it."

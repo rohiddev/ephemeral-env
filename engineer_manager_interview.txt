@@ -1,0 +1,141 @@
+Here are strong Engineering Manager interview questions tailored for your background in cloud, platform engineering, IDP, DevEx, GCP/AWS, automation, and AI agents.
+
+1. Leadership and people management
+
+Question: Tell me about yourself as an engineering manager.
+
+Strong angle:
+
+I am an engineering manager with a strong platform engineering and cloud background. I lead teams building developer platforms, automation workflows, and enterprise cloud capabilities. My focus is improving developer productivity, standardizing engineering practices, and delivering measurable outcomes such as reducing onboarding time, improving governance, and increasing self-service adoption.
+
+Question: How do you manage a distributed team?
+
+Answer structure:
+
+I manage distributed teams through clear ownership, strong documentation, async communication,
+and regular checkpoints. I make sure every engineer understands the goal, success criteria,
+timeline, and dependencies. I also use metrics and demos to keep the team aligned, not
+just status meetings.
+
+Mention:
+
+- Clear priorities
+- Weekly execution rhythm
+- Sprint planning
+- Architecture reviews
+- 1:1 coaching
+- Documentation-first culture
+- Demo-driven delivery
+
+Question: How do you handle an underperforming engineer?
+
+Good answer:
+
+First, I try to understand whether the issue is skill, clarity, motivation, workload, or
+personal challenge. I give direct but respectful feedback, define specific expectations,
+create a short improvement plan, and provide coaching. If there is still no improvement,
+I escalate through the formal performance process while staying fair and documented.
+2. Platform engineering / cloud questions
+
+Question: What is your biggest platform engineering achievement?
+
+Use your IDP story:
+
+One of my strongest achievements was leading enterprise platform modernization by consolidating
+developer self-service into Harness IDP. The goal was to provide a single front door for developers, reduce manual tickets, reuse existing APIs and pipelines, and improve standardization across cloud and application onboarding.
+
+We delivered workflows such as repository creation and Kubernetes onboarding, integrated
+governance controls, and started building catalog visibility across thousands of repositories.
+The impact was faster developer onboarding, reduced context switching, better compliance, and
+stronger visibility for leadership.
+
+Question: How do you measure developer productivity?
+
+Good answer:
+
+I do not measure developer productivity only by commits or story points. I look at flow metrics
+and friction reduction. For example: time to create a repo, time to onboard to Kubernetes,
+deployment lead time, change failure rate, time to restore service, self-service adoption,
+number of manual tickets reduced, and developer satisfaction.
+
+Useful metrics:
+
+- Lead time for change
+- Deployment frequency
+- Change failure rate
+- MTTR
+- Self-service workflow usage
+- Ticket reduction
+- Onboarding time
+- Developer satisfaction
+
+Question: What is platform engineering?
+
+Platform engineering is the practice of building internal platforms that make it easier,
+faster, and safer for developers to deliver software. A good platform provides paved roads,
+self-service workflows, reusable automation, golden paths, security guardrails, and
+observability without forcing every team to reinvent the same process.
+3. Architecture and technical leadership
+
+Question: How do you make architecture decisions?
+
+I start with the business goal and operational constraints. Then I evaluate options based on scalability, security, cost, maintainability, developer experience, and time to deliver. I prefer simple, reusable patterns over custom one-off solutions. I also document key decisions using lightweight ADRs so teams understand why a decision was made.
+
+Question: How do you balance speed and governance?
+
+I believe governance should be automated, not manual. Instead of slowing teams down with approval-heavy processes, I prefer policy-as-code, automated checks, reusable pipelines, and self-service workflows. That gives developers speed while still enforcing security, compliance, and operational standards.
+
+This is a strong answer for banks, healthcare, and large enterprises.
+
+Question: How would you design a blast-radius capability?
+
+I would use the CMDB or system-of-record as the source of truth for application relationships. Each application should map dependencies such as APIs, databases, Kafka, MQ, FTP, and cloud resources. That relationship data should feed into the developer portal and deployment pipeline. Before production deployment, the system can calculate impacted services and require the team to review the blast-radius report.
+4. AI / GCP / agents interview questions
+
+Question: How can AI help enterprise shared services?
+
+AI can help enterprise shared services by reducing repetitive work, improving knowledge discovery, and automating workflows. For example, HR, legal, procurement, compliance, and facilities teams all have large volumes of policies, tickets, forms, and approvals. A RAG-based assistant can answer employee questions with citations, while agents can route requests, create tickets, validate data, and trigger workflows.
+
+Question: Explain a GCP RAG architecture.
+
+A simple GCP RAG architecture starts with documents stored in Cloud Storage. An ingestion job chunks the documents and creates embeddings. Those embeddings are stored in Vertex AI Vector Search or another vector database. When a user asks a question, the application embeds the question, retrieves the most relevant policy sections, sends the context to Gemini on Vertex AI, and returns an answer with source citations.
+
+Question: What is the difference between RAG and an agent?
+
+RAG helps the model answer using trusted company knowledge. An agent goes further by deciding what action to take, choosing tools, calling APIs, and completing workflows. For example, RAG can answer “What is the PTO policy?” An agent can answer the question, check employee eligibility, create an HR case, and send a confirmation.
+5. Behavioral questions using STAR
+Question: Tell me about a time you led change.
+
+STAR answer:
+
+Situation: The organization had multiple developer entry points and manual onboarding processes.
+Task: My responsibility was to modernize the developer experience and create a unified self-service platform.
+Action: I led the team to consolidate workflows into Harness IDP, reuse existing APIs and pipelines, and build automated onboarding capabilities such as repo creation and Kubernetes onboarding.
+Result: The platform reduced manual effort, improved standardization, created better visibility, and moved the organization toward a scalable self-service model.
+Question: Tell me about a time you handled conflict.
+I first separate the technical disagreement from the people issue. I bring the team back to facts: business goal, constraints, risk, cost, timeline, and operational impact. If needed, I create a small proof of concept or decision matrix. My goal is not to win the argument, but to help the team make the best decision and move forward with alignment.
+Question: How do you communicate with executives?
+With executives, I focus on outcomes, risk, cost, and business value. I avoid deep implementation detail unless asked. For example, instead of saying we built multiple pipeline integrations, I would say we reduced developer onboarding from days to minutes, improved governance through automation, and created measurable visibility into adoption and compliance.
+6. Questions you should ask the interviewer
+
+Ask these near the end:
+
+How mature is your platform engineering function today?
+
+What are the biggest developer productivity problems your teams face?
+
+How do you measure engineering effectiveness?
+
+Are teams currently using cloud self-service, or is cloud onboarding still ticket-driven?
+
+What is your approach to AI adoption, governance, and internal automation?
+
+What would success look like for this role in the first 6 to 12 months?
+Best 60-second pitch for you
+I am an engineering manager with a strong cloud and platform engineering background. My focus is building internal platforms that improve developer productivity, automation, governance, and cloud adoption.
+
+Recently, I have been leading work around internal developer platforms, self-service workflows, Kubernetes onboarding, repo automation, and enterprise service mapping. I am also expanding into AI use cases such as RAG, agents, and workflow automation on platforms like GCP Vertex AI and AWS Bedrock.
+
+What makes me valuable is that I can connect technical execution with business outcomes. I can lead engineers, simplify complex platforms, communicate with executives, and deliver measurable improvements such as faster onboarding, reduced manual tickets, stronger compliance, and better developer experience.
+
+Use that as your opening answer for: “Tell me about yourself.”

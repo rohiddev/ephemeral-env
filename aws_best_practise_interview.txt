@@ -1,0 +1,375 @@
+Interview Q&A — AWS Best Practices
+
+  ---
+  Security
+
+  ---
+  1. What is the principle of least privilege and how do you apply it in AWS?
+
+  Give every person and every system only the permissions it needs to do its specific job — nothing more.
+
+  A Lambda function that reads from one S3 bucket should have permission to read from that one bucket only. Not all buckets. Not write access. Not EC2 access. Nothing else.
+
+  In practice: create a separate IAM role for each workload. Write the narrowest policy that makes it work. Never use "Action": "*" or "Resource": "*" in production. Start with no permissions and
+   add only what's needed — not the other way around.
+
+  The reason: if that Lambda is compromised, the attacker can only read that one bucket. They can't delete your databases, spin up Bitcoin miners, or exfiltrate everything else.
+
+  ---
+  2. What is the difference between IAM Users, Roles, and Groups?
+
+  - Users — a person. Has a username and password (or access keys). Used for humans logging into the console or CLI.
+  - Groups — a collection of users. Attach a policy to a group and everyone in it inherits it. Easier than setting permissions per person.
+  - Roles — an identity for a service or application. No password, no access keys. Instead, AWS issues short-lived temporary credentials automatically.
+
+  Best practice: humans use Roles via SSO (not long-lived access keys). Applications and services always use Roles — never embed access keys in code or config files. Roles = credentials that
+  expire automatically, reducing the blast radius if compromised.
+
+  ---
+  3. Why should you never use the AWS root account for day-to-day work?
+
+  The root account has unlimited access to everything in your AWS account — it can delete all resources, close the account, and bypass IAM policies. There is no way to restrict it.
+
+  If a root account's credentials are stolen, the attacker owns everything with no recourse.
+
+  Best practice: use root only to create the first admin IAM user, then lock root away. Enable MFA on root. Never create access keys for root. Store the root credentials in a password manager
+  that requires two people to unlock.
+
+  ---
+  4. What is MFA and where should it be required in AWS?
+
+  MFA (Multi-Factor Authentication) requires two things to log in: your password plus a one-time code from your phone or hardware key. Even if someone steals your password, they can't log in
+  without the second factor.
+
+  Require it everywhere:
+  - Root account — always, no exceptions
+  - All IAM users with console access
+  - Anyone who can make changes to production
+  - Any action that could cause irreversible damage (deleting a database, changing IAM policies)
+
+  AWS lets you enforce MFA via IAM policy conditions — you can require MFA before any destructive action is allowed.
+
+  ---
+  5. What is secrets management and why can't you store secrets in environment variables?
+
+  A secret is anything that grants access — database passwords, API keys, encryption keys, certificates.
+
+  Environment variables seem convenient but have two problems:
+  1. They're readable by anyone with access to the container, instance, or Lambda — including in CloudWatch logs if you accidentally log them
+  2. They're static — once set, they don't rotate automatically
+
+  The right approach: store secrets in AWS Secrets Manager. Your application fetches the secret at runtime by name. Benefits: secrets are encrypted, access is audited (who fetched what, when),
+  secrets can rotate automatically, and no secret ever lives in your code, config files, or CI/CD system.
+
+  ---
+  6. What are Security Groups and NACLs, and when do you use each?
+
+  Both control network traffic — what can connect to what.
+
+  Security Groups — work at the instance/resource level. They are stateful: if you allow traffic in, the response is automatically allowed out. Think of them as a lock on each individual door.
+
+  NACLs (Network Access Control Lists) — work at the subnet level. They are stateless: you must explicitly allow traffic in AND out. Think of them as a wall around a neighbourhood.
+
+  In practice: Security Groups handle 90% of cases. NACLs add a second layer for blocking large ranges of IPs (e.g., blocking a country, blocking a known malicious IP range). Use both together
+  for defence in depth — a mistake in one layer is caught by the other.
+
+  ---
+  ---
+  Networking
+
+  ---
+  7. What is a VPC and why do you need one?
+
+  A VPC (Virtual Private Cloud) is your own private section of AWS — like renting a floor in an office building where only your company's people can walk around.
+
+  Without a VPC, your servers would be on a shared network where other AWS customers could potentially reach them. With a VPC, your resources are isolated. You control who can enter, who can
+  leave, and what can talk to what inside.
+
+  Every production workload should be in a VPC. AWS gives you a default VPC, but best practice is to create a custom one — the default has overly permissive settings designed for convenience, not
+   security.
+
+  ---
+  8. What is the difference between a public subnet and a private subnet?
+
+  Public subnet — resources here can be reached from the internet and can reach the internet. Used for: load balancers, bastion hosts, NAT gateways.
+
+  Private subnet — resources here cannot be reached from the internet. They can reach the internet only through a NAT gateway (outbound only). Used for: application servers, databases, Lambda
+  functions.
+
+  Best practice: put almost everything in private subnets. The only thing in a public subnet should be the front door (load balancer). Your databases and app servers should never be directly
+  reachable from the internet — only the load balancer can reach them.
+
+  ---
+  9. What is a NAT Gateway and what problem does it solve?
+
+  Resources in a private subnet have no internet access by default — which is secure but sometimes too restrictive. Your app server might need to download a software update or call an external
+  API.
+
+  A NAT Gateway sits in a public subnet and acts as a middleman. Your private server sends outbound traffic to the NAT Gateway, which forwards it to the internet. The response comes back through
+  the NAT Gateway to your server. The internet never initiates a connection to your private server — it can only respond.
+
+  One NAT Gateway per Availability Zone. Put one in each AZ for high availability — if the AZ goes down, the other NAT Gateways keep working.
+
+  ---
+  10. What is PrivateLink and when do you need it?
+
+  PrivateLink lets your resources call AWS services (like S3, DynamoDB, Bedrock) without traffic ever leaving the AWS network or touching the internet.
+
+  Without PrivateLink: your Lambda in a private subnet calls the S3 API, which goes out through a NAT Gateway, across the internet, and into AWS's public endpoint. Traffic leaves your VPC.
+
+  With PrivateLink (VPC Endpoint): the call goes directly from your VPC to S3 inside AWS's private network. Never touches the internet. No NAT Gateway needed. Faster, cheaper, and far more
+  secure.
+
+  Required for any compliance framework (PCI, HIPAA, SOC 2) that restricts data leaving your network perimeter.
+
+  ---
+  ---
+  Compute
+
+  ---
+  11. When do you choose Lambda vs ECS vs EC2?
+
+  Think of it in terms of how much control vs convenience you need:
+
+  Lambda — you provide a function, AWS runs everything else. Best for: short tasks triggered by events (an API call comes in, a file lands in S3, a timer fires). Limit: 15-minute max execution
+  time. No server to manage at all.
+
+  ECS (Fargate) — you provide a container, AWS runs the infrastructure. Best for: long-running services, APIs, background workers. You control what's in the container but not the servers
+  underneath.
+
+  EC2 — you manage everything: the server, OS, patches, scaling. Best for: when you need specific hardware, custom kernels, or workloads that don't fit containers. Most new workloads should not
+  start here.
+
+  Rule of thumb: start with Lambda, move to ECS when you hit Lambda limits, use EC2 only when you have a specific reason.
+
+  ---
+  12. What is Auto Scaling and why is it not just "turn it on and forget it"?
+
+  Auto Scaling automatically adds servers when traffic increases and removes them when traffic drops. You pay only for what you use.
+
+  But "turn it on" isn't enough:
+
+  - Scaling policies matter. Scale based on the right metric — CPU usage is often wrong. A web server might have low CPU but be overwhelmed by open connections. Use the metric that actually
+  reflects load on your application.
+  - Warm-up time matters. A new server takes 2-3 minutes to start. If you only scale when you're already at 90% capacity, the new server arrives too late. Scale earlier (at 60-70%).
+  - Scale-in protection matters. Auto Scaling might terminate a server that's in the middle of processing a long job. Configure termination protection for instances doing active work.
+  - Test scale-down. Most teams test that scaling up works. They don't test that removing servers doesn't cause dropped requests.
+
+  ---
+  13. What is the difference between vertical and horizontal scaling?
+
+  Vertical scaling (scale up): make the existing server bigger — more CPU, more RAM. Like upgrading from a compact car to an SUV. There's a limit to how big you can go, and you have to stop the
+  server to resize it.
+
+  Horizontal scaling (scale out): add more servers — same size, just more of them. Like adding more lanes to a highway. No limit in theory, and you can add capacity without stopping anything.
+
+  AWS best practice is to design for horizontal scaling from the start. This means: servers should be stateless (no data stored on the server itself), sessions stored externally (ElastiCache or
+  DynamoDB), and any server should be replaceable at any time without losing data.
+
+  ---
+  ---
+  Storage & Database
+
+  ---
+  14. What are the S3 storage classes and how do you choose?
+
+  S3 has different tiers based on how often you access data:
+
+  - Standard — accessed frequently. Highest cost, instant retrieval. Use for active data.
+  - Infrequent Access (IA) — accessed a few times a month. Lower storage cost, small retrieval fee. Use for backups you might need.
+  - Glacier Instant Retrieval — accessed a few times a year, retrieved in milliseconds. Use for compliance archives.
+  - Glacier Deep Archive — accessed rarely, retrieval takes hours. Cheapest. Use for 7-year compliance data you hope never to retrieve.
+  - Intelligent-Tiering — AWS automatically moves your data between tiers based on access patterns. Best when you don't know how often data will be accessed.
+
+  S3 Lifecycle Policies automate this: move objects to IA after 30 days, to Glacier after 90 days, delete after 7 years — no manual work.
+
+  ---
+  15. What is the difference between RDS, Aurora, and DynamoDB?
+
+  RDS — managed relational database (MySQL, PostgreSQL, SQL Server, Oracle). You write standard SQL. AWS handles backups, patching, and failover. Best for: existing applications that use SQL,
+  complex queries with joins.
+
+  Aurora — AWS's own relational database, compatible with MySQL and PostgreSQL but built for the cloud. 5x faster than standard MySQL, automatically grows storage, replicates across 3 AZs
+  automatically. Best for: new relational workloads where you want maximum performance and resilience.
+
+  DynamoDB — AWS's NoSQL database. No SQL, no schemas, no joins. Stores items by key. Scales to millions of requests per second automatically. Best for: high-throughput simple lookups (user
+  sessions, shopping carts, event streams) where the access pattern is always "get item by ID."
+
+  Choose RDS/Aurora when your data has relationships and complex queries. Choose DynamoDB when you need massive scale and simple access patterns.
+
+  ---
+  16. What is RDS Multi-AZ and why is it not the same as a Read Replica?
+
+  Multi-AZ — AWS maintains an exact copy of your database in a second Availability Zone, kept in sync synchronously. If your primary database goes down, AWS automatically switches to the standby
+  in 60-90 seconds. The standby cannot handle any traffic — it exists only for failover. This is for availability.
+
+  Read Replica — a copy of your database that handles read queries (SELECT). Your primary handles writes (INSERT, UPDATE, DELETE). Read replicas are kept in sync asynchronously — they might be a
+  few seconds behind. You can have multiple read replicas in different regions. This is for performance.
+
+  Use both together: Multi-AZ for failover protection, Read Replicas to take read load off the primary database.
+
+  ---
+  ---
+  High Availability & Disaster Recovery
+
+  ---
+  17. What does "designing for failure" mean in AWS?
+
+  Assume every component will fail at some point — and build the system so that when it does, users don't notice.
+
+  Practical rules:
+  - Never deploy in only one Availability Zone. Always spread across at least 2 AZs.
+  - Use a load balancer so traffic automatically routes around failed servers.
+  - Use managed services (RDS, SQS, S3) instead of running your own databases and queues on EC2 — AWS handles the failure for you.
+  - Test failure regularly. Terminate random servers in production during business hours (Netflix invented this with "Chaos Monkey"). If your system only survives failure in theory, it doesn't
+  survive failure.
+
+  The goal: a single server or single AZ can fail completely and your users experience no downtime.
+
+  ---
+  18. What is RTO and RPO and why do they matter for DR planning?
+
+  RTO (Recovery Time Objective) — how long can you be down? "We can be offline for 4 hours before it costs us money." This determines how quickly your DR plan must get you back up.
+
+  RPO (Recovery Point Objective) — how much data can you lose? "We can afford to lose up to 1 hour of transactions." This determines how frequently you must back up.
+
+  These are business decisions, not technical ones. Get them from the business owner, then design the technical solution to meet them.
+
+  ┌──────────┬──────────────────────────┬────────────────────────────┐
+  │          │ RTO 4 hours / RPO 1 hour │   RTO 15 min / RPO 1 min   │
+  ├──────────┼──────────────────────────┼────────────────────────────┤
+  │ Cost     │ Low                      │ High                       │
+  ├──────────┼──────────────────────────┼────────────────────────────┤
+  │ Strategy │ Backup & restore         │ Multi-region active-active │
+  └──────────┴──────────────────────────┴────────────────────────────┘
+
+  The most common mistake: assuming you need the expensive option before knowing what the business actually needs.
+
+  ---
+  19. What is the difference between Backup/Restore, Pilot Light, Warm Standby, and Multi-Region Active-Active?
+
+  These are four DR strategies in order from cheapest/slowest to most expensive/fastest:
+
+  Backup/Restore — back up data to S3, restore when disaster strikes. Takes hours. Costs almost nothing until you need it. Good for: non-critical systems.
+
+  Pilot Light — core systems (databases) run in the DR region at minimum scale. App servers are off. In a disaster, turn on the app servers (15-30 min). Good for: moderate criticality.
+
+  Warm Standby — a scaled-down but fully running copy in the DR region. In a disaster, scale it up and redirect traffic (minutes). Good for: important systems.
+
+  Multi-Region Active-Active — full system running in two regions simultaneously. Traffic splits between them. One region fails, the other absorbs all traffic instantly. Zero downtime. Highest
+  cost. Good for: payment systems, healthcare, anything that cannot go down.
+
+  ---
+  ---
+  Cost Optimization
+
+  ---
+  20. What are the biggest causes of wasted AWS spend?
+
+  1. Idle resources — EC2 instances and RDS databases running 24/7 for dev/test environments that are only used 8 hours a day. Fix: schedule them to stop nights and weekends. Saves 65%
+  immediately.
+  2. Over-provisioned instances — someone guessed a server size 3 years ago and nobody checked since. CloudWatch shows CPU at 5% all day. Fix: right-size using AWS Compute Optimizer
+  recommendations.
+  3. Forgotten resources — an old Load Balancer with no targets, an Elastic IP not attached to anything, a 5TB EBS snapshot from 2021 nobody knows about. Fix: monthly audit with AWS Cost Explorer
+   and Trusted Advisor.
+  4. Data transfer costs — data moving between AZs, regions, or out to the internet adds up fast and is invisible until the bill arrives. Fix: use VPC Endpoints (free to use, eliminates NAT
+  Gateway transfer costs), keep data in the same region as the services that use it.
+  5. On-Demand pricing for predictable workloads — On-Demand is the most expensive option. Anything running 24/7 should be on Reserved Instances or Savings Plans. Typical saving: 40-60%.
+
+  ---
+  21. What is the difference between Reserved Instances, Savings Plans, and Spot Instances?
+
+  On-Demand — pay by the hour, no commitment. Most expensive. Use for: unpredictable workloads, short-term experiments.
+
+  Reserved Instances — commit to a specific instance type for 1 or 3 years. Up to 72% cheaper. Use for: databases, always-on production servers with predictable size.
+
+  Savings Plans — commit to a dollar amount of compute spend per hour for 1 or 3 years. More flexible than Reserved Instances — the discount applies across instance types and even Lambda. Use
+  for: general compute where you know roughly how much you'll spend but not exactly which instances.
+
+  Spot Instances — use AWS's spare capacity at up to 90% discount. AWS can reclaim them with 2 minutes notice. Use for: batch jobs, data processing, anything that can be interrupted and
+  restarted.
+
+  Best practice: Savings Plans for baseline compute, Spot Instances for batch/flexible workloads, On-Demand only for burst capacity.
+
+  ---
+  ---
+  Monitoring & Observability
+
+  ---
+  22. What is the difference between monitoring, logging, and tracing?
+
+  All three tell you what's happening in your system — but at different levels of detail:
+
+  Monitoring — numbers over time. CPU is at 80%. Response time is 200ms. Error rate is 0.1%. Tells you something is wrong. Shown in dashboards, triggers alarms.
+
+  Logging — a diary of events. "At 14:32:01, user 12345 requested /api/orders and got a 500 error." Tells you what happened. Stored in CloudWatch Logs.
+
+  Tracing — follows a single request through every service it touched. "This request went through the load balancer → API server → database → cache → back to the user, and the database step took
+  4 seconds." Tells you exactly where the slowness or failure is. Shown in X-Ray.
+
+  You need all three. Monitoring tells you there's a fire. Logging tells you where the smoke is. Tracing tells you exactly which wire sparked.
+
+  ---
+  23. What should every production system have in terms of alarms?
+
+  At minimum, alarm on:
+
+  - Error rate — if more than 1% of requests return errors, alert immediately
+  - Latency (p99) — if the slowest 1% of requests take more than X seconds, alert (don't use average — averages hide spikes)
+  - CPU/Memory — if consistently above 80%, you're close to the edge
+  - Disk space — if above 85%, you will run out soon
+  - Failed deployments — every deployment failure should alert the team
+
+  Alarm to the right place: not a shared email inbox. A dedicated channel or on-call rotation where someone is responsible for responding within 5 minutes for P1 issues.
+
+  Alarm at the right threshold: not so sensitive that it fires 20 times a day for noise, not so loose that it fires only when users are already calling to complain.
+
+  ---
+  ---
+  Infrastructure as Code
+
+  ---
+  24. Why should infrastructure be in code rather than clicked in the console?
+
+  When you click in the console:
+  - Nobody knows what you did unless they read your mind
+  - You can't do it the same way twice (tiny differences every time)
+  - You can't review it before it happens
+  - You can't undo it automatically if it breaks
+  - Your staging environment slowly drifts from production
+
+  When infrastructure is in code (Terraform, CloudFormation):
+  - Every change is reviewed in a pull request before it happens
+  - The same code creates identical environments — dev, staging, prod are all the same
+  - If something breaks, git revert and re-apply
+  - New team members can read the code and understand exactly what exists and why
+  - You can rebuild the entire infrastructure from scratch in minutes
+
+  The rule: if you click it in the console today, you will forget it exists tomorrow.
+
+  ---
+  25. What is state in Terraform and why is it important?
+
+  Terraform keeps a record of everything it has created — this is called state. It's stored in a file called terraform.tfstate.
+
+  State is how Terraform knows what already exists. When you run terraform apply a second time, it compares the current code with the state file and makes only the changes needed. Without state,
+  Terraform would try to create everything again — resulting in duplicate resources or errors.
+
+  Best practice for teams: never store the state file locally. Store it in S3 with a DynamoDB lock table. This means:
+  - The state is not lost if your laptop dies
+  - Two people can't run Terraform at the same time (the lock prevents it)
+  - Every state change is versioned in S3 so you can roll back
+
+  ---
+  26. What is the AWS Well-Architected Framework?
+
+  It's AWS's checklist for building good systems, organized into six pillars:
+
+  1. Operational Excellence — can you run it, monitor it, and improve it? (pipelines, runbooks, post-mortems)
+  2. Security — is it protected? (least privilege, encryption, MFA, no hardcoded secrets)
+  3. Reliability — does it recover from failure? (multi-AZ, backups, health checks)
+  4. Performance Efficiency — is it fast and efficient? (right-size, caching, CDN)
+  5. Cost Optimization — are you spending only what you need? (Reserved Instances, right-sizing, unused resource cleanup)
+  6. Sustainability — are you minimizing environmental impact? (efficient instance types, managed services over self-hosted)
+
+  AWS provides a free Well-Architected Review tool where you answer questions about your system and get a report showing exactly where you have gaps. Use it before any major launch.

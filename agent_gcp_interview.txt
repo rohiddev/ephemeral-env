@@ -1,0 +1,228 @@
+ ---
+  Interview Q&A — Multi-Agent GCP Architecture
+
+  ---
+  Director / Manager Level
+
+  ---
+  1. Why specialist agents instead of one general AI?
+
+  Think of a hospital. One doctor who does surgery, therapy, and pharmacy is a disaster.
+  Specialists are better at their specific job. Same here — the RAG Agent is trained to look
+  things up
+  accurately, the Policy Agent is trained to say yes/no on rules, the Action Agent is trained to
+  execute tasks cleanly. One general agent would be mediocre at all three. Specialists also fail
+  independently — if the ticket system is down, knowledge search still works.
+
+  ---
+  2. Which retrieval backend and when?
+
+  - Agent Search (default) — use it to get started. Google manages everything, minimal setup.
+  - RAG Engine — use it when you need production reliability and your documents change frequently.
+  - Vector Search — use it when you need full control, custom ranking, or hybrid search.
+
+  Switching cost is low — it's one line in your .env file (RETRIEVAL_BACKEND=rag_engine). The rest of the code doesn't change because the abstraction layer hides the difference.
+
+  ---
+  3. Build vs buy decision?
+
+  This template saves money when:
+  - You need multiple AI agents working together (not just a chatbot)
+  - You're already on Google Cloud
+  - You need audit trails, policy gates, and security built in from day one
+
+  It becomes tech debt when:
+  - Your use case is simple enough for a single prompt to a commercial API
+  - Your team has no Python or cloud skills to maintain it
+
+  The honest answer: use this template for enterprise workflows with compliance requirements. Use a SaaS chatbot for simple Q&A.
+
+  ---
+  4. Selling the Policy Agent as a feature, not friction?
+
+  Frame it this way: "The AI can never delete a record, send an email, or create a ticket that a human policy hasn't already pre-approved."
+  That's not friction — that's an audit trail your legal
+  and compliance team will love.
+
+  If the policy engine goes down, the Policy Agent returns DENIED by default. It fails closed, not open. Nothing gets executed without a green
+  light.
+
+  ---
+  5. How to phase a rollout?
+
+  - Phase 1: Read-only. Knowledge search only (RAG Agent). No actions. Users can ask questions, get answers. Zero risk.
+  - Phase 2: Low-risk actions. Ticket creation only. Monitor for wrong policy decisions for 30 days.
+  - Phase 3: Higher-risk actions. Approvals, data lookups, integrations.
+
+  Signal to expand: error rate below 1%, no policy mismatches reported, support team comfortable with the audit logs.
+
+  ---
+  6. Cost model — where does it grow fastest?
+
+  Gemini API calls grow fastest. Every agent turn (Supervisor deciding, Policy Agent checking, RAG Agent retrieving) is a separate API call. A single user request can be 3-5 Gemini calls.
+
+  Control it by:
+  - Caching frequent knowledge search results
+  - Using smaller Gemini models for Policy and Action agents (save the big model for Supervisor)
+  - Setting rate limits per user
+
+  Cloud Logging and Trace costs are predictable and small by comparison.
+
+  ---
+  7. Proving AI never acted without a policy check?
+
+  Every request goes: Supervisor → Policy Agent → Action Agent. The Policy Agent call and its verdict (PERMITTED/DENIED/REQUIRES_APPROVAL) is logged in Cloud Logging with a trace ID. Cloud Trace
+  shows the full timeline.
+
+  You can pull a report: "Show me every create_ticket call and the Policy Agent verdict that preceded it." If there's a create_ticket with no preceding PERMITTED verdict in the trace — that's a
+  bug and an alert.
+
+  ---
+  8. Wrong routing — how do you detect and fix it?
+
+  Cloud Trace shows exactly which agent handled each request. If a knowledge question went to Action Agent instead of RAG Agent, you see it in the trace timeline.
+
+  Fix without redeploy: the routing rules are in the Supervisor's instruction text (plain English). Update the routing prompt, redeploy the Supervisor only. The specialist agents don't change. In
+   ADK, this is one file edit — agents/supervisor.py.
+
+  ---
+  9. Data residency and model training concerns?
+
+  This runs entirely in your GCP project, in your chosen region. Documents in your retrieval backend stay in your project. Gemini Enterprise on Vertex AI contractually does not use your data for
+  model training — unlike consumer products.
+
+  Before signing: require a Data Processing Agreement (DPA), confirm the Vertex AI Enterprise tier, and enable VPC Service Controls so data cannot leave your defined network perimeter. Also
+  enable CMEK — you hold the encryption key for your documents, not Google.
+
+  ---
+  10. Why ADK + Vertex AI instead of ChatGPT?
+
+  1. Data stays in your perimeter. ChatGPT sends your enterprise documents to OpenAI's servers. This sends nothing outside your GCP project.
+  2. Policy and auditability are built in. ChatGPT has no native policy gate before actions. This architecture enforces it structurally.
+  3. Integration with Google Cloud services. Cloud Logging, Trace, IAM, and your existing GCP data sources connect natively — no custom connectors needed.
+
+  ---
+  ---
+  Lead Engineer Level
+
+  ---
+  1. sub_agents vs tools — what's the difference?
+
+  A tool is a Python function the agent calls and gets a result from immediately. It's like using a calculator — you punch in numbers, get an answer, keep going.
+
+  A sub_agent is a full AI agent. When the Supervisor delegates to RAGAgent, it hands over the entire conversation turn. The RAGAgent thinks, decides, calls its own tools, and then hands a reply
+  back. The Supervisor doesn't see the RAGAgent's internal steps — only the final answer.
+
+  Session state is shared across the whole system. But turn boundaries reset — the RAGAgent starts fresh on each delegation, it doesn't carry memory of previous delegations.
+
+  ---
+  2. Why does only the retrieval tool need ToolContext?
+
+  ToolContext holds the live session state — a dictionary that persists for the duration of the session. search_enterprise_knowledge writes the last query and results into that state so other
+  agents or tools in the same session can reference them later (e.g., "what did we just search for?").
+
+  create_ticket and get_ticket_status don't need to read or write session state — they take inputs, call an API, return a result. No memory needed. Adding ToolContext to them would be unnecessary
+   complexity.
+
+  ---
+  3. Switching retrieval backends — what changes?
+
+  Only one file changes: retrieval/retrieval.py. The retrieve() function at the bottom is the single exit point that all agents call. You swap the implementation inside that function for a
+  different backend client.
+
+  Everything above it — enterprise_tools.py, rag_agent.py, the Supervisor — stays completely identical. To validate the switch, you only need to test retrieve() in isolation with a known query
+  and verify the results look correct. The agent layer doesn't need retesting.
+
+  ---
+  4. Why is idempotent setup_telemetry() necessary?
+
+  Without the _tracer global guard, every call to run() would create a new TracerProvider, register a new BatchSpanProcessor, and open a new connection to Cloud Trace. In a long-running service
+  handling thousands of requests, you'd leak memory and connections, and Cloud Trace would receive duplicate, out-of-order spans.
+
+  The _tracer global means: first call does the setup, every subsequent call gets the same already-initialized tracer. One setup, one connection, clean spans.
+
+  ---
+  5. Why fail at import time for missing config?
+
+  When Python loads config.py, _require("GOOGLE_CLOUD_PROJECT") runs immediately. If the variable is missing, the process crashes before any agent is built, before any request is accepted, before
+   anything touches Vertex AI.
+
+  If we checked at runtime instead, you'd find out the variable is missing only when a real user sends a request — halfway through processing, with a confusing traceback deep in the Google SDK.
+  Import-time failure gives you a clear, actionable error at startup: "Set GOOGLE_CLOUD_PROJECT in your .env file."
+
+  ---
+  6. Wiring human-in-the-loop after REQUIRES_APPROVAL?
+
+  ADK doesn't have a built-in "pause and wait for a human" primitive today. What you build:
+
+  1. Policy Agent returns REQUIRES_APPROVAL with a reason.
+  2. Action Agent detects this verdict and instead of executing, calls a request_approval tool.
+  3. That tool writes a record to a database (Firestore or Cloud SQL) with the pending action and a unique approval token.
+  4. An email or notification goes to the approver with an approval link.
+  5. A separate webhook endpoint receives the approval click, updates the record, and re-triggers the agent with the approval token as input.
+
+  The agent session doesn't "pause" — it completes with "pending approval." A new session starts when the approver responds.
+
+  ---
+  7. Return dicts instead of raising exceptions — why?
+
+  In a multi-agent system, an unhandled exception in one tool bubbles up through the agent framework unpredictably. The ADK might log it, swallow it, or crash the entire turn.
+
+  When tools return {"status": "error", "message": "..."}, the agent receives a structured response it can reason about. The Policy Agent can say "the ticket system returned an error, I'll inform
+   the user and suggest retry" — intelligent handling, not a crash. It also means you can log the error at the tool level with full context before returning, rather than hoping the framework
+  catches it cleanly.
+
+  ---
+  8. What contract does agent.py fulfill for adk web and adk deploy?
+
+  ADK looks for a module-level variable named root_agent. That's the entire contract. When you run adk web or adk deploy agent_engine, the ADK CLI imports agent.py and reads root_agent. Whatever
+  agent object that variable points to becomes the entry point for all requests.
+
+  On Agent Engine, the runtime wraps root_agent in an HTTP server, assigns it a resource ID in Vertex AI, and routes requests to it. You don't write any server code — ADK handles that from
+  root_agent alone.
+
+  ---
+  9. How does credential chain work in Cloud Run?
+
+  When you deploy to Cloud Run, you attach a service account to the container (set in the Cloud Run service configuration). The container never has a credential file — instead, the GCP metadata
+  server (running on every GCP host) provides short-lived tokens on demand.
+
+  google.auth.default() in security/iam.py calls the metadata server, gets a token for the attached service account, and returns it. The IAM role that service account needs: at minimum
+  roles/aiplatform.user for Vertex AI, roles/cloudtrace.agent for tracing, and roles/logging.logWriter for logs. It needs nothing else — least privilege.
+
+  ---
+  10. Adding a ReportingAgent — files to touch, in order:
+
+  1. tools/enterprise_tools.py — add query_bigquery(dataset, sql) tool function with status: success/error pattern.
+  2. tools/__init__.py — export query_bigquery.
+  3. agents/reporting_agent.py — create LlmAgent with tools=[query_bigquery] and instruction describing what reporting questions it handles.
+  4. agents/supervisor.py — import reporting_agent, add it to sub_agents=[], update routing instruction with "reporting/analytics questions → ReportingAgent".
+  5. config.py — add BIGQUERY_DATASET = _optional("BIGQUERY_DATASET", "") if dataset is configurable.
+  6. .env.example — document the new variable.
+
+  Nothing else changes. The RAG, Policy, and Action agents are completely unaffected.
+
+  ---
+  11. Scope of tool_context.state — per call, turn, or session?
+
+  tool_context.state is session-scoped. It persists for the entire session (all turns with the same session_id), not just the current turn or tool call.
+
+  If RAGAgent is called twice in one turn (ADK re-enters it due to multi-step reasoning), the second call overwrites last_retrieval_query and last_retrieval_results. The first values are lost. If
+   you need both, write to distinct keys: last_retrieval_query_1, last_retrieval_query_2 — or append to a list.
+
+  ---
+  12. Testing Supervisor routing without real Gemini API calls?
+
+  Mock LlmAgent.__call__ or use ADK's test runner with a stub model that returns deterministic responses. The pattern:
+
+  # stub model returns a fixed routing decision
+  stub_model = FakeLlm(response="[Routing to RAGAgent]")
+  supervisor_agent.model = stub_model
+
+  The risk: you're testing that the Supervisor says "route to RAGAgent" given a fixed model response — not that Gemini actually produces that routing decision from your prompt. Prompt drift
+  (changing the instruction text) won't be caught.
+
+  Mitigation: keep a small suite of golden prompts that you run against real Gemini in a staging environment as a pre-deploy check. Mock tests catch code bugs; golden prompt tests catch prompt
+  bugs.
+
+✻ Churned
