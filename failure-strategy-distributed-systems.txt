@@ -1,0 +1,650 @@
+Failure Strategy in Distributed Systems
+========================================
+How to handle failure, use observability to detect and diagnose it,
+read service maps, and survive catastrophic events.
+
+
+---
+WHY DISTRIBUTED SYSTEMS FAIL DIFFERENTLY
+---
+
+In a monolith, failure is binary: the process is up or it is down.
+In a distributed system, failure is partial, progressive, and sneaky.
+
+  - Service A is healthy. Service B is degraded. A calls B.
+    A looks fine. Users see slow responses. No red light anywhere.
+
+  - A database query starts taking 3s instead of 50ms.
+    Connection pools fill up. Threads block. Memory grows.
+    The service looks "up" but is effectively dead under load.
+
+  - A downstream payment gateway starts returning 429 (rate limited).
+    Without a circuit breaker, every user request hits that gateway,
+    gets a 429, and your service turns that into a 500.
+
+  - A deployment rolls out to 10% of pods. The new version has a memory leak.
+    Metrics look fine on average. The 10% of users on new pods are suffering.
+
+Partial failure is the normal state in production at scale.
+The goal is not to prevent all failure. It is to contain it,
+detect it fast, respond gracefully, and recover automatically.
+
+
+---
+THE FOUR CATEGORIES OF FAILURE
+---
+
+1. TRANSIENT FAILURE
+   Definition: temporary, self-resolving.
+   Examples: brief network packet loss, momentary timeout,
+             a pod restarting, a DNS blip.
+   Strategy: retry with exponential backoff + jitter. Most go away.
+
+2. DEPENDENCY FAILURE
+   Definition: a downstream service or database is degraded or down.
+   Examples: payment gateway down, auth service slow, database overloaded.
+   Strategy: circuit breaker, fallback, graceful degradation.
+
+3. OVERLOAD / SATURATION
+   Definition: a service receives more load than it can handle.
+   Examples: traffic spike, chatty client retry storm, fan-out amplification.
+   Strategy: rate limiting, load shedding, backpressure, autoscaling.
+
+4. CATASTROPHIC FAILURE
+   Definition: a large portion of the system is unavailable.
+   Examples: region outage, data corruption event, mass pod eviction,
+             a bad deployment that kills all replicas simultaneously,
+             a cascading failure that propagates across the system.
+   Strategy: runbook-driven incident response, failover, disaster recovery,
+             bulkhead isolation to stop blast radius.
+
+
+---
+FAILURE HANDLING PATTERNS
+---
+
+RETRY WITH EXPONENTIAL BACKOFF + JITTER
+  The most basic pattern. Retry transient failures.
+  Exponential backoff: wait 1s, 2s, 4s, 8s between retries.
+  Jitter: add randomness to prevent retry storms (all clients
+  retrying at exactly the same second makes the problem worse).
+
+  When to retry:    network timeout, 429 (rate limited), 503 (unavailable)
+  When NOT to retry: 400 (bad request), 401 (unauthorized), 404 (not found)
+                     409 (conflict), any non-idempotent operation
+
+  Max retries: 3 is typical. More than that and you are adding load
+  to an already stressed system.
+
+  AWS SDK and most HTTP clients have built-in retry + jitter.
+  Always configure max_attempts and base_delay explicitly.
+
+
+CIRCUIT BREAKER
+  Prevents cascading failure when a downstream service is degraded.
+
+  Three states:
+    CLOSED   - normal, requests flow through
+    OPEN     - downstream is failing, all requests fail fast (no call made)
+    HALF-OPEN - probe state, let one request through to test recovery
+
+  Thresholds (example):
+    Open the circuit if error_rate > 50% in the last 10 seconds
+    or if latency_p95 > 2x baseline for 30 seconds.
+
+  Why it matters:
+    Without a circuit breaker: every user request waits for the 30s timeout
+    on the downstream call. Connection pool fills up. Thread pool exhausts.
+    Your service is now also down.
+
+    With a circuit breaker: after the threshold trips, requests fail fast
+    in <1ms. Resources are freed. Upstream stays healthy.
+    The circuit probes recovery automatically.
+
+  Implementation: Resilience4j (Java), pybreaker (Python),
+  go-resilience (Go), or service mesh (Istio, Linkerd) for language-agnostic.
+
+
+BULKHEAD
+  Isolate resources so one failing component cannot exhaust shared resources.
+
+  Concept comes from ship design: compartmentalize the hull so one breach
+  does not sink the whole ship.
+
+  Examples:
+    - Separate thread pools for each downstream dependency.
+      Payment gateway gets its own pool (10 threads).
+      Auth service gets its own pool (20 threads).
+      If payment hangs, only the payment pool fills up.
+      Auth and all other calls continue normally.
+
+    - Separate Kubernetes namespaces or node pools per criticality tier.
+      Tier-1 (payment, auth): dedicated nodes with resource guarantees.
+      Tier-2 (reporting, notifications): shared nodes with lower priority.
+      Tier-1 pods cannot be evicted by Tier-2 workload spikes.
+
+    - Separate connection pools per database.
+      The analytics query that takes 60s cannot consume the
+      connection pool used by the transactional write path.
+
+
+TIMEOUT
+  Every network call must have an explicit timeout. No exceptions.
+  Without timeouts, a single slow dependency hangs your threads forever.
+
+  Timeout hierarchy: set tighter timeouts closer to the user.
+    API Gateway: 30s max
+    Service-to-service: 5s
+    Database query: 1s (fast queries), 10s (batch queries, separate pool)
+    External API: 3s with 2 retries
+
+  Timeout budget: the downstream timeout must always be less than
+  the upstream timeout minus the work your service does.
+    User -> A (timeout 10s) -> B (timeout 8s) -> C (timeout 6s)
+  If C takes 6s, B waits 6s, A sees 8s, user sees close to 10s.
+  If timeouts are not staggered, A times out before B does, and B's
+  retry keeps running after A already gave up.
+
+
+RATE LIMITING AND LOAD SHEDDING
+  Rate limiting: cap the number of requests a client can send.
+    Per user, per IP, per API key, per service.
+    Return 429 with Retry-After header when the limit is hit.
+    Protects downstream services from noisy neighbors.
+
+  Load shedding: when the system is overloaded, actively drop
+  lower-priority work to protect higher-priority work.
+    Example: during a traffic spike, continue processing payments
+    but drop analytics events and defer notification emails.
+    Return 503 with a message. Let the client retry later.
+
+  Priority queues: assign work to queues by business priority.
+    Queue A: real-time payment (process immediately)
+    Queue B: fraud check (process within 1s)
+    Queue C: batch report generation (process within 1 hour)
+    Under load, Queue C is paused first. Queue A is never touched.
+
+
+GRACEFUL DEGRADATION
+  When a dependency is unavailable, return a degraded but useful response
+  instead of an error.
+
+  Examples:
+    - Product page: recommendations service is down.
+      Return the page without recommendations instead of returning 500.
+
+    - Loan application: credit bureau API is down.
+      Queue the application for manual review instead of failing the submission.
+
+    - Feature flag service is unreachable.
+      Fall back to the default feature state (feature off) instead of crashing.
+
+  The contract: tell the user what is limited and why.
+  Do not silently return incomplete data and pretend it is complete.
+
+
+IDEMPOTENCY
+  Design all write operations to be safe to retry.
+  A request is idempotent if calling it multiple times has the same
+  effect as calling it once.
+
+  How: the client generates a unique idempotency_key for each logical
+  operation. The server stores the result the first time.
+  On retry with the same key, return the stored result immediately
+  without re-executing the operation.
+
+  Payments, order creation, and anything with money must be idempotent.
+  Without this: a timeout + retry creates a duplicate charge.
+
+
+BACKPRESSURE
+  When a consumer is processing slower than a producer is sending,
+  the producer must slow down. This is backpressure.
+
+  Without backpressure: queues grow unbounded, memory exhausts,
+  the consumer crashes, messages are lost.
+
+  Mechanisms:
+    - Queue depth limit: reject new messages when queue > N items
+    - Flow control: consumer sends explicit "slow down" signals to producer
+    - Async / message queue: SQS, Kafka provide natural buffering
+      and allow consumers to scale independently of producers
+
+
+---
+HOW OBSERVABILITY HELPS WITH FAILURE
+---
+
+Observability does not prevent failure. It tells you:
+  1. Something is wrong (alerting)
+  2. Where it is wrong (service map + traces)
+  3. What is wrong (logs + trace attributes)
+  4. How bad it is (metrics)
+  5. When it started (metric history, deployment markers)
+  6. Whether the fix worked (metrics after the change)
+
+THE DETECTION CHAIN
+
+  Failure starts: a downstream database starts returning slow queries.
+
+  Metrics detect it first (seconds):
+    - db_query_duration_p99 crosses alert threshold
+    - CloudWatch alarm fires: p99 > 1s for 2 consecutive minutes
+    - PagerDuty notifies on-call engineer
+
+  Traces show scope (seconds to minutes):
+    - Engineer opens X-Ray service map
+    - loan-service -> postgres span is red and wide
+    - All other spans in the trace are green and fast
+    - The problem is isolated to the postgres SELECT call
+
+  Logs confirm the cause (minutes):
+    - Engineer queries CloudWatch Logs Insights:
+        fields @timestamp, @message
+        | filter service = "loan-service" and level = "ERROR"
+        | filter @timestamp > 1h ago
+        | limit 50
+    - Sees: "connection pool exhausted" and "query timeout"
+    - Correlates with a recent deployment marker on the metrics graph
+
+  Metrics confirm impact (minutes):
+    - error_rate for loan-service jumped from 0.1% to 18% at the same time
+    - active_connections on the RDS instance is at 99% of max
+    - Deployment happened 22 minutes ago
+
+  Resolution is now targeted:
+    - Not: "something is wrong, restart everything"
+    - But: "the new deployment has a query that hits the full table,
+            it runs on every user request, it is exhausting the connection pool"
+
+Without observability the same incident takes hours and requires
+guessing across multiple services and log files.
+
+
+USING TRACES TO FIND THE BLAST RADIUS
+
+  When an alert fires, the first question is: how many services are affected?
+  Traces answer this without reading logs in every service.
+
+  In X-Ray service map or Grafana Tempo:
+    - Red nodes = services with elevated error rate
+    - Wide spans = services with elevated latency
+    - Arrow direction = dependency direction (who calls whom)
+
+  You can immediately see:
+    - payment-service is red (error rate 40%)
+    - auth-service is green (healthy)
+    - loan-service is orange (latency elevated, errors low)
+    - notification-service is grey (no traffic, no traces)
+
+  This tells you: payment-service is the origin. loan-service is affected
+  because it depends on payment-service and is hitting its circuit breaker.
+  auth-service and notification-service are isolated from the failure.
+
+  Blast radius = payment-service + loan-service.
+  Everything else is fine. You do not need to look at those other services.
+
+
+USING LOG CORRELATION DURING AN INCIDENT
+
+  During an incident, you need to answer: what is the error and who is affected?
+
+  Structured logs + trace_id let you do this in seconds:
+
+  Step 1 - Find the error pattern:
+    CloudWatch Logs Insights:
+      fields @timestamp, trace_id, user_id, error, @message
+      | filter level = "ERROR"
+      | filter @timestamp > 30min ago
+      | stats count() by error
+      | sort by count desc
+
+  Step 2 - Find the affected users:
+      fields user_id
+      | filter error = "connection pool exhausted"
+      | filter @timestamp > 30min ago
+      | stats count() by user_id
+      | sort by count desc
+
+  Step 3 - Pick one trace_id from the error logs:
+    Jump to X-Ray -> paste the trace_id -> see the full waterfall
+    for that exact request. See which span failed and what the
+    attributes were (loan_id, amount, query text).
+
+  You now have: error type, affected user count, root cause span,
+  and full context — in under 5 minutes.
+
+
+---
+SERVICE MAPPING
+---
+
+A service map is a live, auto-generated dependency graph.
+Every node is a service. Every edge is a call between services.
+Color indicates health. Width or thickness indicates latency or volume.
+
+Reading a service map:
+  Green node    = healthy, error rate and latency within normal range
+  Yellow node   = degraded, elevated latency or low error rate
+  Red node      = failing, high error rate or very high latency
+  Arrow         = call direction (A -> B means A calls B)
+  Arrow label   = call volume (req/s) and error rate on that edge
+  Node size     = call volume (bigger = more traffic)
+
+Where to find it:
+  AWS X-Ray     -> Service Map (auto-generated from traces)
+  GCP           -> Cloud Trace service graph
+  Grafana Tempo -> Service Graph panel
+  Datadog       -> Service Catalog + Service Map
+  Dynatrace     -> Smartscape (auto-detected, very detailed)
+  Istio         -> Kiali service mesh visualizer
+
+How to use a service map during an incident:
+
+  1. Find the red or orange node. That is where errors are generated.
+  2. Look at its upstream callers (arrows pointing TO it).
+     They are affected by this failure but are not the cause.
+  3. Look at its downstream dependencies (arrows pointing FROM it).
+     Did the failure come from one of those?
+  4. Click the red node to see its error rate, latency distribution,
+     and a sample of failing traces.
+  5. Click the edge between two services to see the error rate
+     and latency specifically on that call path.
+
+Common patterns on service maps:
+
+  Single red node, all callers turning yellow:
+    One service is down. Its callers are degraded because they
+    depend on it. Fix the red node. Yellow nodes self-recover.
+
+  Cascading red starting from a leaf node:
+    A downstream dependency (database, external API) is failing.
+    Everything that depends on it turns red in sequence.
+    Fix the root leaf. If circuit breakers are in place, only the
+    immediate callers are red. If not, cascading red means no
+    circuit breakers — that is also a finding.
+
+  One red edge between two green nodes:
+    A specific call path is failing (e.g. loan-service -> credit-bureau).
+    Both services are healthy overall. The issue is in the integration
+    (auth, protocol mismatch, schema change, network policy).
+
+  All nodes turning red simultaneously:
+    Likely a shared dependency (database, service mesh, DNS, load balancer)
+    or a deployment that went out to all pods at once.
+    Check the timeline against recent deployments.
+    Check shared infrastructure health (RDS, Redis, ELB).
+
+Building a service dependency map for design:
+  Beyond runtime service maps, maintain a static dependency map:
+    - What services does my service call?
+    - What services call my service?
+    - Which dependencies are sync (required for the request to succeed)?
+    - Which are async (failure can be buffered)?
+    - What is the SLA of each dependency?
+
+  This map determines your failure blast radius before anything goes wrong.
+  If payment-service (SLA 99.9%) depends on fraud-service (SLA 99.5%),
+  then payment-service can never achieve better than 99.5% end-to-end.
+  You design circuit breakers and fallbacks based on this map.
+
+
+---
+CATASTROPHIC FAILURE
+---
+
+Definition: a failure that affects a large portion of the system
+simultaneously, is not self-resolving, and requires coordinated
+human response.
+
+Examples:
+  - Cloud region outage (AWS us-east-1 degraded, 2021, 2023)
+  - Database corruption or accidental bulk delete
+  - A bad deployment that kills all pods simultaneously
+    (rollout strategy not set, or maxUnavailable=100%)
+  - A cascading failure where circuit breakers were not in place
+    and one slow service caused all upstream services to hang
+  - Runaway autoscaler consuming all cloud quota
+  - A DDoS attack consuming all ingress bandwidth
+  - Security incident: mass secret rotation breaks all services at once
+
+The difference from normal failure: scope and coordination.
+One service failing = incident. Half the system failing = major incident.
+The failure handling playbook is different.
+
+
+BLAST RADIUS CONTAINMENT (before catastrophic failure happens)
+
+  Goal: design the system so that any single failure can only
+  affect a bounded portion of users and services.
+
+  Techniques:
+
+  Availability zones and multi-region:
+    Deploy across 3 AZs minimum. Route traffic across all three.
+    If one AZ has an outage, traffic routes to the other two.
+    For mission-critical: active-active multi-region (two regions
+    both serve live traffic with data replication between them).
+
+  Deployment rings:
+    Deploy to 1% of pods (canary). Observe metrics for 10 minutes.
+    Deploy to 10%. Observe. Deploy to 50%. Observe. Then 100%.
+    A bad deployment kills 1% of users, not all of them.
+    Automatic rollback: if error_rate > threshold during rollout, stop and revert.
+
+  Feature flags:
+    New code ships with a feature flag set to OFF.
+    Enable for internal users first. Then 1%. Then 10%. Then all.
+    Catastrophic failure from a new feature: flip the flag off.
+    Recovery time: seconds. No deployment, no rollback required.
+
+  Pod disruption budgets (Kubernetes):
+    Define: always keep at least 2 replicas of this service running.
+    Prevents Kubernetes cluster maintenance from evicting all pods at once.
+
+  maxUnavailable and maxSurge in rollout strategy:
+    Never set maxUnavailable=100%. That kills all pods simultaneously.
+    Standard: maxUnavailable=25%, maxSurge=25%.
+    Guarantees 75% of pods stay running during a rolling update.
+
+  Timeouts and circuit breakers everywhere:
+    Without these, one slow service can cause every service
+    that calls it to exhaust threads and become unavailable.
+    This is how one database slowdown becomes a full system outage.
+
+
+INCIDENT RESPONSE DURING CATASTROPHIC FAILURE
+
+  The standard: SEV1 / P1 incident response process.
+
+  Immediate actions (first 5 minutes):
+    1. Declare the incident. Open an incident channel (Slack, Teams).
+       One person is Incident Commander (IC). One is the Scribe.
+       IC coordinates. Scribe documents. Engineers investigate.
+       Do NOT have everyone investigating independently in silence.
+
+    2. Assess scope. Open the service map. How many services are red?
+       How many users are affected? What is the error rate?
+       Answer: "What is broken and how many people are feeling it?"
+
+    3. Communicate immediately to stakeholders.
+       Brief, factual: "We are aware of elevated errors on loan processing.
+       We are investigating. Updates every 10 minutes."
+       Do not wait for a root cause before communicating.
+
+    4. Check the deployment timeline.
+       Did anything change in the last 30-60 minutes?
+       Deployment, configuration change, database migration, certificate rotation?
+       Most catastrophic failures in production are caused by changes.
+
+    5. Stop the bleeding before diagnosing.
+       If a bad deployment is confirmed: rollback immediately.
+       Do not try to forward-fix a catastrophic failure in production.
+       Roll back first. Diagnose in a staging environment later.
+
+  Investigation (minutes 5-30):
+    Service map: identify the red nodes and the dependency direction.
+    Traces: find the failing request and the failing span.
+    Logs: find the error message and the first occurrence timestamp.
+    Metrics: confirm the timeline. When did it start? What changed then?
+    CloudTrail / audit logs: what API calls or changes happened at that time?
+
+  Recovery options:
+    Rollback          - revert to the previous working deployment
+    Feature flag off  - disable the specific feature that is failing
+    Traffic shift     - route traffic to another region or AZ
+    Scale out         - add capacity if the issue is overload
+    Restart           - last resort for memory leaks or stuck processes
+    Failover          - promote a read replica to primary if DB is corrupted
+
+  After recovery:
+    Write a postmortem (also called incident review or blameless retrospective).
+    The postmortem is not about finding who to blame.
+    It is about finding the systemic weaknesses that allowed the failure.
+
+    Postmortem structure:
+      What happened (timeline of events, factual)
+      Impact (duration, users affected, revenue impact if known)
+      Root cause (the underlying technical reason)
+      Contributing factors (what made it worse than it needed to be)
+      Detection (how long from failure start to detection)
+      Response (how long from detection to mitigation)
+      Action items (specific changes to prevent recurrence)
+
+    Common action items from catastrophic failure postmortems:
+      - Add circuit breakers to the dependency that caused the cascade
+      - Change rollout strategy from maxUnavailable=100% to 25%
+      - Add an alert for the metric that was moving for 20 minutes before anyone noticed
+      - Set an explicit timeout that was missing on the slow downstream call
+      - Add a canary stage to the deployment pipeline
+      - Create a runbook for this failure mode so the next responder is faster
+
+
+CHAOS ENGINEERING
+
+  The proactive approach to catastrophic failure.
+  Deliberately inject failures into production (or staging) in a
+  controlled way to find weaknesses before customers do.
+
+  Types of chaos experiments:
+    Kill a pod randomly                 - does the service stay healthy?
+    Kill all pods in one AZ             - does traffic route to other AZs?
+    Add 500ms latency on a service call - does the circuit breaker open?
+    Return 500 errors from a dependency - does the fallback work?
+    Fill up disk on a node              - does the service degrade gracefully?
+    Saturate CPU on a node              - do pods reschedule to healthy nodes?
+
+  Framework: Netflix Chaos Monkey (original), AWS Fault Injection Simulator,
+  Gremlin, LitmusChaos (CNCF, Kubernetes-native).
+
+  The rule: always run chaos experiments with a hypothesis.
+    Hypothesis: "If the auth-service is unavailable for 30 seconds,
+    the loan-service will return cached tokens and degrade gracefully
+    without exceeding 1% error rate."
+    Run it. Measure. Either the hypothesis holds (confidence gained)
+    or it does not (weakness found and fixed before a real outage).
+
+  Chaos engineering makes catastrophic failure boring because you
+  have already seen it and fixed the weaknesses in a controlled setting.
+
+
+---
+PUTTING IT ALL TOGETHER: FAILURE LIFECYCLE
+---
+
+BEFORE FAILURE (design):
+  - Draw the dependency map. Know the blast radius of each service.
+  - Add circuit breakers on every synchronous downstream call.
+  - Set explicit timeouts at every boundary.
+  - Design for graceful degradation (what does the service return when X fails?).
+  - Write runbooks for the three most likely failure modes of each service.
+  - Implement deployment rings (canary -> 10% -> 50% -> 100%).
+  - Add feature flags for new functionality.
+  - Set pod disruption budgets and correct rollout strategy.
+  - Run chaos experiments to validate the assumptions.
+
+DETECTION (observability):
+  - Metrics alert fires. Golden Signals: latency, traffic, errors, saturation.
+  - SLO burn rate alert fires (more precise than raw metric alerts).
+  - Synthetic monitoring detects user-facing failure from outside the system.
+
+DIAGNOSIS (observability):
+  - Service map shows which nodes are red and the direction of failure.
+  - Traces show which span is the root cause.
+  - Logs confirm the error message and first occurrence time.
+  - Deployment timeline: correlate with recent changes.
+
+MITIGATION (runbook-driven):
+  - Rollback if a deployment caused it.
+  - Flip a feature flag if a feature caused it.
+  - Scale out if overload caused it.
+  - Fail over if infrastructure caused it.
+  - Communicate at every step.
+
+RECOVERY (verify with observability):
+  - Error rate returns to baseline on metrics.
+  - Service map returns to all green.
+  - Traces show normal latency distribution.
+  - Confirm with synthetic monitoring from outside the system.
+
+LEARNING (postmortem):
+  - Timeline and root cause documented.
+  - Detection gap: how long before the alert fired?
+  - Response gap: how long from alert to mitigation?
+  - Action items with owners and deadlines.
+  - Close the gap before the next failure.
+
+
+---
+KEY INTERVIEW POINTS
+---
+
+Q: How do you handle a cascading failure?
+   Circuit breakers on every downstream call. When a downstream service
+   is failing, the circuit opens and requests fail fast (no thread blocking).
+   This prevents the failure from propagating to all upstream services.
+   Bulkheads ensure one dependency's thread pool cannot starve another.
+   Timeouts ensure no call blocks indefinitely.
+
+Q: What is the difference between a circuit breaker and a retry?
+   Retry is for transient failure. Try again in case it was a blip.
+   Circuit breaker is for sustained failure. Stop trying for now
+   so you do not make things worse. They work together:
+   retry within a closed circuit breaker, fail fast on an open one.
+
+Q: How would you detect a failure before your users do?
+   Synthetic monitoring: scripted transactions that run from outside
+   the system every minute, simulating real user flows.
+   If a synthetic test fails, you know before any real user hits the error.
+   SLO burn rate alerting catches growing degradation before it
+   becomes an outage.
+
+Q: What is a service map and how do you use it in an incident?
+   A service map is an auto-generated graph of services and their
+   runtime dependencies, colored by health. During an incident:
+   find the red node, determine if it is the cause or a victim,
+   look at the direction of arrows to understand which services are
+   upstream (affected) vs downstream (root cause candidates).
+   Trace into the red service to confirm the failing span.
+
+Q: What is chaos engineering and why would you do it?
+   Deliberately injecting failures in a controlled way to find
+   systemic weaknesses before real failures do.
+   It validates that circuit breakers actually open, fallbacks actually
+   work, and alerts actually fire. It converts catastrophic surprises
+   into boring expected events because you have already seen them.
+
+Q: What goes in a postmortem?
+   Timeline (factual), impact (users affected, duration),
+   root cause (the technical reason), contributing factors
+   (what made it worse), detection gap, response gap,
+   and specific action items with owners.
+   A postmortem is blameless. The goal is systemic improvement,
+   not individual accountability.
+
+Q: How do you limit blast radius during a deployment?
+   Deployment rings: canary (1%) -> 10% -> 50% -> 100%.
+   Automatic rollback on error rate threshold.
+   Feature flags for new features (independent of deployment).
+   Pod disruption budgets and maxUnavailable limits in rollout strategy.
+   Multi-AZ / multi-region so an AZ-level failure only hits a fraction.
