@@ -1,0 +1,464 @@
+Temporal.io — Is It a Workflow Agent?
+=======================================
+Short answer: No. Temporal is a durable workflow engine, not an agent.
+But it is one of the best infrastructure layers you can run an agent ON TOP of.
+This write-up explains what Temporal is, how it works, how it differs
+from an agent, and how the two combine in production AI systems.
+
+
+---
+WHAT TEMPORAL IS
+---
+
+Temporal is an open-source durable execution platform.
+
+It lets you write long-running, fault-tolerant workflows in normal
+application code (Go, Java, Python, TypeScript, PHP, .NET).
+
+The core guarantee: if your workflow is interrupted — server crash,
+network failure, pod eviction, deployment restart — Temporal replays
+the workflow from where it left off. Automatically. Without you
+writing any checkpoint or recovery code.
+
+That single guarantee changes what you can build.
+
+Without Temporal:
+  A multi-step process (call API, wait for human approval, update database,
+  send notification) requires: a job queue, a database for state,
+  a scheduler for retries, a separate process for each step,
+  and custom recovery code for every failure mode.
+
+With Temporal:
+  Write it as a single Python or Go function. Temporal handles
+  durability, retries, timeouts, and recovery.
+
+
+---
+THE CORE CONCEPTS
+---
+
+WORKFLOW
+  A Python/Go/Java function that defines the sequence of steps.
+  It runs durably — it can pause for hours, days, or months
+  (waiting for a human, waiting for an event) and resume exactly
+  where it stopped. No state is lost between steps.
+
+  The workflow function itself must be deterministic.
+  It cannot do I/O directly (no HTTP calls, no DB queries, no sleep).
+  All I/O happens inside Activities.
+
+ACTIVITY
+  A plain function that does the actual work: call an API, query a database,
+  send an email, call an LLM, process a file.
+  Activities can fail and are retried by Temporal automatically.
+  You configure: max_attempts, initial_interval, backoff_coefficient, max_interval.
+  Activities are where non-deterministic and side-effectful code lives.
+
+WORKER
+  A process your team runs that hosts Workflow and Activity implementations.
+  Workers poll Temporal Server for tasks. Temporal assigns tasks to workers.
+  Scale workers independently. Zero workers = tasks queue up and resume
+  when workers come back. No work is lost.
+
+TEMPORAL SERVER
+  The orchestration engine. Stores workflow state, dispatches tasks to workers,
+  handles timers, tracks retries. Can be self-hosted (Docker/Kubernetes) or
+  used as Temporal Cloud (managed SaaS).
+
+TASK QUEUE
+  Workflows and Activities are dispatched via named task queues.
+  Workers subscribe to queues. Multiple worker instances on the same queue
+  = horizontal scaling. Different queues for different workload types.
+
+SIGNALS
+  External events sent to a running workflow. The workflow can wait for
+  a signal (human approval, webhook from an external system) for any duration.
+  Signal arrives -> workflow resumes from the exact point where it was waiting.
+
+QUERIES
+  Read the current state of a running workflow without affecting it.
+  A workflow can expose a query handler that returns its current status.
+
+TIMERS
+  A workflow can sleep for any duration (seconds to months) with zero cost.
+  The timer is durable — a server restart does not lose the timer.
+  Use case: reminder email 7 days after a user signs up.
+  The workflow sleeps for 7 days. Temporal fires it exactly when needed.
+
+CHILD WORKFLOWS
+  A workflow can spawn other workflows as children.
+  Fan out work: process 1000 items by launching 1000 child workflows in parallel.
+  Each child is independently durable.
+
+SAGAS / COMPENSATIONS
+  Temporal makes it straightforward to implement the Saga pattern:
+  a sequence of steps where each step has a compensating action if a
+  later step fails. Distributed transaction without a distributed lock.
+
+  Example: book flight, book hotel, charge card.
+  If charge card fails: cancel hotel booking, cancel flight booking.
+  Each compensation is an Activity. Temporal retries them to ensure
+  they eventually succeed.
+
+
+---
+WHY TEMPORAL IS NOT AN AGENT
+---
+
+An AI agent:
+  - Has reasoning capability (an LLM decides what to do next)
+  - Observes its environment (tools return results, context accumulates)
+  - Takes actions (calls tools, invokes APIs)
+  - Adapts its plan based on intermediate results
+  - May loop or backtrack based on what it learns
+
+Temporal:
+  - Has no reasoning capability (it does not decide what to do next)
+  - Executes a plan defined by YOU in code
+  - The sequence of steps is deterministic and pre-written
+  - It does not adapt based on results — unless you write that logic
+  - It cannot look at a tool result and decide to call a different tool
+
+The distinction:
+
+  AGENT         The LLM reads the result of step 3 and decides to call
+                tool A instead of tool B, or to loop back, or to stop.
+                The plan is dynamic. The LLM is the decision maker.
+
+  TEMPORAL      You wrote: step 1, step 2, step 3, step 4.
+                Temporal executes exactly that. Durably. With retries.
+                If step 2 fails it retries step 2. It does not reconsider
+                whether step 2 was even the right step.
+
+Temporal is infrastructure. An agent is intelligence.
+Temporal orchestrates Activities. An agent reasons about what to do.
+
+The confusion arises because:
+  1. Both involve multi-step processes.
+  2. Both can call external tools or APIs.
+  3. Temporal Workflow code looks superficially like agent planning.
+  4. Marketing around "agentic workflows" has blurred the terminology.
+
+But the decision-making locus is completely different.
+Temporal executes your predetermined logic reliably.
+An agent figures out its own logic at runtime using an LLM.
+
+
+---
+WHAT TEMPORAL IS GREAT AT THAT AGENTS ARE NOT
+---
+
+DETERMINISTIC MULTI-STEP PROCESSES
+  Loan origination: collect documents, run credit check, run fraud check,
+  get underwriter approval, disburse funds, send confirmation.
+  The steps are always the same. The order is always the same.
+  Temporal executes this durably across days or weeks.
+  An agent would re-reason about what step comes next on every invocation —
+  unnecessary overhead and non-determinism for a known process.
+
+LONG-RUNNING PROCESSES (hours, days, months)
+  An agent session typically lives for one conversation (seconds to minutes).
+  Temporal workflows live for as long as the business process requires.
+  An employee onboarding workflow might run for 90 days.
+  A subscription renewal workflow might sleep for 364 days then wake up.
+  No agent framework is designed for this.
+
+HUMAN-IN-THE-LOOP AT SCALE
+  Send an approval request to a manager. Wait indefinitely for their response.
+  When the manager clicks Approve in a UI, a Signal arrives.
+  The workflow resumes. This works across days. Across server restarts.
+  Across deployments. The manager approval is just a Signal.
+
+GUARANTEED SIDE EFFECTS
+  Temporal guarantees that Activities (which do external work) run
+  at least once and can be configured for at-most-once with idempotency keys.
+  Sending an email, charging a card, updating a database — Temporal ensures
+  these happen eventually even across failures. An agent has no such guarantee.
+
+VISIBILITY AND AUDIT
+  Every workflow execution has a complete event history in the Temporal UI.
+  You can see: every activity that ran, every retry, every signal received,
+  every state transition, with timestamps.
+  This is an inherent audit trail — valuable for compliance.
+
+MASSIVE PARALLELISM
+  Spawn 10,000 child workflows. Each runs independently.
+  Process 10,000 loan applications in parallel, each with its own retry policy,
+  each tracked individually. This is not something you model in an agent.
+
+
+---
+WHAT AGENTS ARE GREAT AT THAT TEMPORAL IS NOT
+---
+
+DYNAMIC DECISION MAKING
+  "Given this document, decide which specialist to consult and what to ask."
+  Temporal cannot do this. You cannot pre-write the decision in code
+  if the decision depends on the content of the document.
+  An agent using an LLM makes this decision at runtime.
+
+OPEN-ENDED REASONING
+  "Research this topic, read relevant pages, summarize findings, and suggest
+  next steps." The set of steps is not known in advance.
+  The agent figures out the steps as it goes.
+  Temporal requires you to define all steps before execution.
+
+NATURAL LANGUAGE UNDERSTANDING
+  Temporal has no language model. It cannot parse, interpret, or respond
+  to natural language. An agent is built on top of an LLM that does this.
+
+ADAPTING TO INTERMEDIATE RESULTS
+  If a tool returns an unexpected result, an agent reconsiders its plan.
+  Temporal executes the next pre-defined step regardless of what the
+  previous step returned (unless you write explicit branching logic).
+
+CONVERSATIONAL INTERACTION
+  An agent can have a back-and-forth conversation with a user across
+  multiple turns, adapting to what the user says.
+  Temporal workflows do not converse. They execute.
+
+
+---
+THE COMBINATION — AGENTS RUNNING INSIDE TEMPORAL
+---
+
+This is where the real production power is.
+
+Pattern: use Temporal to give an agent durable execution, retry guarantees,
+human approval gates, and long-running persistence — while the agent
+retains its dynamic reasoning capability.
+
+The agent's tool calls become Temporal Activities.
+The agent's loop becomes a Temporal Workflow.
+
+EXAMPLE: Loan Processing Agent on Temporal
+
+  @workflow.defn
+  class LoanProcessingWorkflow:
+      @workflow.run
+      async def run(self, application_id: str) -> str:
+
+          # Step 1: Agent decides what documents to collect
+          # This is an Activity that calls an LLM agent
+          docs_needed = await workflow.execute_activity(
+              agent_decide_documents,
+              application_id,
+              start_to_close_timeout=timedelta(minutes=5),
+          )
+
+          # Step 2: Collect documents (durable, retried if it fails)
+          documents = await workflow.execute_activity(
+              collect_documents,
+              docs_needed,
+              retry_policy=RetryPolicy(maximum_attempts=10),
+              start_to_close_timeout=timedelta(hours=48),
+          )
+
+          # Step 3: Agent analyzes documents and generates assessment
+          assessment = await workflow.execute_activity(
+              agent_analyze_documents,
+              documents,
+              start_to_close_timeout=timedelta(minutes=10),
+          )
+
+          # Step 4: Wait for human underwriter approval (could be days)
+          approval = await workflow.wait_condition(
+              lambda: self._approval_received,
+              timeout=timedelta(days=30),
+          )
+
+          # Step 5: Agent drafts the approval letter
+          letter = await workflow.execute_activity(
+              agent_draft_letter,
+              assessment,
+              approval,
+              start_to_close_timeout=timedelta(minutes=5),
+          )
+
+          # Step 6: Disburse funds (at-most-once with idempotency key)
+          await workflow.execute_activity(
+              disburse_funds,
+              application_id,
+              start_to_close_timeout=timedelta(minutes=2),
+          )
+
+          return letter
+
+      @workflow.signal
+      def underwriter_approved(self, decision: str):
+          self._approval_received = True
+          self._decision = decision
+
+What Temporal provides:
+  - If the server crashes during document collection, it retries automatically
+  - The 30-day wait for underwriter approval is a durable timer — no polling loop
+  - Every step has configurable retry policy
+  - The complete audit trail is visible in Temporal UI
+  - The workflow can run for 30+ days without any process staying alive
+
+What the agent provides:
+  - agent_decide_documents: LLM reasons about what to collect
+  - agent_analyze_documents: LLM interprets the documents
+  - agent_draft_letter: LLM writes the approval letter
+  - Dynamic content, natural language, adaptive reasoning
+
+Neither can do what the other does. Together they cover the full spectrum.
+
+
+EXAMPLE: Multi-Agent Pipeline on Temporal
+
+  @workflow.defn
+  class MultiAgentResearchWorkflow:
+      @workflow.run
+      async def run(self, query: str) -> str:
+
+          # Agent 1: Classify query and decide research strategy
+          strategy = await workflow.execute_activity(
+              supervisor_agent_classify,
+              query,
+              start_to_close_timeout=timedelta(minutes=2),
+          )
+
+          # Fan out to specialist agents in parallel (child workflows)
+          results = await asyncio.gather(*[
+              workflow.execute_child_workflow(
+                  SpecialistAgentWorkflow,
+                  args=[query, domain],
+              )
+              for domain in strategy.domains
+          ])
+
+          # Aggregator agent merges results
+          final = await workflow.execute_activity(
+              aggregator_agent_merge,
+              results,
+              start_to_close_timeout=timedelta(minutes=3),
+          )
+
+          return final
+
+  Each child workflow (SpecialistAgentWorkflow) is independently durable.
+  If one specialist agent fails mid-execution, only that child retries.
+  The supervisor workflow tracks all child workflows.
+  This is the supervisor pattern with Temporal's durability guarantees.
+
+
+---
+TEMPORAL vs OTHER WORKFLOW TOOLS
+---
+
+Tool                What it is                    Agent-compatible?
+----------------    --------------------------    -------------------
+Temporal            Durable workflow engine       Yes (Activities wrap agents)
+Apache Airflow      Batch DAG scheduler           Partial (DAGs are static)
+AWS Step Functions  Managed state machine         Yes (Lambda Activities can run agents)
+Prefect             Dataflow orchestration        Partial (Python-native, less durable)
+Dagster             Data pipeline orchestrator    Partial (assets/ops model)
+LangGraph           Agent graph framework         Yes (it IS an agent framework)
+CrewAI              Multi-agent framework         Yes (it IS an agent framework)
+Google ADK          Agent Development Kit         Yes (it IS an agent framework)
+n8n / Zapier        No-code workflow automation   No (not designed for code-level agents)
+
+Temporal vs AWS Step Functions:
+  Step Functions: managed by AWS, JSON/YAML state machine definition,
+  good for simple linear flows and Lambda orchestration.
+  Temporal: code-first (Python/Go/Java), more expressive, supports complex
+  patterns (dynamic fan-out, signals, long timers, sagas) naturally.
+  Temporal requires running a server (or Temporal Cloud). Step Functions is serverless.
+
+Temporal vs Airflow:
+  Airflow: batch job scheduler, DAGs defined in Python, runs at scheduled intervals.
+  Not designed for event-driven, long-running, or human-in-the-loop workflows.
+  Temporal: event-driven, runs continuously, designed for millisecond to
+  multi-month durations, human signals, dynamic fan-out.
+
+
+---
+WHEN TO USE TEMPORAL WITH AGENTS
+---
+
+Use Temporal when your agent-based system has any of:
+
+  Long-running steps
+    Any step that can take hours or more (waiting for a human,
+    waiting for an external process, retrying a flaky external API).
+
+  Human-in-the-loop approvals
+    A manager must approve before the next step runs.
+    The approval could come minutes or days later.
+    Temporal's signal mechanism handles this natively.
+
+  Guaranteed side effects
+    Payments, database writes, external API mutations that must
+    eventually happen exactly once despite failures.
+
+  Cross-service orchestration
+    Multiple services are involved and you need coordination,
+    compensation (saga), and visibility across all of them.
+
+  Regulatory audit trail
+    You need an immutable, queryable record of every step
+    every workflow ever took. Temporal's event history is this.
+
+  Complex retry logic per step
+    Each step has different retry requirements:
+    LLM call: retry 3 times with 1s backoff.
+    Payment API: retry 5 times with exponential backoff.
+    Human approval: wait up to 30 days.
+    Temporal configures this per Activity.
+
+Do not use Temporal when:
+  - Your agent interaction is a single short conversation (seconds).
+  - All steps are fast, stateless, and in-process.
+  - You do not need durability across failures.
+  - Adding Temporal's operational overhead is not justified
+    (you must run the Temporal server or pay for Temporal Cloud).
+
+
+---
+KEY INTERVIEW POINTS
+---
+
+Q: Is Temporal an agent?
+   No. Temporal is a durable workflow engine. It has no reasoning capability.
+   It executes a sequence of steps defined in your code, with automatic
+   retry, durability across failures, and long-running timer support.
+   An agent uses an LLM to decide what to do next at runtime.
+   Temporal executes what you told it to do, reliably.
+
+Q: What problem does Temporal solve that a message queue does not?
+   A message queue gives you async delivery. But it does not give you:
+   workflow state across steps, automatic retry with configurable backoff,
+   durable timers (sleep for 30 days), human approval gates via signals,
+   or a complete audit history of every step. You would have to build all
+   of that yourself on top of a queue. Temporal gives it to you as infrastructure.
+
+Q: How do you combine an LLM agent with Temporal?
+   The agent's tool calls become Temporal Activities. The overall process
+   (collect input, run agent, wait for human, run agent again, write result)
+   becomes a Temporal Workflow. Temporal provides durability and retries.
+   The agent provides reasoning and natural language capability.
+   Neither replaces the other.
+
+Q: What is the key Temporal concept for human-in-the-loop?
+   Signals. A running workflow calls workflow.wait_condition() and pauses.
+   When a human completes an action (clicks Approve, submits a form, replies
+   to an email), your system sends a Signal to the workflow.
+   The workflow resumes from exactly where it paused.
+   This works across days. Across server restarts. No polling loop required.
+
+Q: What is a Temporal Activity?
+   A plain function that does the actual work: call an API, query a database,
+   call an LLM. Activities are retried automatically on failure according
+   to the retry policy you configure (max_attempts, backoff, timeout).
+   They are where all non-deterministic and side-effectful code lives.
+   The Workflow function itself must be deterministic and contain no I/O.
+
+Q: When would you use Temporal over AWS Step Functions?
+   Temporal is code-first (Python, Go, Java) and better at complex patterns:
+   dynamic fan-out (spawn N child workflows based on runtime data),
+   long-duration timers (sleep months), signals (external events resume workflows),
+   and sagas (compensating transactions). Step Functions uses JSON/YAML state
+   machine definitions, is serverless on AWS, and is simpler to operate for
+   straightforward linear flows. Choose Temporal when your workflow logic
+   is complex and your team prefers code over configuration.
