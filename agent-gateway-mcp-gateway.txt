@@ -1,0 +1,485 @@
+Can an Agent Gateway Also Be Used as an MCP Gateway?
+======================================================
+The short answer is yes — but only if you understand what each
+concept actually is, where they overlap, and where they diverge.
+This write-up covers both concepts from first principles,
+maps the overlap, and explains the design patterns for running
+one gateway that serves both purposes.
+
+
+---
+WHAT IS AN AGENT GATEWAY
+---
+
+An agent gateway is a reverse proxy or API gateway that sits in front
+of one or more AI agents or LLM backends.
+
+Its responsibilities:
+
+  ROUTING
+    Receive a request (HTTP, WebSocket, gRPC).
+    Decide which agent or model backend handles it.
+    Forward the request. Return the response.
+    This can be simple (one agent) or complex (supervisor pattern,
+    domain-based routing, A/B routing between model versions).
+
+  AUTHENTICATION AND AUTHORIZATION
+    Validate that the caller is allowed to use the agent.
+    API key validation, JWT verification, OAuth2 token introspection.
+    Enforce which users or services can call which agents.
+
+  RATE LIMITING
+    Cap the number of requests per user, per API key, per time window.
+    Protect backend model endpoints from overload.
+    Prevent runaway agent loops from consuming quota.
+
+  COST CONTROL AND TOKEN METERING
+    Track token usage per caller, per model, per request.
+    Enforce token budgets per user or per team.
+    Emit cost metrics for chargebacks.
+
+  OBSERVABILITY
+    Log every request/response (with PII controls).
+    Emit latency, token count, error rate metrics.
+    Propagate trace IDs for end-to-end distributed tracing.
+
+  GUARDRAILS AND CONTENT FILTERING
+    Apply input and output filtering rules before forwarding.
+    Block prompt injection attempts.
+    Redact PII before the request reaches the model.
+    Apply content policies on model responses before returning to the caller.
+
+  CACHING
+    Cache identical or semantically similar requests.
+    Return cached responses without a model call (reduces cost and latency).
+    Semantic caching: embed the query, find similar cached queries.
+
+  LOAD BALANCING
+    Distribute requests across multiple model instances or providers.
+    Fallback: if OpenAI is rate-limiting, route to Anthropic or Bedrock.
+    Latency-based routing: route to the fastest responding endpoint.
+
+  Examples of agent gateways:
+    LiteLLM Proxy       - OSS, model-agnostic, Bedrock/OpenAI/Gemini/Ollama
+    Portkey             - commercial, multi-provider, semantic caching
+    Kong AI Gateway     - Kong plugin ecosystem + AI-specific features
+    AWS API Gateway     - general API gateway used in agent architectures
+    Apigee              - Google's enterprise API gateway
+    Traefik / Nginx     - general reverse proxies used as agent gateways
+    Custom FastAPI       - simple agent gateway built in-house
+
+
+---
+WHAT IS AN MCP GATEWAY
+---
+
+MCP (Model Context Protocol) is an open protocol introduced by Anthropic
+in late 2024. It standardizes how AI models and agents discover and call
+external tools, resources, and data sources.
+
+Think of it as the USB standard for AI agent tool connectivity.
+Instead of every agent framework having its own proprietary tool
+integration format, MCP defines one wire protocol that any client
+(agent) can use to talk to any server (tool provider).
+
+MCP ARCHITECTURE
+
+  MCP Client
+    The agent or AI system that wants to use tools.
+    Examples: Claude Desktop, a Google ADK agent, a LangChain agent,
+    any LLM application that implements the MCP client spec.
+
+  MCP Server
+    A process that exposes tools, resources, and prompts via the MCP protocol.
+    Examples:
+      - A filesystem MCP server (read/write local files)
+      - A GitHub MCP server (create PRs, read repos)
+      - A PostgreSQL MCP server (run SQL queries)
+      - A Slack MCP server (send messages, read channels)
+      - A Jira MCP server (create tickets, update status)
+      - A custom enterprise MCP server (your internal APIs as tools)
+
+  MCP PRIMITIVES
+    Tools      - functions the model can call (like function calling / tool use)
+                 Example: create_ticket(summary, priority), query_database(sql)
+    Resources  - data the model can read (like RAG context injection)
+                 Example: file contents, database records, API responses
+    Prompts    - reusable prompt templates with parameters
+                 Example: a code review prompt, a summarization prompt
+
+  MCP TRANSPORT OPTIONS
+    stdio      - local process communication (MCP server runs as a subprocess)
+    HTTP + SSE - remote server over HTTP with Server-Sent Events for streaming
+    WebSocket  - bidirectional streaming transport (emerging)
+
+  MCP DISCOVERY
+    An MCP client can ask a server: "what tools do you have?"
+    The server returns a manifest: tool names, descriptions, input schemas.
+    The model uses this manifest to decide which tool to call.
+    No hardcoded tool definitions needed in the agent code.
+
+AN MCP GATEWAY IS
+
+  A gateway that sits between multiple MCP clients (agents) and
+  multiple MCP servers (tool providers) and provides:
+
+    TOOL DISCOVERY AGGREGATION
+      Multiple MCP servers each expose their own tool lists.
+      The gateway merges them into a single unified tool catalog.
+      An agent connects to the gateway and sees all tools from all servers.
+      Without a gateway: each agent must connect to each MCP server individually.
+
+    AUTHENTICATION FOR TOOL ACCESS
+      Not every agent should be allowed to call every tool.
+      A CI agent should be able to run tests but not delete a database.
+      The gateway enforces: which agent identity can call which tools.
+
+    ROUTING FROM CLIENT TO SERVER
+      When an agent calls create_ticket(), the gateway routes that call
+      to the Jira MCP server, not to the filesystem MCP server.
+      The agent does not need to know which server provides which tool.
+
+    RATE LIMITING AND QUOTA PER TOOL
+      Prevent an agent from calling an external API (GitHub, Jira, Slack)
+      more than N times per minute to avoid hitting external rate limits.
+
+    AUDIT LOGGING
+      Every tool call is logged: which agent, which tool, what parameters,
+      what response, timestamp. This is critical for enterprise compliance.
+      An agent that deletes a file or creates a database record must leave
+      an immutable audit trail.
+
+    PROTOCOL TRANSLATION
+      Some MCP servers speak stdio. Some speak HTTP+SSE.
+      The gateway normalizes the transport so agents always talk HTTP.
+
+    SECRET MANAGEMENT
+      MCP servers need credentials to talk to external systems
+      (Jira API token, GitHub token, Slack bot token).
+      The gateway holds these credentials. The agent does not.
+      The agent never sees raw credentials.
+
+  Examples of MCP gateways (emerging ecosystem as of 2025):
+    Anthropic MCP reference implementations
+    LiteLLM Proxy (adding MCP gateway support)
+    Kong AI Gateway (MCP plugin in development)
+    Custom FastAPI / Express gateway
+    Cloudflare Workers (MCP server hosting + gateway)
+
+
+---
+WHERE THEY OVERLAP
+---
+
+Both an agent gateway and an MCP gateway are middleware layers
+between AI systems and backends. They share the same core concerns:
+
+  Concern                  Agent Gateway        MCP Gateway
+  --------------------     ---------------      ---------------
+  Authentication           Yes                  Yes
+  Authorization            Yes                  Yes (tool-level)
+  Rate limiting            Yes                  Yes (per tool)
+  Routing                  Yes (to models)      Yes (to MCP servers)
+  Observability            Yes                  Yes
+  Audit logging            Yes                  Yes
+  Secret management        Yes (model API keys) Yes (tool credentials)
+  Content filtering        Yes                  Optionally
+  Cost metering            Yes (tokens)         Yes (API call counts)
+
+The overlap is large enough that a single well-designed gateway
+can serve both roles simultaneously.
+
+
+---
+CAN ONE GATEWAY SERVE BOTH ROLES?
+---
+
+Yes. Here is exactly how.
+
+A gateway that handles both concerns looks like this:
+
+  Caller (user / service / CI system)
+    |
+    v
+  +----------------------------------------------------------+
+  |                UNIFIED AGENT + MCP GATEWAY               |
+  |                                                          |
+  |  AGENT GATEWAY LAYER                                     |
+  |    - Authenticate the caller (JWT / API key)             |
+  |    - Route to the right agent (supervisor, specialist)   |
+  |    - Rate limit the caller                               |
+  |    - Apply input guardrails (PHI redaction, injection)   |
+  |    - Meter token usage                                   |
+  |    - Emit latency + error metrics                        |
+  |    - Propagate trace_id                                  |
+  |                                                          |
+  |  MCP GATEWAY LAYER                                       |
+  |    - Serve unified tool catalog (merged from all MCP     |
+  |      servers) to agents that connect as MCP clients      |
+  |    - Route tool calls to the correct MCP server          |
+  |    - Enforce tool-level authorization (which agent       |
+  |      can call which tool)                                |
+  |    - Rate limit per tool per agent                       |
+  |    - Inject credentials for each MCP server              |
+  |    - Audit every tool call                               |
+  |                                                          |
+  +----------------------------------------------------------+
+         |                    |                    |
+         v                    v                    v
+   LLM Backends          MCP Servers           Enterprise APIs
+   (Bedrock, Gemini,     (GitHub, Jira,        (Workday, ServiceNow,
+    OpenAI, Ollama)       Slack, Postgres,      SAP Ariba, Vault)
+                          Filesystem)
+
+THE AGENT FLOW END TO END
+
+  1. Caller sends: POST /ask { query: "create a Jira ticket for this bug" }
+  2. Gateway (agent layer): authenticates caller, applies guardrails,
+     routes to the correct agent (IT Support agent, supervisor, etc.)
+  3. Agent (Claude via Bedrock): needs to call create_ticket().
+     Agent is configured as an MCP client pointing to the gateway's MCP endpoint.
+  4. Agent sends MCP tool call: create_ticket(summary="...", priority="P2")
+  5. Gateway (MCP layer): validates agent is allowed to call create_ticket,
+     injects the Jira API token, routes to the Jira MCP server,
+     logs the tool call (who, what, when, parameters).
+  6. Jira MCP server creates the ticket. Returns ticket ID.
+  7. Gateway returns result to the agent.
+  8. Agent includes the ticket ID in its response.
+  9. Gateway (agent layer): applies output guardrails, logs the response,
+     records token usage. Returns to the caller.
+
+The caller sees one endpoint. The agent sees one tool catalog.
+The gateway handles all routing, auth, credential injection, and audit.
+
+
+---
+PRACTICAL IMPLEMENTATION OPTIONS
+---
+
+OPTION 1 — LITELLM PROXY AS A DUAL GATEWAY
+
+  LiteLLM Proxy is primarily an agent gateway (model routing, key management,
+  cost tracking, rate limiting across 100+ LLM providers).
+
+  It is adding MCP support: you can register MCP servers in the LiteLLM
+  config and agents that connect to LiteLLM can access MCP tools
+  through the proxy.
+
+  litellm_proxy_config.yaml:
+    model_list:
+      - model_name: claude-sonnet
+        litellm_params:
+          model: bedrock/anthropic.claude-sonnet-4-5
+          aws_region_name: us-east-1
+
+    mcp_servers:
+      - name: github
+        url: http://mcp-github-server:8080/mcp
+        auth_token: "${GITHUB_MCP_TOKEN}"
+      - name: jira
+        url: http://mcp-jira-server:8080/mcp
+        auth_token: "${JIRA_MCP_TOKEN}"
+      - name: postgres
+        command: ["python", "mcp_postgres_server.py"]   # stdio mode
+        env:
+          DATABASE_URL: "${DATABASE_URL}"
+
+  Agents connect to LiteLLM proxy for both:
+    - Model calls (POST /chat/completions)
+    - Tool discovery and calls (GET /mcp/tools, POST /mcp/call)
+
+  LiteLLM handles: key management, rate limiting, cost tracking,
+  model fallback, MCP routing, credential injection.
+
+OPTION 2 — KONG AI GATEWAY
+
+  Kong is an enterprise API gateway with a plugin ecosystem.
+  Kong AI Gateway adds LLM-specific plugins.
+
+  Plugins relevant to dual gateway use:
+    ai-proxy          - routes to LLM providers (OpenAI, Bedrock, Gemini)
+    ai-rate-limiting  - token-based rate limiting
+    ai-prompt-guard   - input/output content filtering
+    ai-request-transformer - modify prompts before forwarding
+    key-auth          - API key authentication
+    jwt               - JWT validation
+    rate-limiting     - request-level rate limiting
+    request-termination - block specific patterns
+    opentelemetry     - trace propagation
+
+  MCP gateway function: add a custom plugin or route that:
+    - Accepts MCP protocol requests from agents
+    - Routes to registered MCP server backends
+    - Injects credentials via Kong Vault integration
+    - Logs tool calls via Kong's audit logging
+
+  Kong runs on Kubernetes (helm install kong). Central control plane
+  via Kong Manager (UI) or deck (declarative config as code).
+
+OPTION 3 — CUSTOM FASTAPI GATEWAY (FULL CONTROL)
+
+  Build a FastAPI application that handles both layers.
+  Most appropriate when you need custom business logic,
+  domain-specific routing, or tight integration with existing infrastructure.
+
+  Sketch:
+
+  from fastapi import FastAPI, Depends, HTTPException
+  from pydantic import BaseModel
+
+  app = FastAPI()
+
+  # --- Agent Gateway Routes ---
+
+  @app.post("/ask")
+  async def ask(body: AskRequest, caller=Depends(authenticate)):
+      apply_guardrails(body.query)
+      meter_request(caller)
+      response = await route_to_agent(body.query, caller)
+      audit_log("ask", caller, body.query, response)
+      return response
+
+  # --- MCP Gateway Routes ---
+
+  @app.get("/mcp/tools")
+  async def list_tools(agent=Depends(authenticate_agent)):
+      # aggregate tool lists from all registered MCP servers
+      tools = await aggregate_mcp_tools(agent.allowed_servers)
+      return {"tools": tools}
+
+  @app.post("/mcp/call")
+  async def call_tool(body: MCPCallRequest, agent=Depends(authenticate_agent)):
+      if not agent_allowed(agent, body.tool_name):
+          raise HTTPException(403, "Tool not permitted for this agent")
+      server = resolve_mcp_server(body.tool_name)
+      credential = vault.get_secret(server.credential_key)
+      result = await forward_to_mcp_server(server, body, credential)
+      audit_log("mcp_tool_call", agent, body.tool_name, body.params, result)
+      return result
+
+  The agent (Claude via ADK) points its MCP client at /mcp/.
+  The caller points at /ask.
+  One FastAPI process handles both.
+
+OPTION 4 — CLOUDFLARE WORKERS AI
+
+  Cloudflare Workers can host MCP servers at the edge.
+  Cloudflare's AI Gateway sits in front of LLM provider calls.
+  Together: Cloudflare AI Gateway (agent gateway) + Workers MCP servers
+  = a dual-role gateway at the edge.
+
+  Use case: low-latency global deployment where edge proximity matters.
+  Not typical for enterprise on AWS/GCP but worth knowing about.
+
+
+---
+WHAT TO BE CAREFUL ABOUT
+---
+
+TOOL AUTHORIZATION IS DIFFERENT FROM MODEL AUTHORIZATION
+  Authenticating that a caller can use the agent is straightforward.
+  Authorizing that an agent identity can call a specific tool
+  (create_ticket vs delete_database_record) is more granular.
+  You need a separate authorization policy for tool-level access.
+  RBAC: role=ci-agent -> allowed tools: [run_tests, create_pr, comment_pr]
+        role=hr-agent -> allowed tools: [create_hr_case, search_knowledge_base]
+        role=admin-agent -> all tools (restricted, audited)
+
+AUDIT GRANULARITY
+  Agent gateway audit: who called the agent, what was the query, what was the response.
+  MCP gateway audit: which agent called which tool, with what parameters, what was returned.
+  The MCP layer audit is more important for compliance. Tool calls have
+  direct side effects (creating records, sending messages, modifying data).
+  Every tool call must be an immutable audit event.
+
+CREDENTIAL SCOPE
+  MCP servers need credentials for external systems.
+  The gateway holds these credentials, not the agents.
+  Use a secrets manager (Vault, AWS Secrets Manager, GCP Secret Manager).
+  Inject credentials per tool call. Rotate them without restarting agents.
+  Never pass raw credentials to agent prompts or tool parameters.
+
+RECURSIVE AGENT TOOL CALLS
+  An agent calls a tool. The tool internally calls another agent.
+  That agent calls more tools. This can loop.
+  The gateway must enforce: max tool calls per request,
+  max recursion depth, and circuit break on loop detection.
+
+MCP IS A YOUNG PROTOCOL
+  MCP was introduced in late 2024. The ecosystem is moving fast.
+  Transport options (stdio, HTTP+SSE, WebSocket) are stabilizing.
+  Not all agent frameworks support MCP as a client yet.
+  Check the current state of your framework before committing
+  to a deep MCP gateway investment. The pattern is correct;
+  the specific implementations are still maturing.
+
+
+---
+WHEN TO COMBINE THEM vs KEEP THEM SEPARATE
+---
+
+COMBINE (one gateway for both) when:
+  - You have a small to medium number of agents and MCP servers
+  - You want a single control plane for auth, rate limiting, and audit
+  - You are building greenfield and can design both concerns together
+  - Operational simplicity matters more than independent scaling
+
+KEEP SEPARATE when:
+  - The agent gateway handles very high traffic (millions of requests/day)
+    and MCP tool calls are much lower volume — different scaling requirements
+  - Different teams own the agent gateway and the MCP server registry
+  - You already have a mature API gateway (Kong, AWS API Gateway) and
+    want to bolt on MCP support as a separate sidecar or service
+  - Your MCP servers need to be discoverable by clients outside your
+    agent ecosystem (external developers, partners)
+
+
+---
+KEY INTERVIEW POINTS
+---
+
+Q: What is MCP and why does it matter?
+   MCP (Model Context Protocol) is an open standard by Anthropic that
+   defines how AI agents discover and call external tools. Before MCP,
+   every agent framework had its own tool integration format.
+   MCP standardizes the wire protocol so any MCP client (agent) can
+   talk to any MCP server (tool provider) without custom integration code.
+   Think USB for AI tool connectivity.
+
+Q: What is an agent gateway?
+   A reverse proxy or API gateway that sits in front of AI agent backends.
+   It handles authentication, routing to the right model or agent,
+   rate limiting, token metering, input/output guardrails, observability,
+   and caching. It decouples callers from the specific model endpoints.
+
+Q: Can they be the same gateway?
+   Yes. Both deal with the same cross-cutting concerns: authentication,
+   authorization, routing, rate limiting, audit logging, secret management.
+   A unified gateway handles agent-layer routing (caller -> agent -> LLM)
+   and MCP-layer routing (agent -> tool catalog -> MCP server).
+   The agent sees one endpoint for model calls and one endpoint for tool calls.
+   The gateway handles everything behind those two endpoints.
+
+Q: What is the most important thing an MCP gateway adds that a basic
+   agent gateway does not?
+   Tool-level authorization and tool call audit logging.
+   An agent gateway controls who can use the agent.
+   An MCP gateway controls which tools each agent can call and logs
+   every tool invocation with parameters. Tool calls have direct side
+   effects (create, update, delete in external systems). That audit trail
+   is critical for compliance and for debugging agent behaviour.
+
+Q: How do credentials work in an MCP gateway?
+   The gateway holds all external system credentials (Jira token, GitHub token,
+   database password) in a secrets manager. When an agent calls a tool,
+   the gateway injects the right credential into the request to the MCP server.
+   The agent never sees the credential. This prevents credential leakage
+   through agent prompts, logs, or trace data.
+
+Q: What guardrails does a combined gateway apply?
+   Input guardrails (on the incoming query): PHI redaction, prompt injection
+   detection, content policy filtering, max token enforcement.
+   Tool call guardrails (on MCP calls): tool authorization check,
+   parameter validation, rate limit per tool per agent.
+   Output guardrails (on the response): content policy on model output,
+   PII filtering before returning to the caller.
