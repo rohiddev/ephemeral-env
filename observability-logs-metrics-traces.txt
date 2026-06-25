@@ -1,0 +1,372 @@
+Observability: Logs, Metrics, Traces, and Everything Around Them
+================================================================
+
+The three pillars of observability are logs, metrics, and traces.
+Each answers a different question. Together they give you full
+visibility into what a distributed system is doing and why.
+
+
+---
+THE THREE PILLARS
+---
+
+LOGS
+  What they are: timestamped text records of discrete events.
+  What they answer: "what happened?"
+
+  A log entry captures a single event at a point in time.
+  It can be structured (JSON) or unstructured (plaintext).
+
+  Structured log example:
+    {
+      "timestamp": "2025-07-25T10:42:11Z",
+      "level": "INFO",
+      "service": "loan-service",
+      "user_id": "u-001",
+      "action": "loan_approved",
+      "amount": 50000,
+      "duration_ms": 142
+    }
+
+  Best practices:
+  - Always use structured (JSON) logs in production
+  - Include correlation IDs (trace_id, request_id) on every line
+  - Use consistent severity levels: DEBUG / INFO / WARN / ERROR / FATAL
+  - Never log secrets, PII, passwords, or tokens
+  - Log at the boundary (entry + exit of a function or service call),
+    not inside every loop
+
+  AWS tools: CloudWatch Logs, CloudWatch Logs Insights
+  GCP tools: Cloud Logging (formerly Stackdriver)
+  OSS tools: Elasticsearch + Kibana (ELK), Loki + Grafana
+
+
+METRICS
+  What they are: numeric measurements sampled over time.
+  What they answer: "how is the system behaving right now?"
+
+  Metrics are aggregates — counts, gauges, rates, histograms.
+  They are cheap to store and fast to query.
+  They are the first signal you see in a dashboard or alert.
+
+  Core metric types:
+    Counter     - only goes up (e.g. total_requests, errors_total)
+    Gauge       - goes up and down (e.g. cpu_usage, active_connections)
+    Histogram   - distribution of values (e.g. request_duration_ms)
+    Summary     - pre-calculated percentiles (e.g. p50, p95, p99 latency)
+
+  Golden Signals (Google SRE framework):
+    Latency     - how long requests take (distinguish success vs error)
+    Traffic     - requests per second, events per second
+    Errors      - error rate (4xx, 5xx, business errors)
+    Saturation  - how full is the system (CPU, memory, queue depth)
+
+  USE Method (for infrastructure):
+    Utilization - % of time resource is busy
+    Saturation  - work queue depth, backpressure
+    Errors      - error rate on the resource
+
+  Key application metrics to track:
+    - request_rate (req/s per service)
+    - error_rate (% of requests returning errors)
+    - latency_p50 / p95 / p99 (response time percentiles)
+    - active_sessions / concurrent_users
+    - queue_depth (backlog of work waiting to be processed)
+    - cache_hit_rate (effectiveness of caching layer)
+    - db_connection_pool_usage (saturation signal)
+
+  AWS tools: CloudWatch Metrics, CloudWatch Embedded Metrics Format (EMF)
+  GCP tools: Cloud Monitoring (Metrics Explorer)
+  OSS tools: Prometheus + Grafana
+
+
+TRACES
+  What they are: records of a request's path through a distributed system.
+  What they answer: "where did the time go across services?"
+
+  A trace is a tree of spans. Each span is one unit of work
+  (one function call, one service hop, one database query).
+
+  Trace structure:
+    Trace
+      Span: API Gateway (200ms total)
+        Span: auth-service validate_token (10ms)
+        Span: loan-service process_request (180ms)
+          Span: postgres SELECT loan WHERE id=x (45ms)
+          Span: redis GET user_eligibility (5ms)
+          Span: notification-service send_email (30ms)
+
+  Key concepts:
+    trace_id    - unique ID for the entire request end-to-end
+    span_id     - unique ID for one unit of work
+    parent_id   - links child span to its parent span
+    duration    - wall clock time for that span
+    attributes  - key/value metadata on the span (user_id, service, status)
+    status      - OK / ERROR
+
+  Why traces matter:
+  - Logs tell you something happened in each service
+  - Metrics tell you the p99 is 2s
+  - Traces tell you: the 2s is ALL inside the postgres query
+  Without traces, cross-service debugging in a microservices system
+  requires manually correlating logs across services using request IDs.
+
+  AWS tools: AWS X-Ray (native), ADOT (OpenTelemetry)
+  GCP tools: Cloud Trace
+  OSS tools: Jaeger, Zipkin, Tempo (Grafana)
+
+
+---
+THE CORRELATION LAYER
+---
+
+Logs, metrics, and traces become 10x more useful when they share
+a common correlation ID — trace_id and span_id.
+
+When every log line includes trace_id:
+  - You click a slow trace in X-Ray / Grafana Tempo
+  - You jump directly to all logs from that exact request
+  - You see the exact error log that caused the slow span
+
+This is called exemplars in Prometheus/Grafana —
+metric data points annotated with the trace_id that caused them.
+
+Example: metric alert fires (p99 > 2s)
+  -> Click the alert in Grafana
+  -> See the exact histogram bucket and trace_id
+  -> Click trace_id -> see the full trace waterfall
+  -> Click the slow span -> see the logs for that span
+
+
+---
+THE FOURTH SIGNAL: EVENTS / AUDIT TRAIL
+---
+
+Beyond the three pillars, enterprise systems add a fourth layer:
+structured audit events. These are not debug logs — they are
+business-level records of who did what and when.
+
+Audit event shape:
+  {
+    "timestamp": "...",
+    "actor": "user-001",
+    "action": "loan_approved",
+    "resource": "loan/LN-88231",
+    "outcome": "success",
+    "ip": "10.0.1.5",
+    "session_id": "...",
+    "trace_id": "abc123"
+  }
+
+Audit logs:
+  - Immutable (write-once, append-only)
+  - Separate from application logs (different retention, access controls)
+  - Required for HIPAA, SOX, PCI, GDPR compliance
+  - Always include trace_id so they can be cross-referenced with traces
+
+AWS: CloudWatch Logs + CloudTrail (API-level audit, automatic)
+GCP: Cloud Audit Logs (Admin Activity + Data Access logs, automatic)
+
+
+---
+ALERTING AND ANOMALY DETECTION
+---
+
+Metric alerting strategies:
+  Static threshold   - alert if error_rate > 5% for 5 minutes
+  Anomaly detection  - alert if metric deviates > 2 stddev from baseline
+  Composite alert    - alert only when BOTH error_rate high AND latency high
+
+Key alert design principles:
+  - Alert on symptoms, not causes (alert on high latency, not high CPU)
+  - Every alert must be actionable (if it fires and no one knows what to do, delete it)
+  - Set minimum alert duration (avoid flapping on brief spikes)
+  - Separate paging alerts (P1/P2) from ticketed alerts (P3/P4)
+  - Use SLO-based alerting (burn rate on error budget) for mature systems
+
+SLO alerting example:
+  SLO: 99.9% of loan requests succeed within 500ms over 30 days
+  Error budget: 0.1% = 43.2 minutes of downtime per 30 days
+  Alert: if burn rate > 14x normal rate, page immediately
+  Alert: if burn rate > 2x normal rate over 6 hours, create ticket
+
+AWS tools: CloudWatch Alarms, CloudWatch Anomaly Detection
+GCP tools: Cloud Monitoring alerting policies
+OSS tools: Prometheus Alertmanager, Grafana Alerting
+
+
+---
+SAMPLING STRATEGIES FOR TRACES
+---
+
+Tracing every request in high-volume systems is expensive.
+Sampling reduces cost while preserving observability.
+
+Head-based sampling (decision at trace start):
+  - Simple: sample 10% of all traces uniformly
+  - Risk: you may miss the rare slow or failed request
+
+Tail-based sampling (decision at trace completion):
+  - Sample 100% of error traces, 100% of slow traces (>p99)
+  - Sample 1% of everything else
+  - Requires a trace collector (ADOT / OpenTelemetry Collector)
+  - AWS: ADOT tail-based sampling via OpenTelemetry Collector config
+
+Adaptive sampling:
+  - Adjust rate dynamically based on traffic volume
+  - AWS X-Ray: configurable sampling rules per service/route
+
+
+---
+OBSERVABILITY PIPELINE (where data flows)
+---
+
+Application / Service
+  |
+  +-- Logs   -> stdout (container) -> log agent -> log storage
+  |                                     (Fluent Bit / Fluentd -> CloudWatch / Loki)
+  |
+  +-- Metrics -> push to metrics endpoint (Prometheus scrape / CloudWatch EMF)
+  |              -> metrics storage (Prometheus / CloudWatch)
+  |
+  +-- Traces  -> OTLP exporter -> OTel Collector (ADOT)
+                                    |-> AWS X-Ray
+                                    |-> CloudWatch
+                                    |-> Jaeger / Tempo (OSS)
+
+OTel Collector is the hub in OpenTelemetry architectures.
+It receives logs/metrics/traces via OTLP and routes them to
+any backend (X-Ray, Prometheus, CloudWatch, Datadog, Jaeger).
+This decouples instrumentation from the backend vendor.
+
+
+---
+INSTRUMENTATION APPROACHES
+---
+
+Auto-instrumentation:
+  OTel Java agent, OTel Python agent auto-patch common libraries
+  (FastAPI, Flask, requests, boto3, psycopg2, redis).
+  Zero code changes required.
+
+Manual instrumentation:
+  Wrap critical business operations in explicit named spans.
+  Add business attributes (user_id, loan_id, amount) to spans.
+  This is where trace data becomes business-readable.
+
+Example (Python + OTel):
+  from opentelemetry import trace
+  tracer = trace.get_tracer("loan-service")
+
+  with tracer.start_as_current_span("process_loan_application") as span:
+      span.set_attribute("loan.id", loan_id)
+      span.set_attribute("loan.amount", amount)
+      span.set_attribute("user.id", user_id)
+      result = run_loan_logic(loan_id)
+      span.set_attribute("loan.outcome", result.status)
+
+
+---
+AWS-SPECIFIC OBSERVABILITY STACK
+---
+
+Service                      Role
+-----------------------      ------------------------------------------
+CloudWatch Logs              Log storage, querying (Logs Insights), alarms
+CloudWatch Metrics           System + custom metrics storage and alerting
+CloudWatch Anomaly Detection ML-based baseline + deviation alerting
+CloudWatch Embedded Metrics  Emit metrics inline in structured logs (free)
+AWS X-Ray                    Distributed tracing (spans, service map)
+ADOT                         OTel Collector for AWS (receives OTLP, routes to X-Ray + CW)
+CloudTrail                   Immutable audit trail for all AWS API calls
+AWS Health                   Service health events and maintenance notices
+Container Insights           EKS/ECS node + pod metrics, log routing
+Application Signals          SLO-aware observability for microservices (new, 2024)
+
+Deployment pattern (EKS):
+  - Pod: app container + ADOT sidecar
+  - ADOT sidecar receives OTLP on localhost:4317
+  - Fluent Bit DaemonSet ships logs to CloudWatch Logs
+  - CloudWatch Container Insights collects pod/node metrics
+  - X-Ray service map shows cross-service trace topology
+
+
+---
+GCP-SPECIFIC OBSERVABILITY STACK
+---
+
+Service                      Role
+-----------------------      ------------------------------------------
+Cloud Logging                Log storage, Log Explorer, log-based metrics
+Cloud Monitoring             Metrics storage, dashboards, alerting
+Cloud Trace                  Distributed tracing (same concept as X-Ray)
+Cloud Profiler               Continuous CPU/memory profiling in production
+Cloud Audit Logs             Admin Activity + Data Access audit trail
+Error Reporting              Automatic error grouping from logs
+Cloud Debugger               Inspect running apps without stopping them
+
+Deployment pattern (GKE):
+  - Cloud Operations for GKE auto-collects logs + metrics from pods
+  - OTel SDK in app emits traces to Cloud Trace via OTLP exporter
+  - Log-based metrics turn log patterns into metric data points
+
+
+---
+QUICK DECISION GUIDE
+---
+
+Symptom                             Start with
+--------------------------------    -----------------------------------------
+Latency spike (p99 is high)         Traces - find the slow span
+Error rate increase                 Logs - find the error message
+CPU / memory growing                Metrics - trend over time
+Intermittent failure (hard to repro) Traces with tail sampling on errors
+Security / compliance question      Audit logs / CloudTrail
+"Did the deployment cause this?"    Metrics overlaid with deployment markers
+"Which service is the bottleneck?"  Trace waterfall, sorted by duration
+"What did user X do?"               Logs filtered by user_id
+"Are we burning our error budget?"  SLO burn rate metric + alert
+
+
+---
+KEY INTERVIEW POINTS
+---
+
+Q: What is the difference between logs and metrics?
+   Logs record individual events — discrete, high-cardinality, text.
+   Metrics are numeric aggregates — continuous, low-cardinality, queryable.
+   Logs answer "what happened on request 1234."
+   Metrics answer "what is the error rate over the last hour."
+
+Q: Why do you need traces if you already have logs?
+   In a microservices system, one user request touches 5-10 services.
+   Logs in each service are independent — you cannot see the full picture.
+   A trace stitches them together with timing, showing exactly where
+   latency was introduced and which service call failed.
+
+Q: What is OpenTelemetry?
+   A CNCF standard for instrumentation. One SDK, any backend.
+   Defines the wire format (OTLP) and collector architecture.
+   Avoids vendor lock-in: same instrumented code can send to
+   X-Ray, Cloud Trace, Jaeger, Datadog — change is a config swap.
+
+Q: What is tail-based sampling and why does it matter?
+   Head-based sampling decides at the start of a trace whether to keep it.
+   It misses rare failures unless you sample 100% (too expensive).
+   Tail-based sampling buffers spans and decides at completion.
+   Keep 100% of error traces and slow traces. Drop most normal ones.
+   Critical for finding rare, high-impact failures in production.
+
+Q: What is structured logging and why does it matter?
+   Structured logs are JSON with consistent field names.
+   They are machine-parseable without regex.
+   CloudWatch Logs Insights, Kibana, Loki all query structured fields.
+   Unstructured logs require fragile regex to extract data.
+   In any production system: always structured, always include trace_id.
+
+Q: What is SLO-based alerting?
+   Instead of alerting on raw metrics (CPU > 80%), alert on
+   whether you are consuming your error budget faster than expected.
+   Burn rate > 14x = page immediately (budget gone in 2 hours).
+   Burn rate > 2x over 6 hours = ticket (budget gone in a week).
+   This ties alerting directly to user-visible reliability.
