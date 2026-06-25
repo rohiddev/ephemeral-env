@@ -1,0 +1,704 @@
+Grafana, Datadog, and Polaris
+==============================
+What each tool is, what problem it solves, how it works,
+and how to use it in a production engineering context.
+
+
+---
+GRAFANA
+---
+
+WHAT IT IS
+  Grafana is an open-source observability and data visualization platform.
+  It does not collect or store data itself.
+  It is a query and visualization layer that connects to any data source
+  and turns raw numbers into dashboards, alerts, and on-call workflows.
+
+  Think of it as the front end for your entire observability stack.
+  The backend can be anything: Prometheus, Loki, Tempo, Elasticsearch,
+  CloudWatch, Datadog, InfluxDB, PostgreSQL, or 150+ other sources.
+
+CORE COMPONENTS
+
+  Grafana Dashboards
+    The main UI. Panels display metrics, logs, traces, and alerts.
+    Each panel is a query against a data source.
+    Dashboards are version-controlled as JSON — store them in Git.
+
+  Grafana Alerting
+    Unified alerting engine. Define alert rules using the same
+    query language you use in dashboards.
+    Routes alerts to PagerDuty, Slack, Opsgenie, email, webhook.
+    Supports grouping, silencing, and inhibition rules.
+
+  Grafana Loki
+    Log aggregation system. Designed to work like Prometheus but for logs.
+    Stores only the log metadata (labels) in an index.
+    Stores the raw log content compressed in object storage (S3, GCS).
+    Very cheap at scale compared to Elasticsearch.
+    Query language: LogQL (similar to PromQL, works on log streams).
+
+  Grafana Tempo
+    Distributed tracing backend. Stores traces.
+    Integrates natively with Loki and Prometheus:
+    click a trace ID in a log line -> jump to the trace in Tempo.
+    Click a metric exemplar -> jump to the trace that caused it.
+    Storage: S3, GCS, Azure Blob (object storage, cheap at scale).
+
+  Grafana Mimir
+    Long-term Prometheus-compatible metrics storage.
+    Horizontally scalable. Multi-tenant.
+    Drop-in replacement for Prometheus remote_write backend.
+    Use when your Prometheus retention needs to go beyond 15 days
+    or you need to federate metrics from multiple clusters.
+
+  Grafana OnCall
+    On-call scheduling and escalation policies.
+    Integrates with Grafana Alerting.
+    Manages rotations, overrides, escalation chains.
+    Alternative to PagerDuty for teams running the full Grafana stack.
+
+  Grafana k6
+    Load and performance testing tool.
+    Write test scripts in JavaScript. Run from CLI or Grafana Cloud.
+    Integrates with dashboards: overlay load test results on
+    latency and error rate metrics to see system behaviour under load.
+
+THE GRAFANA STACK (OSS)
+
+  Metrics:   Prometheus -> Grafana (or Prometheus -> Mimir -> Grafana)
+  Logs:      Promtail / Fluent Bit -> Loki -> Grafana
+  Traces:    OTel SDK -> OTel Collector -> Tempo -> Grafana
+  Alerting:  Grafana Alerting -> PagerDuty / Slack / Opsgenie
+
+  This stack is often called the LGTM stack:
+  Loki + Grafana + Tempo + Mimir (or just Prometheus).
+
+PROMQL — PROMETHEUS QUERY LANGUAGE
+  Metrics in Prometheus/Grafana are queried with PromQL.
+
+  Example queries:
+    # Request rate per second over 5m window
+    rate(http_requests_total[5m])
+
+    # Error rate as a percentage
+    rate(http_requests_total{status=~"5.."}[5m])
+    /
+    rate(http_requests_total[5m]) * 100
+
+    # p99 latency
+    histogram_quantile(0.99,
+      rate(http_request_duration_seconds_bucket[5m])
+    )
+
+    # Service-level: error rate above 5% for 5 minutes
+    # (used in alert rules)
+    rate(http_requests_total{status=~"5.."}[5m])
+    /
+    rate(http_requests_total[5m]) > 0.05
+
+LOGQL — LOG QUERY LANGUAGE (Loki)
+  LogQL queries Loki log streams.
+
+  Example queries:
+    # All error logs from loan-service in the last hour
+    {service="loan-service"} |= "ERROR"
+
+    # Parse JSON and filter by field
+    {service="loan-service"}
+    | json
+    | level="ERROR"
+    | action="loan_approved"
+
+    # Error rate metric from logs (log-based metric)
+    rate({service="loan-service"} |= "ERROR" [5m])
+
+    # Count errors by user_id
+    sum by (user_id) (
+      count_over_time({service="loan-service"} |= "ERROR" [1h])
+    )
+
+DASHBOARD BEST PRACTICES
+  - One dashboard per service, one dashboard per business domain
+  - Always show: request rate, error rate, latency (p50/p95/p99), saturation
+  - Add deployment annotations (vertical lines when a deploy happened)
+  - Use template variables so one dashboard works for all environments
+    (select env=prod/staging from a dropdown)
+  - Store dashboard JSON in Git. Review dashboard changes in PRs.
+  - Link dashboards to each other (service dashboard -> dependency dashboard)
+
+GRAFANA ALERTING BEST PRACTICES
+  - Alert on symptoms not causes (alert on error_rate not on CPU)
+  - Set a minimum evaluation period (5m) to avoid alerting on spikes
+  - Group related alerts to reduce noise (all pod restarts = one Slack message)
+  - Use contact points per team (platform team gets infra alerts, app team gets app alerts)
+  - Set up silences during planned maintenance windows
+  - Every alert rule must have a runbook URL in its annotation
+
+WHEN TO CHOOSE GRAFANA
+  - You already run Prometheus and want a visualization layer
+  - You want full control and no vendor lock-in (OSS, self-hosted)
+  - You are building on Kubernetes and want the LGTM stack
+  - Cost is a constraint (OSS stack is free, Grafana Cloud has a free tier)
+  - You want to correlate metrics, logs, and traces in one UI
+
+GRAFANA CLOUD
+  Managed version of the full LGTM stack.
+  No infrastructure to operate.
+  Free tier: 10k metrics, 50GB logs, 50GB traces.
+  Paid: usage-based pricing.
+
+
+---
+DATADOG
+---
+
+WHAT IT IS
+  Datadog is a commercial SaaS observability platform.
+  It is an all-in-one platform: metrics, logs, traces, dashboards,
+  alerting, service maps, security, synthetics, profiling, and more.
+  Everything is in one product, one pricing contract, one UI.
+
+  Datadog collects data via an agent installed on every host/pod.
+  The agent ships metrics, logs, and traces to Datadog's cloud backend.
+  You query and visualize in Datadog's web UI.
+
+  It is the most feature-complete observability platform on the market.
+  It is also the most expensive. But it removes almost all operational
+  overhead of running an observability stack yourself.
+
+CORE COMPONENTS
+
+  Datadog Agent
+    Lightweight agent installed on every host, pod, or VM.
+    Collects: system metrics (CPU, memory, disk, network),
+    container metrics, logs (tail from files or container stdout),
+    traces (APM), and custom metrics from StatsD.
+    Deployed as a DaemonSet in Kubernetes.
+
+  Infrastructure Monitoring
+    Every host and container is automatically visible.
+    Dashboards for CPU, memory, network, disk per host/pod/cluster.
+    Host map: visual overview of all infrastructure colored by any metric.
+    Container map: all containers colored by CPU or memory usage.
+
+  APM (Application Performance Monitoring)
+    Distributed tracing built into the Datadog platform.
+    Auto-instrumented for most languages (Java, Python, Go, Node, Ruby, .NET).
+    Flame graphs show the full call tree for any request.
+    Service map auto-generated from APM traces.
+    P50/P75/P95/P99 latency breakdown per endpoint, per service.
+
+  Log Management
+    Centralized log aggregation. Tail logs from agent or ship via HTTP.
+    Parse, enrich, and index logs at ingestion.
+    Faceted search: filter by service, env, status, any field.
+    Log patterns: ML-based grouping of similar log lines.
+    Correlate logs to traces: click a log line -> see the full trace.
+
+  Synthetic Monitoring
+    Scripted browser tests and API tests that run on a schedule
+    from Datadog's global network of locations.
+    Detects failures before real users do.
+    Alert if a user flow (login, checkout, loan application) fails from London.
+    SLA tracking: uptime percentage per synthetic check.
+
+  Service Map
+    Auto-generated from APM traces.
+    Shows all services, their dependencies, and health at a glance.
+    Click a service: see its request rate, error rate, latency.
+    Click an edge: see the call volume and error rate between two services.
+    Filter by environment (prod/staging), by team, by service.
+
+  Monitors and Alerting
+    Monitor types:
+      Metric monitor   - alert when a metric threshold is crossed
+      Log monitor      - alert when a log pattern appears N times
+      Trace monitor    - alert when APM error rate or latency crosses threshold
+      Composite monitor - alert only when multiple conditions are true simultaneously
+      Anomaly monitor  - alert when metric deviates from learned baseline
+      Forecast monitor - alert when a metric is predicted to breach a threshold
+      SLO monitor      - alert when error budget burn rate is too high
+
+    Alert routing via Datadog notification handles:
+      @slack-channel, @pagerduty-service, @email, @webhook
+
+  SLOs (Service Level Objectives)
+    Define: "99.9% of loan requests succeed within 500ms over 30 days."
+    Datadog tracks the error budget in real time.
+    Dashboard widget shows: current SLO status, remaining error budget,
+    burn rate, and historical performance.
+
+  Dashboards
+    Drag-and-drop UI. No JSON required (but JSON export is available).
+    Template variables for env, service, region.
+    Notebook: Datadog's incident investigation scratchpad —
+    annotate metrics and logs with text during an incident.
+
+  Database Monitoring
+    Deep visibility into database queries.
+    Shows: which queries are slow, which are running most often,
+    wait times, connection pool usage, explain plans.
+    Supports: PostgreSQL, MySQL, Oracle, SQL Server, MongoDB, Redis.
+
+  Watchdog
+    Datadog's ML-based anomaly detection engine.
+    Automatically surfaces unusual patterns across all your telemetry.
+    No configuration required. It watches everything.
+    Alerts on: sudden error rate increase, abnormal latency, memory trend,
+    unusual log volume, unexpected deployment behaviour.
+
+  Cloud Cost Management
+    Tracks and allocates cloud spend (AWS, GCP, Azure).
+    Correlates cost to services and teams.
+    Identifies idle resources and rightsizing opportunities.
+
+  Security Monitoring (CSPM + SIEM)
+    Cloud Security Posture Management: checks cloud resource configs
+    against CIS benchmarks and compliance frameworks (PCI, HIPAA, SOC2).
+    SIEM: correlates log data to detect threats and anomalous activity.
+    Cloud Workload Security: detects unusual process activity in containers.
+
+DATADOG AGENT IN KUBERNETES
+  Deployed as a DaemonSet (one agent pod per node).
+
+  Standard configuration collects:
+    - Node metrics (CPU, memory, network, disk)
+    - Pod metrics (via kubelet API)
+    - Container logs (from /var/log/pods)
+    - Kubernetes events
+    - APM traces (via agent receiver on localhost)
+    - Custom metrics via StatsD on localhost:8125
+
+  Cluster Agent (separate deployment):
+    Handles cluster-level metrics (HPA, resource quotas, events).
+    Reduces API server load (one agent talks to API server,
+    not every node agent).
+
+DATADOG QUERY LANGUAGE
+  Metrics queries use Datadog's own syntax (similar to PromQL).
+
+  Example queries:
+    # Request rate
+    sum:trace.http.request.hits{service:loan-service}.as_rate()
+
+    # Error rate
+    sum:trace.http.request.errors{service:loan-service}.as_rate()
+    /
+    sum:trace.http.request.hits{service:loan-service}.as_rate()
+
+    # p99 latency
+    p99:trace.http.request.duration{service:loan-service}
+
+    # Group by service
+    avg:system.cpu.user{*} by {service}
+
+APM TAGS — THE CORE CONCEPT
+  Datadog's power comes from unified tagging.
+  Every piece of telemetry (metric, log, trace) is tagged with:
+    env      (prod, staging, dev)
+    service  (loan-service, auth-service)
+    version  (the deployment version)
+    host     (the node name)
+    region   (aws:us-east-1)
+    team     (platform, payments, identity)
+
+  With consistent tags you can:
+    - Filter any dashboard to a specific team's services
+    - Correlate a metric spike to a specific version deployment
+    - Search logs for all errors from a specific env and service
+    - Compare error rates between version 1.2 and 1.3 in prod
+
+UNIFIED SERVICE TAGGING
+  The recommended practice: set env, service, version on every
+  container, every log line, every trace, and every metric from deployment.
+
+  In Kubernetes (pod labels -> Datadog picks them up automatically):
+    labels:
+      tags.datadoghq.com/env: "prod"
+      tags.datadoghq.com/service: "loan-service"
+      tags.datadoghq.com/version: "1.4.2"
+
+  With these three tags consistent everywhere, Datadog can:
+    - Show you a deployment event when version changes
+    - Compare p99 latency before/after a deploy automatically
+    - Correlate an error spike to a specific version
+
+WHEN TO CHOOSE DATADOG
+  - You want a single platform for everything (metrics, logs, traces, security)
+  - Operational overhead of running your own stack is a concern
+  - You need Synthetic Monitoring, Database Monitoring, or CSPM out of the box
+  - You have budget (Datadog is expensive — typically $15-40/host/month)
+  - You want enterprise support, SLAs, and compliance certifications
+  - You want Watchdog ML anomaly detection without building your own
+
+DATADOG vs GRAFANA
+  Grafana (OSS stack):
+    + Free / open source
+    + Full control, no vendor lock-in
+    + Data stays in your infrastructure
+    - Requires operational effort (run Prometheus, Loki, Tempo, Mimir)
+    - Feature parity requires assembling multiple tools
+
+  Datadog:
+    + Everything in one product, one UI
+    + No infrastructure to run
+    + Synthetic, APM, DBM, Security, ML anomaly detection built in
+    - Expensive (can be very expensive at scale)
+    - Data leaves your infrastructure (vendor dependency)
+    - Proprietary query language and format
+
+
+---
+POLARIS
+---
+
+WHAT IT IS
+  Polaris is an open-source Kubernetes configuration validation tool
+  by Fairwinds.
+
+  It audits Kubernetes workload configurations against best practices
+  and security standards. It tells you: your deployment configs have
+  these specific problems, here is why they matter, and here is how to fix them.
+
+  It is not a monitoring tool. It does not collect runtime metrics.
+  It is a static analysis and admission control tool for Kubernetes YAML.
+
+  Official site: https://github.com/FairwindsOps/polaris
+
+WHAT IT CHECKS
+  Polaris evaluates Pod specs across four categories:
+
+  1. HEALTH CHECKS
+     - readinessProbe missing
+       Without this, Kubernetes sends traffic to pods that are not ready.
+       Result: users hit a pod that is still starting up and get errors.
+     - livenessProbe missing
+       Without this, a hung or deadlocked pod is never restarted.
+       Result: the pod stays "running" but returns errors forever.
+
+  2. IMAGE
+     - imagePullPolicy not set to Always (for latest tags)
+       If you use :latest without Always, a node may use a cached old image.
+     - Image tag is latest or missing (should be a specific digest or version tag)
+       :latest is non-deterministic. The same image name can pull different code.
+     - Image pull policy not appropriate for the tag used
+
+  3. NETWORKING
+     - hostNetwork: true
+       Pod shares the node's network namespace. A port conflict or
+       security issue in the pod affects the entire node.
+     - hostPort set
+       Binds a container port directly to a node port.
+       Limits scheduling (only one pod per node for that port).
+
+  4. RESOURCES
+     - CPU request missing
+       Kubernetes cannot schedule the pod correctly without resource requests.
+       The scheduler does not know how much CPU this pod needs.
+     - Memory request missing
+       Same issue. Pod may land on a node without enough memory.
+     - CPU limit missing
+       A noisy neighbor can consume all CPU on a node if no limit is set.
+     - Memory limit missing
+       A memory leak can exhaust node memory and cause OOM kills on other pods.
+
+  5. SECURITY (most commonly flagged)
+     - runAsNonRoot: false or missing
+       Container runs as root (UID 0). If the container is compromised,
+       the attacker has root inside the container. Combined with a
+       container escape, root on the node.
+     - runAsRootAllowed (SecurityContext check)
+       The pod spec explicitly allows running as root.
+     - privileged: true
+       Container runs with all Linux capabilities. Effectively root on the node.
+     - readOnlyRootFilesystem: false
+       A writable root filesystem makes it easier for an attacker to
+       persist malware or modify application binaries.
+     - allowPrivilegeEscalation: true
+       Allows processes inside the container to gain more privileges
+       (e.g. via setuid binaries).
+     - Capabilities not dropped
+       Containers inherit a set of Linux capabilities by default.
+       Best practice: drop ALL capabilities, add back only what is needed.
+       Most apps need none.
+     - hostPID: true or hostIPC: true
+       Container can see all processes on the node (hostPID) or
+       use node inter-process communication (hostIPC). Security risk.
+
+  6. RELIABILITY
+     - No pod disruption budget defined
+       During node drain (maintenance, upgrade), all pods can be evicted
+       at once. No guarantee of minimum availability.
+     - Single replica deployment
+       One pod failure = 100% of the service is down. No HA.
+     - No topology spread constraints
+       All replicas may land on the same node. One node failure takes them all.
+
+SEVERITY LEVELS
+  Polaris uses three severity levels:
+    danger   - critical issue, blocks admission in enforcement mode
+    warning  - should fix, does not block
+    ignore   - informational only
+
+  You configure which checks are danger vs warning.
+  Default config is sensible but you can tune it per team/environment.
+
+HOW POLARIS WORKS — THREE MODES
+
+  1. DASHBOARD (audit mode)
+     Run against a live cluster. Scans all existing workloads.
+     Shows a score (0-100) and per-namespace, per-workload breakdown.
+     Good for: initial audit of an existing cluster.
+
+     Run:
+       polaris dashboard --port 8080
+     Or via kubectl:
+       kubectl apply -f https://github.com/FairwindsOps/polaris/releases/latest/download/dashboard.yaml
+
+  2. CLI AUDIT (CI/CD integration)
+     Run against YAML files or a live cluster. Returns JSON or text output.
+     Integrate into a CI pipeline to fail PRs that introduce config violations.
+
+     Run against YAML files:
+       polaris audit --audit-path ./k8s/ --format pretty
+
+     Run against a live cluster:
+       polaris audit --context my-cluster --format json
+
+     Exit code: 0 if no danger issues, non-zero if danger issues found.
+     This is how you gate deployments: fail the pipeline if Polaris exits non-zero.
+
+     Example CI step (GitHub Actions / Harness pipeline):
+       - name: Polaris lint
+         run: |
+           polaris audit --audit-path ./k8s/ \
+             --set-exit-code-on-danger \
+             --format pretty
+
+  3. ADMISSION CONTROLLER (enforcement mode)
+     Deployed as a Kubernetes ValidatingWebhookConfiguration.
+     Every pod creation or update is sent to Polaris for validation.
+     If the pod spec fails a danger check: Kubernetes rejects the admission.
+     The pod cannot be created at all.
+
+     This enforces policy at the cluster level, not just in CI.
+     Even if someone applies YAML directly with kubectl, Polaris blocks it.
+
+     Deploy:
+       helm repo add fairwinds-stable https://charts.fairwinds.com/stable
+       helm install polaris fairwinds-stable/polaris \
+         --namespace polaris \
+         --set webhook.enable=true \
+         --set dashboard.enable=true
+
+POLARIS CONFIGURATION
+  Polaris uses a YAML config to define which checks are active and their severity.
+
+  Example config (polaris-config.yaml):
+    checks:
+      dangerousCapabilities: danger
+      hostIPCSet: danger
+      hostPIDSet: danger
+      hostNetworkSet: warning
+      privilegeEscalationAllowed: danger
+      runAsRootAllowed: danger
+      runAsPrivileged: danger
+      notReadOnlyRootFilesystem: warning
+      noReadinessProbe: warning
+      noLivenessProbe: warning
+      cpuRequestsMissing: warning
+      memoryRequestsMissing: warning
+      cpuLimitsMissing: warning
+      memoryLimitsMissing: danger
+      tagNotSpecified: danger
+      pullPolicyNotAlways: warning
+
+  Exemptions: exclude specific controllers or namespaces from checks.
+    exemptions:
+      - controllerNames:
+          - my-legacy-app
+        rules:
+          - runAsRootAllowed
+
+POLARIS SCORE
+  Polaris assigns a score (0-100) to each workload and an aggregate score
+  to the cluster. Higher is better.
+
+  What the score means:
+    90-100: excellent — most best practices followed, minor warnings only
+    70-89:  good — some warnings, no danger issues
+    50-69:  needs improvement — multiple warnings and possibly danger issues
+    below 50: poor — significant security or reliability gaps
+
+  Use the score as a KPI for platform quality:
+    Set a minimum score threshold for prod deployments.
+    Track score over time in dashboards.
+    Block a namespace graduation from staging to prod if score < 80.
+
+POLARIS IN A CI/CD PIPELINE (Harness example)
+
+  Stage: Lint and Validate
+    Step 1 - Render Helm chart:
+      helm template my-release ./chart -f values-prod.yaml > rendered.yaml
+
+    Step 2 - Polaris audit:
+      polaris audit \
+        --audit-path rendered.yaml \
+        --config polaris-config.yaml \
+        --set-exit-code-on-danger \
+        --format pretty
+
+    If Polaris exits non-zero: pipeline fails. Deployment is blocked.
+    Engineer sees exactly which checks failed and on which container.
+
+  This shifts security and reliability checks LEFT — into the pipeline —
+  rather than finding problems in production after deployment.
+
+POLARIS vs OTHER TOOLS
+
+  Tool          What it checks
+  ----------    --------------------------------------------------
+  Polaris       Kubernetes workload config (Pod spec best practices)
+  OPA / Gatekeeper  Custom policy engine (any Kubernetes resource, complex rules)
+  Kyverno       Policy-as-code for Kubernetes (similar to Gatekeeper, simpler)
+  Trivy         Container image vulnerability scanning (CVEs in packages)
+  Falco         Runtime security (detects suspicious behaviour in running containers)
+  kube-bench    CIS Kubernetes benchmark (node-level config checks)
+  Checkov       IaC scanning (Terraform, Helm, YAML — broader scope)
+
+  Polaris + Trivy is a common pairing:
+    Polaris: is the workload configured securely and correctly?
+    Trivy:   does the container image contain known vulnerabilities?
+  Together they cover configuration risk and image risk.
+
+WHEN TO USE POLARIS
+  - You are running Kubernetes and want to enforce config best practices
+  - You want to shift security left into CI without writing custom policies
+  - You want a cluster-wide audit of existing workloads (dashboard mode)
+  - You want an admission webhook to block bad configs at apply time
+  - You want a simple, opinionated tool (vs writing OPA Rego policies from scratch)
+
+WHEN TO USE OPA/GATEKEEPER INSTEAD
+  - You need custom business rules beyond workload best practices
+    (e.g. "all pods must have a team label", "only these registries allowed")
+  - You need fine-grained policy per namespace or per team
+  - You need to enforce rules on non-Pod resources (NetworkPolicy, Ingress, RBAC)
+  Polaris and OPA are complementary. Many teams use both.
+
+
+---
+HOW ALL THREE WORK TOGETHER
+---
+
+  POLARIS       Validates configuration before deployment.
+                Ensures the workload is correctly and securely defined.
+                "Is this safe to deploy?"
+
+  GRAFANA       Observes the workload after deployment.
+                Metrics, logs, and traces show runtime behaviour.
+                "How is it performing right now?"
+
+  DATADOG       All-in-one observability platform covering what Grafana
+                covers plus synthetic monitoring, ML anomaly detection,
+                security, and database monitoring.
+                "What is everything doing and is anything unusual?"
+
+In a mature platform:
+  1. Developer writes a Helm chart.
+  2. CI pipeline renders the chart and runs Polaris audit.
+     Polaris flags: readinessProbe missing, memory limit missing.
+     Pipeline fails. Developer fixes the chart. CI passes.
+  3. Deployment proceeds to canary (1% of traffic).
+  4. Grafana (or Datadog) shows: error_rate, latency, saturation.
+     Grafana Alerting fires if error_rate > threshold during canary.
+     Automatic rollback triggered.
+  5. If canary is healthy: promote to 100%.
+  6. Datadog Watchdog surfaces an anomaly 2 hours later:
+     memory growing steadily on the new pods.
+     Alert fires. Team investigates. Memory leak found in new code.
+  7. Next deployment cycle: Polaris finds the memory limit was removed
+     during a hotfix. Pipeline blocks it. The configuration drift is caught
+     before it reaches production.
+
+
+---
+QUICK COMPARISON TABLE
+---
+
+  Aspect              Grafana (OSS)        Datadog (SaaS)       Polaris
+  ----------------    ----------------     ----------------     ----------------
+  Category            Observability        Observability        Config validation
+  Metrics             Yes (Prometheus)     Yes (native agent)   No
+  Logs                Yes (Loki)           Yes (native agent)   No
+  Traces              Yes (Tempo)          Yes (APM)            No
+  Alerting            Yes                  Yes                  Via exit code (CI)
+  Service Map         Yes (Tempo)          Yes (APM, rich)      No
+  Synthetic Monitoring No (k6 separately)  Yes (built in)       No
+  Security            No                   Yes (CSPM, SIEM)     Yes (Kubernetes)
+  ML anomaly detect.  Limited              Yes (Watchdog)       No
+  Cost                Free (OSS)           $15-40/host/month    Free (OSS)
+  Hosting             Self-hosted or Cloud Vendor SaaS          Self-hosted or CI
+  Vendor lock-in      Low (OTel + OSS)     High (agent + format) None
+  Kubernetes native   Yes (Helm charts)    Yes (DaemonSet)      Yes (webhook)
+  CI/CD integration   Dashboards / k6      Dashboards           Audit + exit code
+
+
+---
+KEY INTERVIEW POINTS
+---
+
+Q: What is Grafana and what does it connect to?
+   Grafana is an open-source visualization and alerting platform.
+   It does not store data — it queries external data sources.
+   Common backends: Prometheus (metrics), Loki (logs), Tempo (traces),
+   CloudWatch, Elasticsearch, PostgreSQL. One dashboard can combine
+   data from multiple sources in the same view.
+
+Q: What is the LGTM stack?
+   Loki (logs) + Grafana (visualization) + Tempo (traces) + Mimir (metrics).
+   A fully open-source observability stack. Commonly run on Kubernetes
+   via the Grafana Helm charts. All components use object storage (S3/GCS)
+   for cheap, scalable retention.
+
+Q: What is Datadog's competitive advantage over Grafana?
+   Everything in one product with no infrastructure to operate.
+   Synthetic monitoring, Database Monitoring, CSPM security, ML-based
+   Watchdog anomaly detection, and Unified Service Tagging work out of the box.
+   Grafana requires assembling and operating multiple tools to reach
+   equivalent coverage. Datadog is faster to value, higher in cost.
+
+Q: What is Unified Service Tagging in Datadog?
+   A practice of applying three consistent tags to every piece of
+   telemetry: env, service, version. With these tags on every metric,
+   log, and trace, you can correlate a metric spike to a specific
+   service version in a specific environment — instantly.
+   Implemented via Kubernetes pod labels that the Datadog agent reads.
+
+Q: What is Polaris and what problem does it solve?
+   Polaris is a Kubernetes config validator. It checks Pod specs against
+   security and reliability best practices: missing probes, missing resource
+   limits, containers running as root, privileged containers, writable
+   root filesystems. It runs in three modes: dashboard (audit existing cluster),
+   CLI (gate CI/CD pipelines), and admission webhook (block bad configs at apply time).
+
+Q: How does Polaris fit into a CI/CD pipeline?
+   After Helm template renders the manifests, Polaris audit runs against
+   the rendered YAML. It exits non-zero if any danger checks fail.
+   This blocks the deployment pipeline before anything reaches the cluster.
+   It shifts security and reliability checks left — finding problems in
+   the pipeline where they are cheap to fix, not in production.
+
+Q: How do Polaris, Grafana, and Datadog complement each other?
+   Polaris is pre-deployment: validates configuration before the workload
+   is created. Grafana and Datadog are post-deployment: observe runtime
+   behaviour after the workload is running. Polaris cannot detect a memory
+   leak in running code. Grafana/Datadog cannot prevent a deployment with
+   a missing readiness probe. Together they cover the full lifecycle.
+
+Q: When would you choose Grafana over Datadog?
+   When cost is a constraint, when data residency requires keeping
+   telemetry in your own infrastructure, when you want to avoid vendor
+   lock-in, or when you already operate Prometheus and Kubernetes
+   and want a natural extension. Grafana requires more operational
+   investment but gives full control and portability.
