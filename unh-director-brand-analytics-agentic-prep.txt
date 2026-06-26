@@ -1,0 +1,630 @@
+Preparation Guide — Director, Brand Analytics & Agentic Enablement
+UnitedHealthcare E&I Marketing Ops
+==========================================================================
+Honest read first, then full prep. This role is different from Amex,
+WEX, Staples, and the Optum architecture role. Read this carefully
+before reusing prep from those guides.
+
+
+---
+PART 1 — WHAT THIS ROLE ACTUALLY IS
+---
+
+Strip the title. This is three things:
+
+1. MARKETING MIX MODELING (MMM) AUTHORITY
+   The primary job is owning MMM strategy, interpretation, and activation
+   for UHC's E&I (Employer and Individual) marketing portfolio.
+   MMM = econometric models that measure the incremental ROI of every
+   marketing channel (TV, digital, paid search, direct mail, sponsorships).
+   This is the hardest part of the role. If you do not have MMM depth,
+   you will be screened out early. It is the first required qualification.
+
+2. BRAND ANALYTICS LEADER
+   Measuring brand health: awareness, consideration, preference, NPS.
+   Understanding how brand perception shifts drive downstream funnel
+   outcomes (leads, acquisition, conversion, retention).
+   Quantifying halo effects: does a TV campaign lift paid search conversion?
+
+3. AGENTIC AI ENABLEMENT FOR ANALYTICS
+   The third pillar — and the one that maps to your background.
+   Design AI-driven and agentic workflows that accelerate insight generation,
+   automate MMM output interpretation, identify emerging market signals,
+   and create continuous optimization loops.
+   This is explicitly "preferred" in the JD, not "required."
+   The MMM and brand analytics pieces are required. AI is the accelerant.
+
+THE HONEST GAP ASSESSMENT
+   Your strength: the agentic AI and automation layer (Part 3).
+   Your gap: Marketing Mix Modeling is a specialized discipline.
+   If you have not worked with MMM models (Robyn, Meridian, Nielsen,
+   Analytic Partners), this is a significant gap.
+   The JD requires "tangible expertise" and "8+ years in marketing analytics."
+   Be honest with yourself: if your background is platform/DevEx/cloud,
+   this role may require more framing work than the others.
+   The angle that works: you are the agentic enablement leader who
+   partners with and accelerates the MMM specialists — not a statistician
+   who builds models from scratch. The JD describes both in one role.
+   Position yourself as the leader who brings AI to the analytics function,
+   with enough analytical depth to be credible in the room.
+
+
+---
+PART 2 — WHAT MMM IS (master this before the interview)
+---
+
+WHAT MARKETING MIX MODELING IS
+   MMM is an econometric regression technique that decomposes historical
+   sales or conversion outcomes into the contribution of each marketing
+   channel and external factor.
+
+   Example: UHC spends on TV, digital display, paid search, direct mail,
+   and broker events. MMM tells you: of the 10,000 new E&I members
+   acquired last quarter, how many were driven by each channel,
+   by seasonality (open enrollment), by price changes, and by competitor
+   actions — and what the ROI of each dollar was.
+
+   The model output:
+     Channel contribution curves (diminishing returns per dollar spent)
+     ROI per channel (revenue or members per $1000 spent)
+     Saturation points (at what spend level does a channel stop working?)
+     Optimal budget allocation across channels to maximize acquisition
+
+HOW MMM WORKS (simplified)
+   Base variables: price, seasonality, economic conditions, competitor spend
+   Marketing variables: TV GRPs, digital impressions, search spend, etc.
+   Response transformation: adstock (how long does an ad's effect last?)
+     and diminishing returns (hill function — each additional dollar buys less)
+   Regression: fit a model that explains sales as a function of all variables
+   Decomposition: attribute each unit of sales to each variable
+
+   Modern MMM tools:
+     Robyn (Meta, open source, R-based, uses Ridge regression + Nevergrad optimizer)
+     Google Meridian (2024, open source, Bayesian MMM in Python)
+     Analytic Partners (commercial, enterprise MMM vendor)
+     Nielsen Marketing Cloud (legacy enterprise vendor)
+     Neustar (TransUnion) (enterprise MMM)
+     Recast (modern probabilistic MMM, startup)
+
+   You need to know: Robyn and Meridian at the conceptual level.
+   Know: what an adstock transformation does, what saturation means,
+   what ROI curves look like, how budget optimization works.
+
+KEY MMM CONCEPTS TO KNOW COLD
+
+   Adstock (carryover effect)
+     Advertising effect does not stop the day the ad runs.
+     It decays over time. A TV ad this week still influences behavior
+     next week and the week after, at a diminishing rate.
+     Adstock transforms the raw spend variable to capture this decay.
+     Parameter: half-life (how many weeks until 50% of the effect is gone).
+     TV: long half-life (weeks). Digital: short half-life (days).
+
+   Saturation / diminishing returns
+     Each additional dollar of spend buys less incremental outcome.
+     The first $100K on TV might drive 500 new members.
+     The next $100K drives 300. The next $100K drives 100.
+     The model fits a curve (hill function) to capture this.
+     Implication for budget allocation: do not stack all spend in one channel
+     past its saturation point. Spread across channels for efficiency.
+
+   Incrementality
+     The true causal lift from marketing, isolated from organic demand.
+     Without incrementality: you credit marketing for members who would
+     have joined anyway (during open enrollment).
+     With incrementality: you measure only the lift above the baseline.
+     MMM estimates incrementality via the base/media decomposition.
+     Geo holdout tests (run the campaign in some markets, not others)
+     are used to validate MMM incrementality estimates.
+
+   Attribution vs MMM
+     Attribution (last-touch, multi-touch, data-driven):
+       Assigns credit for a conversion to touchpoints in a single user's journey.
+       Works for digital only. Does not see offline channels.
+       Biased toward bottom-funnel channels (paid search gets last touch).
+     MMM:
+       Aggregate model across all channels including offline.
+       Measures macro-level effectiveness, not individual user journeys.
+       Slower to update (weekly/monthly data). No user-level view.
+     Best practice: use both. MMM for budget allocation strategy.
+     Attribution for channel-level optimization and creative testing.
+
+   Halo effect
+     A marketing activity in one channel lifts performance in another.
+     Example: a brand TV campaign increases branded paid search volume.
+     More people search for "UnitedHealthcare plans" after seeing a TV ad.
+     The TV campaign gets partial credit for the search conversion.
+     Quantifying halo: MMM can model cross-channel interactions if
+     designed to capture them (interaction terms, lagged effects).
+
+   Brand health metrics
+     Awareness: unaided (unprompted) vs aided (prompted after mention).
+     Consideration: would you consider this brand for your next plan?
+     Preference: which brand do you prefer among those you know?
+     Net Promoter Score (NPS): would you recommend UHC to a friend?
+     Purchase intent: how likely are you to choose this plan?
+     Brand equity index: composite of the above.
+     These are measured via survey panels (monthly or quarterly).
+     MMM uses them as variables: does brand consideration drive
+     incremental acquisition above what media alone explains?
+
+   Budget optimization
+     Given the fitted MMM and diminishing return curves:
+     What is the optimal allocation of the total marketing budget
+     across channels to maximize acquisitions (subject to constraints)?
+     This is a constrained optimization problem:
+     maximize: sum of channel contributions
+     subject to: total spend = budget, each channel spend within bounds
+     Solved with: Nevergrad (Robyn), scipy.optimize, or Bayesian optimization.
+     The output is a recommended media plan.
+
+OPEN ENROLLMENT CONTEXT FOR UHC
+   UHC E&I sells health insurance to individuals and employer groups.
+   Open enrollment (OE): November 1 – January 15 (ACA marketplace).
+   Employer group renewal: year-round but peaks Q3-Q4.
+   Marketing spend is heavily seasonal: 70%+ of annual budget in OE window.
+   MMM must account for this: strong seasonal baseline during OE means
+   marketing incremental lift is smaller (high organic demand already).
+   Competitor actions during OE (BCBS, Cigna, Aetna) affect brand share.
+   Regulatory changes (ACA subsidies, plan rules) are external drivers
+   that MMM must include as variables.
+
+
+---
+PART 3 — THE AGENTIC AI LAYER (your strongest contribution)
+---
+
+This is where you own the room. The JD describes six agentic use cases.
+Know each one with a specific architecture.
+
+USE CASE 1 — FASTER ACCESS TO MMM OUTPUTS
+   Problem: MMM results are delivered as Excel files, PowerPoint decks,
+   or R/Python notebooks. Analysts spend hours finding the right number.
+   "What was the TV ROI in Q3 last year?" requires opening 3 files.
+
+   Agentic solution:
+     MMM outputs (model coefficients, decomposition tables, ROI curves,
+     budget scenarios) ingested into a structured knowledge base.
+     RAG agent: analyst asks natural language question.
+     Agent retrieves the relevant model output, formats the answer,
+     cites the source model run and date.
+     "TV ROI in Q3 2024 was $2.14 per $1 spent (Source: MMM_Q3_2024_v3.xlsx,
+     Sheet: ROI Summary)."
+   Your evidence: Bedrock Knowledge Bases + RAG agent pattern.
+   Same architecture, different document type (MMM output instead of policy docs).
+
+USE CASE 2 — EMERGING MARKET SIGNAL DETECTION
+   Problem: brand perception shifts, competitor launches, regulatory changes
+   happen in real time. The analyst team finds out weeks later via surveys.
+
+   Agentic solution:
+     Signal monitoring agent: polls daily —
+       News feeds (healthcare industry, UHC brand mentions)
+       Social listening (sentiment on UHC vs competitors)
+       Regulatory filings (CMS rule changes, state insurance dept notices)
+       Competitor pricing/plan changes (public data)
+       Search trend data (Google Trends for plan-related queries)
+     Classifier agent: scores each signal for relevance and urgency.
+       "High urgency: Cigna launched a new $0 premium plan in Texas.
+       Historical MMM shows competitor plan launches reduce UHC acquisition
+       in affected markets by 8-12% for 6 weeks."
+     Alert: surfaces to brand strategy team in Slack/email with context.
+   Your evidence: intent classifier + supervisor pattern from multi-agent project.
+   Same classification engine, different signal sources.
+
+USE CASE 3 — SCALABLE AUTOMATED INSIGHT GENERATION
+   Problem: MMM runs produce hundreds of outputs. An analyst manually
+   writes the same narrative structure every cycle: here is performance,
+   here is what changed, here are the recommendations.
+
+   Agentic solution:
+     Insight generation agent: receives new MMM run outputs (structured JSON
+     or structured tables from Robyn/Meridian).
+     Compares to prior run: what changed in ROI by channel?
+     What moved toward/away from saturation?
+     Which channels are underinvested vs overinvested vs prior?
+     Generates a draft narrative in the standard reporting format.
+     Human analyst reviews, edits, approves — does not write from scratch.
+   Your evidence: aggregator.py + LLM summarization pattern.
+   The agent structures the output. The human validates.
+
+USE CASE 4 — CONTINUOUS OPTIMIZATION LOOPS
+   Problem: media investment decisions happen quarterly during planning.
+   Between planning cycles, the market changes but spend does not adapt.
+
+   Agentic solution:
+     Weekly optimization agent: ingests latest performance data
+     (digital metrics, search volume, brand tracker pulse surveys).
+     Runs against the current MMM response curves.
+     Identifies: which channels are currently over/underperforming
+     vs their MMM-predicted response?
+     Recommends: tactical budget shifts within the approved plan
+     (e.g., reallocate $200K from display to paid search this week).
+     Flags for human approval if shift exceeds threshold.
+     Approved shifts feed back into the performance tracking system.
+   Your evidence: supervisor + human-in-the-loop gate pattern.
+   Temporal for the weekly durable workflow.
+
+USE CASE 5 — AGENTIC OPERATIONAL OPTIMIZATION (time and cost)
+   Problem: the analytics team spends 60% of time on data prep, report
+   generation, and answering the same questions repeatedly.
+
+   Agentic solution:
+     Data prep agent: automates ingestion, cleaning, and joining of
+     marketing performance data from multiple sources (DV360, Google Ads,
+     DCM, Salesforce Marketing Cloud, brand tracker vendor).
+     Report generation agent: builds standard weekly/monthly decks
+     automatically. Analyst reviews and customizes the exceptions.
+     Q&A agent: answers recurring questions from stakeholders
+     ("what was last week's cost per lead by channel?") without
+     analyst involvement. Frees analysts for higher-order work.
+   Your evidence: self-service workflow automation (IDP pattern applied
+   to analytics operations instead of developer operations).
+
+USE CASE 6 — REUSABLE ANALYTICS COMPONENTS
+   Problem: every analyst builds their own version of the same analysis.
+   Inconsistent methods, inconsistent numbers, conflicting reports.
+
+   Agentic solution:
+     Analytics library: standardized, version-controlled functions for
+     common calculations (adstock transformation, ROI calculation,
+     brand health composite score, funnel conversion rate).
+     Agent-accessible: agents call these functions as tools via MCP.
+     Governance: all published components are reviewed and approved.
+     Audit trail: every calculation cites the function version used.
+   Your evidence: tool architecture from multi-agent project.
+   Tools are reusable, versioned, testable — the same principle.
+
+
+---
+PART 4 — THE TECHNICAL STACK TO KNOW
+---
+
+DATABRICKS (explicitly in preferred qualifications)
+   Unified data and AI platform. Two main uses at scale:
+   1. Data engineering: ETL pipelines, Delta Lake storage, Spark for
+      large-scale data processing. Marketing data at UHC scale
+      (millions of member records, billions of ad impressions) needs Spark.
+   2. ML and AI: MLflow for model lifecycle management, experiment tracking.
+      Databricks notebooks for model development. Model serving via
+      Databricks Model Serving (REST API for inference).
+   For MMM: Databricks is where you run Robyn/Meridian at scale,
+   store model outputs as Delta tables, and version model runs with MLflow.
+   Know: Delta Lake (ACID transactions on data lakes), MLflow (tracking,
+   registry, deployment), Unity Catalog (data governance on Databricks).
+
+SNOWFLAKE (explicitly in preferred qualifications)
+   Cloud data warehouse. Marketing data (ad spend, impressions, clicks,
+   conversions, member data) lives here. MMM input data is pulled from
+   Snowflake. MMM outputs written back to Snowflake for reporting.
+   Know: Snowpark (Python in Snowflake, run ML workloads in the warehouse),
+   Cortex (Snowflake's native LLM features — text summarization, classification).
+
+PYTHON FOR ANALYTICS
+   Pandas, NumPy (data manipulation).
+   Statsmodels, scikit-learn (regression, statistical modeling).
+   Matplotlib, Plotly (visualization).
+   PyMC (Bayesian MMM — used by Google Meridian approach).
+   Robyn requires R but has a Python API wrapper.
+   Know these at the conceptual level. You manage the team that codes.
+
+LANGCHAIN / LANGGRAPH (in preferred qualifications)
+   Same as Amex prep. Know LangGraph's graph-based state model.
+   For this role specifically: LangGraph for the weekly optimization
+   loop agent (cyclical workflow with state — fits LangGraph well).
+
+COPILOT / CLAUDE CODE (in preferred qualifications)
+   AI coding assistants used by the analytics team.
+   Copilot in Excel/Power BI for marketing reporting.
+   Claude Code for Python/SQL analytics development.
+   Your role: define the governance and adoption framework for these tools
+   within the analytics org — same as your IDP governance work.
+
+
+---
+PART 5 — HEALTHCARE PAYER CONTEXT
+---
+
+UHC E&I BUSINESS
+   E&I = Employer and Individual markets.
+   Individual: ACA marketplace plans, off-marketplace plans.
+   Employer: small group, large group, self-funded (ASO) plans.
+   ~28 million members in commercial (E&I) segment.
+   Open enrollment is the single biggest revenue-driving period.
+   Marketing budget is largest in Q4 leading into OE.
+
+COMPETITIVE LANDSCAPE
+   BCBS (Blue Cross Blue Shield): largest competitor, local market strength.
+   Cigna: strong in employer group, aggressive on price.
+   Aetna (CVS Health): national brand, pharmacy integration.
+   Humana: strong in Medicare, growing in E&I.
+   Oscar Health / Bright Health: digital-native challengers.
+   Brand differentiation for UHC: network breadth, digital tools (myUHC app),
+   customer service reputation, affordability messaging.
+
+REGULATORY DRIVERS THAT AFFECT MMM
+   ACA subsidy changes: when subsidies increase, individual market grows —
+   organic demand rises, marketing ROI appears lower (baseline higher).
+   MLR (Medical Loss Ratio) requirements: insurers must spend 85% of
+   premium on care. Affects how much can be spent on marketing.
+   CMS star ratings: affect plan availability and consumer perception.
+   State-level regulatory changes: affect plan offerings by market.
+   All of these are external variables in the MMM model.
+
+MEMBER EXPERIENCE SIGNALS
+   NPS: Net Promoter Score from member surveys.
+   CSAT from call center interactions.
+   App store ratings (myUHC app).
+   Social sentiment (Twitter/Reddit complaints about claims, denials).
+   These feed into brand health measurement and MMM as perception variables.
+
+
+---
+PART 6 — STORIES TO PREPARE
+---
+
+STORY 1 — AUTOMATION ACCELERATING TIME TO INSIGHT
+   The Harness IDP self-service automation program.
+   "I led the transformation of a manual, ticket-driven operation into
+   an automated self-service platform. The parallel to this role:
+   analysts today manually pull MMM outputs, write the same narrative
+   every cycle, and answer the same stakeholder questions repeatedly.
+   I have done exactly this transformation for engineering operations —
+   reduced 2-5 day waits to minutes, saved 100 minutes per person per
+   week. I would apply the same automation-first, measurement-first
+   approach to the marketing analytics operation at UHC."
+
+STORY 2 — AGENTIC AI BUILT FOR A REGULATED DOMAIN
+   The multi-agent healthcare solution.
+   "I designed and built a production multi-agent system for an enterprise
+   service operation in a regulated healthcare context. The system
+   retrieves answers from knowledge bases, applies guardrails for PHI,
+   escalates to humans for sensitive decisions, and maintains a full
+   audit trail. The agentic enablement use cases in this role — MMM
+   insight generation, signal detection, optimization loops — follow
+   the same architectural pattern: agents retrieve data, classify signals,
+   generate structured outputs, and route to human review before action."
+
+STORY 3 — INFLUENCING SENIOR STAKEHOLDERS WITH DATA
+   Use your IDP ROI story, framed as executive influence.
+   "I built a quantitative ROI framework that translated platform
+   investment into business outcomes: time saved per developer,
+   ticket deflection rate, onboarding cost reduction. I presented
+   this to senior leadership to justify continued investment and
+   prioritization. This is the same skill this role requires:
+   translating MMM outputs into budget allocation recommendations
+   and presenting them to marketing leadership and finance."
+
+STORY 4 — BUILDING AND LEADING ANALYTICS TEAMS
+   Be specific about leading data scientists, analysts, engineers.
+   Describe how you set technical standards, review work quality,
+   develop talent, and maintain analytical rigor.
+
+STORY 5 — GOVERNANCE AND AUDITABILITY
+   PHI governance, Bedrock Guardrails, audit logging in your agent work.
+   Translate to analytics: model validation process, version control
+   for model runs, audit trail for budget recommendations.
+   "Every recommendation that influences a budget decision must be
+   traceable to a specific model run, a specific input dataset, and
+   a specific set of assumptions. I build governance into the workflow,
+   not as a gate at the end."
+
+
+---
+PART 7 — QUESTIONS YOU WILL GET AND HOW TO ANSWER
+---
+
+"Walk me through how you have used MMM to inform a budget decision."
+   If you have not done this directly, be honest:
+   "My primary experience is in the engineering and platform domain,
+   where I have applied the same analytical discipline — ROI measurement,
+   before/after quantification, investment optimization — to platform
+   programs. I have studied MMM deeply and understand the mechanics
+   of adstock, saturation, and budget optimization. I would partner
+   closely with the MMM specialists on the team to validate my
+   interpretation of model outputs, while contributing the agentic
+   enablement architecture that accelerates their work."
+   Do NOT fabricate MMM project experience. They will probe it.
+
+"How would you design an agentic workflow to accelerate MMM insight delivery?"
+   Use Use Case 3 from Part 3. Structured answer:
+   Inputs: new MMM run output (structured table of contributions, ROIs, curves).
+   Agent step 1: compare to prior run — delta analysis by channel.
+   Agent step 2: classify changes (positive/negative, material/immaterial).
+   Agent step 3: retrieve context (what market events explain the change?
+   News signal agent: open enrollment started, competitor launched).
+   Agent step 4: generate narrative draft (standard template filled in).
+   Human review: analyst edits the draft, approves, publishes.
+   Outcome: cycle time from model output to published insight drops
+   from 3 days to 4 hours.
+
+"What is the difference between MMM and multi-touch attribution, and when do you use each?"
+   MMM: aggregate, all channels including offline, causal, slow to update,
+   used for strategic budget allocation across channels.
+   MTA: user-level, digital channels only, fast to update, biased toward
+   last touch, used for tactical optimization within digital channels.
+   Use both: MMM for the quarterly plan, MTA for weekly digital optimization.
+   Triangulate: if MMM says TV drives 20% of acquisition but MTA says 0%
+   (because TV is offline), trust MMM for TV, use MTA for digital.
+
+"How do you validate that an MMM model is reliable before acting on it?"
+   Four checks:
+   1. Historical fit: does the model explain historical sales well?
+      R-squared > 0.85 is a common threshold.
+   2. Out-of-sample test: hold out the last 3 months. Does the model
+      predict them accurately without seeing that data?
+   3. Sanity checks: do the channel coefficients make business sense?
+      TV should have a longer adstock than digital. High spend channels
+      should have higher diminishing returns.
+   4. Geo holdout: run a market test (media off in some markets).
+      Does the MMM-predicted lift match the observed lift?
+   If not: challenge the vendor's model assumptions. That is explicitly
+   what the JD asks for ("challenging, validating, and enhancing
+   vendor delivered models").
+
+"How do you quantify brand halo effects?"
+   Two approaches:
+   1. In the MMM: add brand health metrics (aided awareness, consideration)
+      as lagged variables explaining acquisition. Coefficient on brand
+      consideration = how much each 1-point lift in consideration
+      drives incremental acquisition, holding media spend constant.
+   2. Cross-channel interaction terms: in the MMM, include an interaction
+      term between TV spend and branded search volume. A significant
+      positive interaction = TV drives search (halo). The coefficient
+      quantifies the halo value.
+   Key point: halo effects mean that the ROI of brand-building campaigns
+   is underestimated if you only count direct response. The full ROI
+   includes the lift to all other channels downstream.
+
+"How do you manage a team of data scientists and analysts?"
+   Technical bar: I set quality standards for model development —
+   peer review of models, version control for model runs and datasets,
+   documentation of assumptions. Every model that influences a budget
+   decision is reproducible.
+   Development: I push analysts toward higher-order work by automating
+   the routine (data prep, standard reports). Time saved on busywork
+   = time available for insight generation.
+   Career growth: clear paths from analyst to senior analyst to lead.
+   Data scientists grow toward model ownership and methodology leadership.
+
+"What is your experience with the healthcare payer landscape?"
+   Use your healthcare multi-agent work as the anchor:
+   "I built a production multi-agent system for a healthcare enterprise
+   context — benefits, compliance, provider operations. I understand
+   the regulatory environment: PHI governance, HIPAA audit requirements,
+   the complexity of plan administration. For the market analytics context:
+   I understand that ACA subsidy changes, CMS star ratings, and competitor
+   plan launches are material drivers of member acquisition — and that
+   an MMM model for a payer must include these as external variables."
+
+
+---
+PART 8 — THE CRITICAL FRAMING FOR THIS ROLE
+---
+
+This role is 50% MMM depth, 50% agentic enablement.
+You are strong on 50% and have a gap on 50%.
+The interview strategy is:
+
+DO NOT pretend to be an MMM expert if you are not.
+Interviewers who live in MMM every day will probe immediately.
+A fabricated answer will end the conversation.
+
+DO position yourself as:
+"The leader who brings AI and automation to the analytics function —
+and who has enough analytical depth to be a credible partner to the
+MMM specialists, challenge vendor assumptions, and translate model
+outputs into executive narratives."
+
+The JD uses the word "enabling" in the title.
+Agentic Enablement means: you enable the analytics team to work faster,
+not that you replace them. You are the platform and AI layer.
+That framing is your strongest honest positioning.
+
+If you are asked about MMM technical depth directly:
+"My depth is in the infrastructure, automation, and agentic layer that
+makes MMM work faster and be more accessible. I partner deeply with
+the domain specialists — that is why the role reports into Marketing Ops
+rather than sitting in the modeling team. I ask hard questions of vendors,
+I know when a model output does not make sense, and I translate the
+outputs into decisions. The heavy modeling work is done by the team
+I lead and the vendors I manage."
+
+
+---
+PART 9 — QUESTIONS TO ASK THEM
+---
+
+For the Hiring Manager:
+  1. What is the current state of MMM at UHC E&I — is it fully operationalized
+     into planning cycles, or is it still being built out and validated?
+  2. What does the current agentic or AI enablement look like for the
+     analytics team today — are analysts using any AI tools, or is this
+     purely greenfield?
+  3. What is the balance between internal modeling capability vs external
+     vendor-managed models — and what is the strategic direction?
+  4. What does success look like at 6 months in this role?
+
+For technical peers:
+  1. What is the current data infrastructure for MMM — Databricks, Snowflake,
+     both? Where do model inputs and outputs live today?
+  2. Is there an existing analytics platform or self-service layer, or
+     would building that be part of this role's mandate?
+  3. What frameworks are the data scientists using today for MMM —
+     Robyn, Meridian, proprietary, vendor-managed?
+
+For the VP:
+  1. How does marketing leadership currently use MMM outputs — are they
+     fully trusted and integrated into budget decisions, or is there
+     still skepticism to overcome?
+  2. What is the appetite for agentic AI in analytics operations —
+     is this a 6-month pilot or a 2-year transformation program?
+
+
+---
+PART 10 — RAPID-FIRE VOCABULARY
+---
+
+Adstock          Transformation of ad spend to capture carryover effect.
+                 Geometric decay: effect_t = spend_t + decay * effect_(t-1)
+                 Parameter: decay rate (0-1). Higher = longer lasting effect.
+
+Saturation       Diminishing returns on spend. Modeled as hill function:
+                 response = spend^alpha / (spend^alpha + gamma^alpha)
+                 gamma = inflection point (spend at 50% max response)
+                 alpha = shape (steepness of the curve)
+
+Decomposition    Splitting total sales/acquisitions into components:
+                 Base (organic) + each channel's contribution + seasonality.
+                 Visualized as a stacked bar: each bar = one time period.
+
+Budget optimizer Given response curves, find spend allocation that maximizes
+                 total contribution subject to total budget constraint.
+                 Robyn uses Nevergrad. Meridian uses NumPyro/JAX.
+
+Incrementality   Causal lift above what would have happened without the
+                 marketing activity. Measured via geo holdout, matched
+                 market tests, or synthetic control methods.
+
+Robyn            Meta's open-source MMM package. R-based. Uses Ridge
+                 regression + Nevergrad for budget optimization.
+                 Produces: response curves, budget allocator, one-pager.
+
+Meridian         Google's open-source Bayesian MMM. Python-based. Uses
+                 NumPyro (probabilistic programming). More uncertainty
+                 quantification than Robyn. Newer (2024).
+
+Brand tracker    Recurring survey panel measuring brand health metrics
+                 (awareness, consideration, NPS) weekly or monthly.
+                 Vendors: Kantar, Ipsos, YouGov, Morning Consult.
+
+MLR              Medical Loss Ratio. ACA requirement that insurers spend
+                 at least 80-85% of premium on medical care.
+                 Limits marketing spend as a % of premium revenue.
+
+ACA subsidies    Advanced Premium Tax Credits reducing plan cost for
+                 individuals below 400% FPL. When subsidies increase
+                 (Inflation Reduction Act extension), individual market
+                 demand rises — organic baseline in MMM increases.
+
+Halo effect      Lift to one channel from activity in another.
+                 TV brand campaign increases branded paid search volume.
+                 Quantified via cross-channel interaction terms in MMM.
+
+ROAS             Return on Ad Spend = revenue / ad spend.
+                 Simpler than ROI (no cost subtraction). Used in digital.
+
+iROAS            Incremental ROAS — revenue that would not have happened
+                 without the ad spend. The MMM measure. Always lower than ROAS.
+
+MLflow           Open-source ML lifecycle platform. Experiment tracking,
+                 model registry, model serving. Used in Databricks.
+                 For MMM: track model runs, parameters, outputs, compare.
+
+Delta Lake       Open-source storage layer on data lakes (S3, ADLS).
+                 Adds ACID transactions, schema enforcement, time travel
+                 to Parquet files. Used in Databricks for reliable data.
+
+Unity Catalog    Databricks governance layer. Centralized metadata, access
+                 control, lineage tracking across all Databricks assets.
+                 Relevant for audit trail on analytics data and models.
