@@ -1,0 +1,685 @@
+Preparation Guide — Director of Data Engineering, Agentic AI
+American Express
+=================================================================
+This guide is written specifically for your background:
+platform engineering, Harness IDP, multi-agent systems on AWS and GCP,
+Google ADK, Bedrock, ephemeral environments, developer portals,
+and engineering leadership of platform/DevEx teams.
+
+It maps what you have already built to what Amex is asking for,
+identifies the gaps to close, and gives you the exact stories,
+answers, and talking points you need for each interview stage.
+
+
+---
+PART 1 — WHAT AMEX IS ACTUALLY HIRING FOR
+---
+
+Strip away the job description language and this role is three things:
+
+1. TECHNICAL AUTHORITY ON AGENTIC AI AT ENTERPRISE SCALE
+   Amex runs one of the largest financial services technology operations
+   in the world. They need someone who has built agentic AI systems that
+   are production-grade, safe, and compliant — not someone who has
+   built demos or run a pilot. They want an architect and standard-setter,
+   not a hands-on coder (though you must speak fluently at the code level).
+
+2. PEOPLE LEADER WHO CAN BUILD AND GROW ENGINEERING TEAMS
+   This is a Director role. The word "team" appears repeatedly.
+   They explicitly mention: hiring, performance reviews, mentoring,
+   raising the technical bar, cultivating engineering culture.
+   You need leadership stories as strong as your technical stories.
+
+3. OPERATOR AT THE INTERSECTION OF AMBIGUITY AND PRODUCTION
+   "Turn ambiguity into production-grade systems" is the exact phrase.
+   Amex is in early-to-mid agentic AI adoption. They need someone who
+   can take an unclear problem space, define the architecture, align
+   stakeholders, and ship something reliable — not someone who needs
+   a perfectly scoped spec before they can start.
+
+The gap risk for you:
+   Your technical depth on agentic AI is strong.
+   Your platform engineering and enterprise architecture background is strong.
+   The area to prepare hardest: Director-level people leadership stories.
+   EM-level is not Director-level. Have a clear, specific answer for
+   "what is the largest team you have led and how did you grow it?"
+   If your direct team was small, frame your influence across teams —
+   but be honest about it. Amex will probe this.
+
+
+---
+PART 2 — YOUR ASSET MAP (what you have that they want)
+---
+
+JOB REQUIREMENT                          YOUR EVIDENCE
+----------------------------             -----------------------------------
+Agentic AI systems at scale              multi_agent_aws_hc_solution_enhance
+                                         multi_agent_gcp_hc_solution_enhance
+                                         Supervisor Agent, 10 specialist agents,
+                                         parallel dispatch, RAG, Bedrock
+
+Agent orchestration frameworks           Google ADK (production use)
+                                         LiteLLM, Bedrock Claude
+                                         Supervisor pattern, Router pattern
+
+RAG pipelines                            Bedrock Knowledge Bases
+                                         Vertex AI Search
+                                         Source filtering, metadata, hybrid retrieval
+
+LLM infrastructure / model gateways     LiteLLM proxy (agent gateway write-up)
+                                         MCP gateway design (written up)
+                                         Bedrock Guardrails, PHI redaction
+
+Observability and safety tooling         ADOT, CloudWatch, X-Ray, OTLP
+                                         Audit logging, PHI redaction,
+                                         clinical escalation hard stop
+                                         Grafana, Datadog, Polaris (written up)
+
+AWS and GCP cloud expertise              Both enhanced solutions on each cloud
+                                         IAM, Secrets Manager, Bedrock,
+                                         EKS, ECS, Vertex AI, Cloud Run
+
+Kubernetes                               Harness IDP k8s onboarding workflows
+                                         Polaris (config validation),
+                                         EKS/ECS deployment patterns
+
+Workflow engines / async / queues        Temporal.io (written up)
+                                         Airflow awareness, Kafka knowledge
+                                         Async design patterns (written up)
+
+Regulated industry context               Healthcare multi-agent solution
+                                         PHI redaction, HIPAA audit trails,
+                                         Bedrock Guardrails, human-in-the-loop
+
+Failure strategy / reliability           failure-strategy write-up
+                                         Circuit breakers, bulkheads,
+                                         blast radius, chaos engineering
+
+Platform engineering                     Harness IDP — developer portal at scale
+                                         Self-service workflows, catalog design,
+                                         governance, RBAC, plugin architecture
+
+Cross-team influence                     TCOE context — working across teams
+                                         on shared platform capabilities
+
+Python, Go (awareness), TypeScript       Python primary (agents, FastAPI)
+
+MCP / tool integration                   agent-gateway-mcp-gateway write-up
+                                         Tool design, three-state contract,
+                                         credential injection patterns
+
+
+---
+PART 3 — THE GAPS TO CLOSE BEFORE THE INTERVIEW
+---
+
+GAP 1: LANGCHAIN / LANGGRAPH / LLAMAINDEX FLUENCY
+  Amex explicitly lists these. You use Google ADK.
+  You do not need to have built with LangChain — but you must be able to
+  speak intelligently about when you would choose it vs ADK vs building
+  lighter primitives. Prepare a clear comparison.
+
+  Study: LangGraph's node/edge/state model, how it handles cycles,
+  how it differs from ADK's sub-agent delegation pattern.
+  Know: LangChain's tool_calling abstraction, memory types (buffer,
+  summary, entity), retriever interface.
+  Know: LlamaIndex's QueryEngine, RAG pipeline, document ingestion.
+
+  Your answer when asked: "I built production multi-agent systems using
+  Google ADK with Bedrock on AWS. ADK gave me code-first agent construction,
+  structured tool calling, and session management. LangGraph is closer to
+  a graph-based state machine approach — better for cyclical workflows with
+  explicit state transitions. I would choose LangGraph when the agent
+  loop has well-defined states and explicit transition conditions.
+  I would choose ADK when the hierarchy of agents and tool calling
+  needs to be code-first and testable. I would build lighter primitives
+  when the framework's abstractions add more complexity than they remove —
+  which is often the case for simple RAG or single-model pipelines."
+
+GAP 2: KAFKA AND EVENT-DRIVEN AGENTIC PATTERNS
+  Amex lists Kafka explicitly. Know how Kafka fits into agentic systems.
+
+  Key concept: agents as consumers of event streams.
+  An agent workflow triggered by a Kafka event (new loan application,
+  fraud alert, customer complaint) rather than an HTTP call.
+  Event sourcing: agent decisions published as events for audit and replay.
+  Exactly-once semantics: idempotent agent actions keyed on event offset.
+
+  Prepare to explain: "How would you design a fraud detection agent
+  that processes real-time transaction events?" Answer includes:
+  Kafka consumer group -> trigger agent invocation per event ->
+  agent calls tools (lookup account, check pattern, assess risk) ->
+  agent decision published back to a Kafka topic -> downstream system acts.
+  Temporal handles the durable execution of multi-step agent logic per event.
+
+GAP 3: PYTORCH AND HUGGING FACE ECOSYSTEM
+  The JD mentions PyTorch, Hugging Face, fine-tuning, embeddings,
+  inference tooling. You may not have deep hands-on here.
+
+  Prepare the conceptual level:
+  - Embeddings: know sentence-transformers (all-MiniLM, BGE, E5).
+    Know why embedding model choice affects RAG quality.
+    Know the difference between retrieval-optimized and semantic-optimized models.
+  - Fine-tuning: know LoRA/QLoRA (efficient fine-tuning of large models
+    by training low-rank adapter matrices, not full weights).
+    Know when to fine-tune vs RAG vs prompt engineering.
+    Fine-tune when: domain terminology is highly specific, the model
+    consistently fails at a task type, you have labeled training data.
+    RAG when: knowledge is dynamic, facts change frequently.
+  - Inference: know vLLM (high-throughput inference server, PagedAttention),
+    llama.cpp (CPU inference), ONNX (model portability).
+    Know Bedrock's managed inference vs self-hosted on EKS.
+  - You do not need hands-on PyTorch. You need to discuss tradeoffs
+    at the architectural level: managed vs self-hosted inference,
+    when to fine-tune, how embedding quality affects RAG.
+
+GAP 4: EVALUATION FRAMEWORKS FOR AGENTIC SYSTEMS
+  The JD specifically mentions "evaluation tooling for autonomous systems."
+  This is a real gap in most agentic AI work and a differentiator if you
+  know it well.
+
+  Prepare:
+  - Agent evaluation is harder than model evaluation because the
+    full trajectory matters (did the agent take the right steps?),
+    not just the final answer.
+  - Metrics: task success rate, tool call accuracy, step efficiency
+    (did it use too many tool calls?), hallucination rate on cited facts,
+    grounding rate (did every claim come from a retrieved document?),
+    latency per request, cost per request (token usage).
+  - Frameworks: LangSmith (LangChain's eval and tracing platform),
+    Weights & Biases (experiment tracking + eval), Ragas (RAG-specific
+    evaluation: faithfulness, answer relevance, context precision),
+    custom eval harnesses (run a golden question set, check answers
+    against expected responses or rubrics, CI/CD integration).
+  - Amex-specific: in a regulated environment, evaluation is also
+    compliance evaluation. Does the agent cite approved sources?
+    Does it escalate when it should? Does it never fabricate regulatory facts?
+    Safety evaluation = does the agent stay within its autonomy boundary?
+
+GAP 5: FINTECH-SPECIFIC AGENTIC CONSIDERATIONS
+  Amex is a financial services company. Know what makes agentic AI
+  different in fintech vs a general enterprise.
+
+  Key concerns:
+  - Explainability: regulators (OCC, CFPB, FINRA) may require that
+    any AI-driven decision affecting a customer be explainable.
+    An agent that denies a credit limit increase must be able to say why.
+    RAG with citations is one approach. Structured reasoning traces are another.
+  - Auditability: every agent action that touches a customer account
+    must be immutably logged. Who initiated it, what data was accessed,
+    what decision was made, what happened next.
+  - Model risk management (MRM): banks and card networks must validate
+    AI models before deploying them to production. This includes
+    bias testing, performance benchmarking, and periodic revalidation.
+    Know what an MRM process looks like at a high level.
+  - PCI DSS: cardholder data must be protected. Agents must never
+    log, transmit, or process raw card numbers or CVVs.
+    Tokenization at ingestion. Data residency controls.
+  - Fair lending: any agent that influences credit decisions must not
+    discriminate on protected characteristics. Bias testing is mandatory.
+  - Human override: any customer-facing agent decision of consequence
+    (account action, credit decision, fraud flag) must have a human
+    override path. Agents recommend; humans (or rule engines) approve.
+
+
+---
+PART 4 — THE INTERVIEW STAGES AND HOW TO PREPARE FOR EACH
+---
+
+STAGE 1 — RECRUITER SCREEN (30 min)
+  Goal: confirm level fit, compensation alignment, basic background.
+  Prepare:
+  - Your one-minute summary: years of experience, what you have built,
+    the level you operate at, why Amex / why now.
+  - Know your compensation expectations at Director level.
+  - Be clear about your title history and team sizes.
+
+STAGE 2 — HIRING MANAGER SCREEN (45-60 min)
+  Goal: assess technical depth and leadership fit.
+  Likely topics:
+  - Walk me through the most complex agentic AI system you have designed.
+    -> Use the multi-agent healthcare solution. Cover: the problem,
+    the architecture decisions, the tradeoffs, what you would do differently.
+  - How do you balance autonomy and safety in an agentic system?
+    -> Your clinical escalation hard stop, PHI redaction at entry,
+    Bedrock Guardrails, human-in-the-loop gates. These are real examples.
+  - How have you grown an engineering team?
+    -> Have a specific answer about hiring, mentoring, performance reviews.
+  - What do you know about our space / why Amex?
+    -> American Express: 175 years, card network not a bank, premium brand,
+    customer service differentiation, travel and lifestyle focus.
+    Agentic AI opportunity: customer service automation, fraud detection,
+    credit decisioning, expense management, merchant analytics.
+    Your angle: regulated environment is where your healthcare/enterprise
+    governance experience is directly applicable.
+
+STAGE 3 — TECHNICAL DEEP DIVE (60-90 min, often with Principal/Staff engineers)
+  Goal: validate that your technical claims are real.
+  Likely format: system design question + architecture review.
+
+  System design question you should be ready for:
+  "Design an agentic AI system for American Express customer service
+  that handles card dispute resolution end-to-end."
+
+  Your answer structure:
+    Requirements:
+      Functional: customer submits dispute, agent gathers evidence,
+      agent assesses validity, agent takes action (provisional credit,
+      merchant contact, case escalation).
+      Non-functional: FINRA/OCC auditability, PCI DSS (no raw card data),
+      99.9% availability, <3s response for interactive turns,
+      human override at every material decision.
+
+    Architecture layers:
+      1. Entry: API Gateway + OAuth2/OIDC (Amex SSO). Customer authenticated.
+         Dispute request hits FastAPI service.
+      2. Supervisor Agent (Claude Opus via Bedrock):
+         PHI/PCI redaction at entry. Classify dispute type.
+         Dispatch specialist agents in parallel.
+      3. Specialist agents:
+         - EvidenceAgent: pull transaction records, merchant data, prior disputes
+           from internal APIs (not from the LLM's memory)
+         - PolicyAgent: retrieve dispute policy from Bedrock KB (RAG, cited)
+         - FraudSignalAgent: query fraud scoring system, pattern history
+         - CustomerHistoryAgent: account standing, dispute history, card tier
+      4. Result aggregation: structured JSON with evidence, policy reference,
+         recommendation (valid/invalid/escalate), confidence score.
+      5. Human review gate: if confidence < threshold OR dispute amount > $X:
+         Temporal workflow pauses, routes to human reviewer.
+         Human reviews agent evidence pack, approves or overrides.
+         Temporal signal resumes workflow.
+      6. Action: provisional credit issued, merchant notified,
+         case logged in CRM with full agent reasoning trace.
+      7. Audit: every agent step, tool call, data access logged to
+         immutable CloudWatch log group with CloudTrail for AWS API calls.
+         Retention: 7 years (regulatory requirement).
+
+    Tradeoffs to raise yourself:
+      - Why RAG over fine-tuning for policy? Policy changes frequently.
+        RAG retrieves the current version. Fine-tuning bakes in old policy.
+      - Why human gate at confidence threshold? Regulators require explainability
+        for material decisions. A human in the loop satisfies that.
+      - Why Temporal for the workflow? The dispute process can take days
+        (waiting for merchant response). Temporal's durable timers + signals
+        handle this natively without a polling loop or custom state DB.
+      - Why parallel specialist dispatch? Evidence, policy, fraud, history
+        are independent lookups. Sequential adds latency; parallel is ~1s.
+      - Why structured output from each agent? Aggregation must be
+        deterministic. An LLM-based merge adds hallucination risk.
+        Structured JSON + deterministic Python aggregation is auditable.
+
+  Architecture review:
+  They may show you a design and ask you to critique it.
+  Common issues to spot:
+    - Missing timeout on any downstream call
+    - No circuit breaker on external API (fraud scoring, merchant network)
+    - Agent has access to raw card data (PCI violation)
+    - No audit trail for agent decisions
+    - Agent makes final decision without human gate on high-value disputes
+    - No retry policy on tool calls
+    - Session state stored in memory only (not durable)
+    - No evaluation framework — how do you know the agent is right?
+
+STAGE 4 — LEADERSHIP AND BEHAVIOURAL (60 min, VP or above)
+  Goal: assess leadership maturity, judgment, and cultural fit.
+  Format: STAR stories (Situation, Task, Action, Result).
+
+  Questions you will get and how to answer each:
+
+  "Tell me about a time you set technical direction for a team
+  and had to bring people along who disagreed."
+    Use: any architectural standard you established (agent framework choice,
+    security controls, deployment patterns). Describe the disagreement,
+    how you listened, how you built the case, how you got alignment.
+    Key: you influenced without authority if cross-team.
+
+  "Tell me about a time you hired or built a team from scratch."
+    Be specific: how many roles, what the bar was, how you structured
+    the process, how you onboarded people, how you set expectations.
+    If your team was small, be honest and pivot to: "I partnered across
+    teams to extend our capability by working with X team on Y initiative."
+
+  "Tell me about a time a project failed or went wrong. What did you do?"
+    They want to see accountability, not blame-shifting.
+    Pick a real example. Own your part. Describe what you learned.
+    Describe what you changed afterward. Postmortem mindset.
+
+  "How do you evaluate and develop senior engineers?"
+    Specific answer: 1:1s focused on growth, not status.
+    Technical bar-raising through architecture reviews and design critique.
+    Stretch assignments on ambiguous problems.
+    Clear promotion criteria written down and discussed.
+    Sponsorship — advocating for them in rooms they are not in.
+
+  "How do you stay current on agentic AI given that it moves so fast?"
+    Specific: you build, not just read. The multi-agent projects you built
+    are proof. Papers you follow (Anthropic, DeepMind, OpenAI, arXiv).
+    Communities: ADK, LangChain Discord, AI engineering Slack groups.
+    You write things up (point to your TCOE-Usecase notes).
+    You prototype and then throw most of it away.
+
+  "How do you manage the tension between moving fast on AI and
+  maintaining safety and reliability in a regulated environment?"
+    This is the core Amex tension. Your answer:
+    Safety is not a gate at the end — it is a design principle from the start.
+    PHI redaction at entry. Guardrails at the tool boundary.
+    Human override gates on material decisions.
+    Evaluation harness before promotion to production.
+    Deployment rings (canary 1% -> 10% -> 100%).
+    Feature flags for new agent capabilities.
+    Postmortem culture — learn fast from failures without blame.
+    The goal is: autonomous where safe, human-in-the-loop where required.
+    That boundary is a business and regulatory decision, not a technical one.
+    Your job as a director is to make sure the architecture enforces
+    whatever that boundary is — reliably and auditably.
+
+STAGE 5 — CROSS-FUNCTIONAL PANEL (sometimes, with Product and UX leaders)
+  Goal: assess whether you can partner with non-engineers.
+  Prepare:
+  - How you translate technical constraints into product decisions.
+    Example: "the agent cannot make a final credit decision because of
+    Reg B — here is how we design the human review step so the product
+    experience is still fast."
+  - How you say no to a product request without saying no.
+    Example: "that feature would require the agent to access raw card data.
+    We cannot do that under PCI. Here is the alternative that gets you 80%
+    of the outcome with a compliant design."
+  - How you communicate roadmap to non-technical stakeholders.
+    Avoid jargon. Use outcomes, not components.
+    "By Q3 the dispute resolution agent will handle 40% of Tier 1 disputes
+    without human review" is better than "we will implement a
+    multi-agent RAG pipeline with Bedrock Knowledge Bases."
+
+
+---
+PART 5 — THE FIVE STORIES TO PREPARE AND REHEARSE
+---
+
+Every story in STAR format (Situation, Task, Action, Result).
+Practice saying each one out loud in 2 minutes. Trim to the essentials.
+
+STORY 1 — MOST COMPLEX AGENTIC AI SYSTEM
+  The multi-agent healthcare service assistant (AWS or GCP version).
+  Situation: enterprise needed a self-service AI system across 10 domains.
+  Task: design and build a production-grade multi-agent system.
+  Action: Supervisor Agent architecture, parallel dispatch, PHI redaction,
+  Bedrock KB for RAG, Bedrock Guardrails, audit logging, 53 tests.
+  Result: system handles cross-domain queries in parallel, passes all
+  governance controls, documented for enterprise deployment.
+  Pivot to Amex: this is directly applicable to customer service,
+  expense management, or fraud — same architecture, same regulated context.
+
+STORY 2 — TECHNICAL DIRECTION AND STANDARDS
+  The Harness IDP platform engineering work.
+  Situation: developers across the enterprise had no single front door.
+  Task: establish the platform architecture, standards, and delivery.
+  Action: designed the IDP architecture, defined the catalog schema,
+  built reusable self-service workflows, set governance controls,
+  integrated security (Vault, delegate selectors, RBAC).
+  Result: standardized developer onboarding, reduced manual tickets,
+  improved governance visibility.
+  Pivot to Amex: this is the same skill — setting architectural standards
+  for a shared platform that multiple teams build on top of.
+
+STORY 3 — INFLUENCING ACROSS ORGANIZATIONAL BOUNDARIES
+  Choose a real example where you aligned teams without formal authority.
+  Could be: getting security team buy-in on the Vault integration pattern,
+  aligning multiple dev teams to adopt a shared workflow standard,
+  or coordinating across cloud and app teams on a deployment pattern.
+  Key: you built the case with data and demos, not authority.
+
+STORY 4 — PEOPLE LEADERSHIP (hiring, developing, difficult conversations)
+  Be specific. How many people. What the challenge was.
+  If you coached a junior engineer to a senior level: describe it.
+  If you had to manage underperformance: describe it with maturity.
+  If you hired a strong engineer who became a team multiplier: describe it.
+  Amex will probe this. Have a real story, not a generic answer.
+
+STORY 5 — FAILURE AND RECOVERY
+  A real project that did not go as planned.
+  What you missed, what you learned, what you changed.
+  Postmortem mindset. No blame. Clear ownership of your part.
+  This builds trust more than a success story.
+
+
+---
+PART 6 — THE AMEX CONTEXT TO KNOW
+---
+
+AMEX BUSINESS CONTEXT
+  American Express is a card network, not a bank.
+  It issues cards directly (unlike Visa/Mastercard which work through banks).
+  Revenue model: merchant discount rate (fee per transaction),
+  annual card fees, interest on revolving balances, travel services.
+  Premium brand: Centurion, Platinum, Gold cards.
+  Strategic differentiator: customer service quality, travel benefits,
+  merchant relationships, fraud detection.
+
+WHERE AGENTIC AI FITS AT AMEX
+  Customer service: dispute resolution, account inquiries, card benefits,
+  spend analysis. Amex has a massive call center operation — agentic AI
+  is a deflection and augmentation play.
+  Fraud detection: real-time transaction scoring, pattern detection,
+  anomaly agents watching for unusual spend. Kafka event-driven architecture.
+  Credit decisioning: agent assists underwriters, aggregates signals,
+  generates recommendation packages. Human final decision required.
+  Expense management: agents that categorize, reconcile, and flag
+  corporate card expenses. Integration with Concur, SAP.
+  Merchant analytics: agents that analyze spend patterns, generate
+  insights for merchant partners.
+  Internal operations: code review agents, infrastructure agents,
+  documentation agents (similar to your Harness IDP work).
+
+AMEX ENGINEERING CULTURE (from public sources)
+  Technology is core, not support. Amex runs its own network.
+  Strong emphasis on reliability (99.99%+ uptime for card processing).
+  Risk-conscious: financial services regulatory environment.
+  Investment in modern engineering: Kubernetes, microservices, AI/ML.
+  Global scale: transactions processed in 130+ currencies, 130+ countries.
+
+THE REGULATORY LANDSCAPE AMEX OPERATES IN
+  OCC (Office of the Comptroller of the Currency): model risk management.
+  CFPB (Consumer Financial Protection Bureau): fair lending, complaints.
+  FINRA: if any investment products are involved.
+  PCI DSS: payment card data security standard. Mandatory.
+  SOX (Sarbanes-Oxley): financial reporting controls.
+  GDPR / state privacy laws (CCPA): customer data handling.
+  Your governance work (PHI, audit trails, human-in-the-loop) maps
+  directly to this. The terminology is different; the patterns are the same.
+
+
+---
+PART 7 — QUESTIONS TO ASK THEM
+---
+
+At the end of every stage, ask thoughtful questions.
+These signal that you think at the Director level, not the engineer level.
+
+Questions for the Hiring Manager:
+  1. What does the current agentic AI capability look like at Amex today —
+     are you building net-new or maturing existing systems?
+  2. What are the biggest obstacles to getting agentic AI into production
+     here — is it regulatory, cultural, technical, or all three?
+  3. What does success look like for this role at 6 months and 12 months?
+  4. How does this Director role interact with the existing Data Engineering
+     and ML Platform organizations? Who do I need to align with?
+
+Questions for the technical panel:
+  1. What agent frameworks are teams currently evaluating or using?
+  2. How is model governance and MRM handled for LLM-based systems today?
+  3. What is the current observability posture for AI systems —
+     are you tracking agent decision quality, not just latency?
+  4. What does the evaluation process look like before an agent
+     goes to production in a customer-facing context?
+
+Questions for the VP / cross-functional:
+  1. How does the product organization think about the boundary between
+     what an agent can decide autonomously and what requires human review?
+  2. What is the investment appetite for platform capabilities vs
+     product-specific agent features?
+  3. How does the organization handle the tension between moving fast
+     on AI and the regulatory and brand risk that Amex carries?
+
+
+---
+PART 8 — ONE-PAGE SUMMARY OF YOUR POSITIONING
+---
+
+WHO YOU ARE (30-second version for the room)
+
+"I am a platform and AI engineering leader with deep experience building
+enterprise-grade agentic AI systems on AWS and GCP, and running developer
+platform programs at scale. I have built production multi-agent systems
+with supervisor orchestration, parallel specialist dispatch, RAG pipelines
+backed by Bedrock Knowledge Bases, PHI redaction, Bedrock Guardrails,
+and audit-grade observability. I have also led platform engineering programs
+— developer portals, self-service workflows, governance frameworks —
+where the challenge is exactly the same: turn ambiguous enterprise needs
+into reliable, scalable shared capabilities that multiple teams build on.
+Regulated environments are where my work has lived. Healthcare and
+financial services share the same core constraints: safety, auditability,
+human oversight, and the discipline to move fast without cutting corners
+on governance. That is the work I want to do at Amex."
+
+WHY AMEX (30-second version)
+
+"Amex sits at an inflection point. The core product — the card experience,
+the dispute process, the merchant relationship — is deeply human today.
+Agentic AI can make it dramatically faster and more personalized without
+sacrificing the trust and service quality that differentiate Amex from
+every other card network. The regulatory constraints are not an obstacle
+here — they are actually the forcing function that makes the architecture
+better. I have built in regulated environments and I know that doing this
+right, not just fast, is the only way to build something that lasts."
+
+
+---
+PART 9 — RAPID-FIRE TECHNICAL DEFINITIONS TO HAVE CLEAN
+---
+
+Know these cold. You may be asked any of them in passing.
+
+  Autonomy boundary       The line between what an agent decides alone
+                          and what requires human approval. Defined by
+                          risk level, regulatory requirement, and confidence
+                          threshold. Not a technical decision — a business
+                          and compliance decision enforced technically.
+
+  Grounding               Anchoring an LLM response in retrieved documents.
+                          Every claim has a source. Prevents hallucination.
+                          Measured by faithfulness (does the answer match
+                          the source?) and context precision (was the
+                          right document retrieved?).
+
+  RAG vs fine-tuning      RAG: dynamic knowledge retrieval at query time.
+                          Good for: changing knowledge, large document sets,
+                          citation requirements.
+                          Fine-tuning: baking knowledge into model weights.
+                          Good for: stable domain-specific tasks, style
+                          adaptation, task-specific performance gains.
+                          In regulated environments: RAG is usually preferred
+                          because the knowledge source is auditable.
+
+  Tool use / function calling  The mechanism by which an LLM calls external
+                          functions. The model outputs a structured call
+                          (name + arguments). Your code executes it.
+                          The result goes back into the model's context.
+                          This is how agents take actions beyond generating text.
+
+  Memory types            In-context: everything in the current prompt window.
+                          External/semantic: vector store of past interactions.
+                          Episodic: structured history of past agent runs.
+                          Procedural: learned patterns encoded in model weights
+                          (fine-tuning) or system prompt.
+
+  Model gateway           A proxy layer in front of LLM APIs.
+                          Handles: routing, rate limiting, key management,
+                          cost metering, fallback between providers,
+                          content filtering. LiteLLM Proxy is an example.
+
+  MCP                     Model Context Protocol. Anthropic standard.
+                          Defines how agents discover and call tools
+                          via a standard wire protocol. Decouples tool
+                          providers from agent frameworks.
+
+  Temporal / durable exec  Workflow engine that guarantees a long-running
+                          process completes even across failures.
+                          Workflows pause (for human approval, external event)
+                          and resume exactly where they stopped.
+                          Not an agent. Infrastructure for agents to run on.
+
+  LangGraph               Agent framework using a directed graph model.
+                          Nodes = agent steps. Edges = transitions.
+                          State flows through the graph.
+                          Good for: cyclical workflows, explicit state machines,
+                          human-in-the-loop at defined graph nodes.
+
+  RAGAS                   Evaluation framework for RAG systems.
+                          Metrics: faithfulness, answer relevance,
+                          context precision, context recall.
+                          Run against a golden question set to measure
+                          RAG pipeline quality before production.
+
+  Semantic caching        Cache LLM responses by semantic similarity of the query.
+                          If a new query is semantically close to a cached query,
+                          return the cached response. No model call needed.
+                          Reduces cost and latency for repeated similar questions.
+
+  Model risk management   The bank/financial services governance process for
+                          validating AI/ML models before production deployment.
+                          Includes: bias testing, performance benchmarking,
+                          documentation, periodic revalidation.
+                          OCC SR 11-7 guidance is the regulatory reference.
+
+  LoRA / QLoRA            Parameter-efficient fine-tuning methods.
+                          Train only small adapter matrices, not the full model.
+                          QLoRA adds quantization for reduced memory usage.
+                          Allows fine-tuning large models on modest hardware.
+
+  vLLM                    High-throughput LLM inference server.
+                          PagedAttention: efficient KV cache management.
+                          Continuous batching: maximizes GPU utilization.
+                          Used for self-hosted inference at scale.
+
+
+---
+PART 10 — PREPARATION SCHEDULE
+---
+
+IF YOU HAVE 2 WEEKS:
+
+Week 1:
+  Day 1-2: Study LangGraph. Build a simple 3-node graph locally.
+            Understand the state model and how it differs from ADK.
+  Day 3:   Study RAGAS and agent evaluation. Know the metrics cold.
+  Day 4:   Read about MRM (SR 11-7), PCI DSS basics, Reg B (fair lending).
+            Know the regulatory names even if not the details.
+  Day 5:   Write your 5 STAR stories. Practice out loud.
+           Record yourself. Listen back. Cut what is vague.
+  Day 6-7: Kafka + agentic systems. Event-driven agent trigger pattern.
+            Know: consumer group, exactly-once, offset management concepts.
+
+Week 2:
+  Day 1:   System design practice. Design the dispute resolution agent.
+            Time yourself: 45 minutes from blank page to full architecture.
+  Day 2:   Director-level leadership questions. Practice with someone.
+  Day 3:   Deep dive into PyTorch / Hugging Face — just the concepts:
+            embeddings, LoRA, vLLM. 30 minutes is enough.
+  Day 4:   Amex research: recent news, earnings reports, product launches,
+            any public AI/tech announcements from Amex leadership.
+  Day 5:   Mock interview — full 60 minutes, technical + leadership.
+  Day 6-7: Rest and review. Re-read your stories. Sharpen the positioning.
+
+IF YOU HAVE 1 WEEK:
+  Day 1:   LangGraph basics + RAGAS metrics
+  Day 2:   5 STAR stories written and practiced
+  Day 3:   System design: dispute resolution agent (45 min timed)
+  Day 4:   Leadership questions practiced out loud
+  Day 5:   Amex context, regulatory landscape, questions to ask
+  Day 6:   Mock interview
+  Day 7:   Rest and review
+
+IF YOU HAVE 3 DAYS:
+  Day 1:   5 STAR stories + system design practice
+  Day 2:   LangGraph basics + leadership questions + Amex context
+  Day 3:   Mock interview + review rapid-fire definitions
