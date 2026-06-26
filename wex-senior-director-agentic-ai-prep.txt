@@ -1,0 +1,625 @@
+Preparation Guide — Senior Director, Engineering: Agentic AI & Service Applications
+WEX Inc.
+==========================================================================
+This is a different role from Amex. Read it carefully before using the
+same prep. This guide is written specifically against your background
+and against what WEX is actually buying.
+
+
+---
+PART 1 — WHAT THIS ROLE ACTUALLY IS (HONEST READ)
+---
+
+The title says Agentic AI. The substance is something more specific.
+
+This is a Senior Director of Engineering who owns the technology
+for WEX's Call Center and Implementation service organizations.
+The job is to take those teams — which today run on traditional
+CRM workflows (Salesforce Service Cloud), manual processes, and
+human agents — and transform them using agentic AI, LLMs,
+predictive analytics, and modern SDLC practices.
+
+Three things this role is, in priority order:
+
+1. SERVICE OPERATIONS TECHNOLOGY LEADER
+   You own the software platform that 60 people across 4 global teams
+   use to run call center and implementation operations.
+   Salesforce Service Cloud is the core platform today.
+   This is not purely a greenfield AI-first role.
+   You are modernizing an existing, business-critical service stack.
+
+2. AGENTIC AI TRANSFORMATION OWNER
+   You drive the shift from human-operated workflows to AI-assisted
+   and AI-autonomous workflows. Real-time call guidance ("nudge" technology),
+   policy drafting automation, benefit selection optimization,
+   predictive service level forecasting.
+   This is the part that maps directly to your agentic AI work.
+
+3. ENTERPRISE STAKEHOLDER MANAGER AND EXECUTIVE COMMUNICATOR
+   "Board-level materials." "VPs and leaders across Call Center."
+   "General Managers and executive leadership."
+   This role has a heavy upward and outward communication component.
+   You are translating between what service teams need and what AI
+   can actually deliver — in terms executives understand.
+
+WHAT WEX IS
+   WEX Inc. is a global financial technology company.
+   Core business: fleet fuel cards (trucking, logistics, field services),
+   corporate payments (travel and expense), health benefits administration
+   (HSA, FSA, HRA, COBRA management).
+   Listed on NYSE. ~$2.6B revenue. ~5,000 employees globally.
+   The call center and implementation teams serve these business lines.
+   Service complexity: benefits administration involves regulatory compliance
+   (IRS, ERISA, ACA), plan configurations, employer onboarding, and
+   claim processing — similar in governance weight to healthcare.
+
+THE DIFFERENCE FROM AMEX
+   Amex: pure technical authority, engineering standards, hiring at scale.
+         Salesforce is not in scope. The stack is AWS/Kubernetes/Python.
+   WEX:  Salesforce Service Cloud is the anchor platform.
+         60 people across 4 teams — you manage managers, not just engineers.
+         Heavier on stakeholder management and executive communication.
+         "Nudge" technology for call center reps is the headline AI use case.
+         Benefits and fleet payments context — regulated but different from banking.
+
+THE HONEST GAP ASSESSMENT FOR YOU
+   Strong: agentic AI architecture, multi-agent systems, RAG, observability,
+           AWS/GCP cloud, governance, enterprise platform thinking.
+   Gap 1: Salesforce Service Cloud depth.
+           They say "prefer 5+ years" — if you do not have it, prepare
+           a clear answer for how you lead platforms you did not build on.
+   Gap 2: Call center / CX operations domain knowledge.
+           Know the vocabulary: AHT (average handle time), FCR (first call
+           resolution), CSAT, NPS, IVR, CTI (computer-telephony integration),
+           wrap time, agent desktop, knowledge base deflection rate.
+   Gap 3: Benefits administration context.
+           HSA/FSA/COBRA administration is complex and regulated.
+           You do not need to be an expert but you need to understand
+           the service operation: open enrollment, claim processing,
+           employer onboarding, member support.
+   Gap 4: "Nudge" technology / real-time agent assist.
+           This is a specific AI application pattern. Prepare it well.
+           It is the headline use case in the JD.
+
+
+---
+PART 2 — YOUR ASSET MAP (what you have that WEX wants)
+---
+
+JOB REQUIREMENT                          YOUR EVIDENCE
+----------------------------             -----------------------------------
+Agentic AI engineering                   Supervisor Agent, 10 specialist agents
+                                         parallel dispatch, intent classifier
+                                         Bedrock, Google ADK, LiteLLM
+
+LLM-based tools for call center support  HR policy agent, benefits agent,
+                                         payroll agent in multi-agent solution
+                                         — same use case, different domain name
+
+RAG pipelines                            Bedrock Knowledge Bases, Vertex AI Search
+                                         source filtering, citation-grounded answers
+
+Policy drafting automation               Benefits agent, compliance agent, legal agent
+                                         retrieve from KB, cite source, draft response
+                                         — exactly "policy drafting" in the JD
+
+Real-time data analysis                  Intent classifier (instant, no model call)
+                                         supervisor aggregation, structured outputs
+
+Modern SDLC / CI/CD                      Harness IDP — the CI/CD platform itself
+                                         53 tests in the multi-agent project
+                                         Pipeline governance, canary deployment,
+                                         Polaris for Kubernetes config validation
+
+Platform governance                      PHI redaction, Bedrock Guardrails,
+                                         audit logging, human-in-the-loop gates
+                                         IDP governance controls (RBAC, Vault)
+
+Global team leadership                   TCOE context — distributed teams
+                                         Harness IDP program across multiple teams
+                                         Managing globally distributed delivery
+
+Executive communication                  ROI story (your IDP ROI tables)
+                                         TCOE capstone presentations (pptx files)
+                                         Architecture narratives for leadership
+
+Self-service workflow automation         Harness IDP workflows:
+                                         repo creation, k8s onboarding,
+                                         public cloud onboarding, AD group mgmt
+                                         — deflecting manual tickets at scale
+
+Predictive / data-driven thinking        Blast radius analysis, drift analysis
+                                         ROI measurement framework
+                                         KPI-driven delivery (your IDP metrics)
+
+Upskilling teams for AI                  Building AI capability on platform teams
+                                         Documentation culture (TCOE write-ups)
+                                         Knowledge transfer through architecture docs
+
+Regulated industry experience            Healthcare multi-agent solution (HIPAA)
+                                         Benefits and payroll domain agents
+                                         PHI redaction, audit trail, compliance agent
+
+
+---
+PART 3 — THE HEADLINE USE CASE: NUDGE TECHNOLOGY
+---
+
+"Nudge technology" for call center agents is the specific AI use case
+the JD calls out. You need to own this concept completely.
+
+WHAT IT IS
+  Real-time AI assistance displayed to a call center representative
+  while they are on a live call with a customer.
+  The agent does not stop to search a knowledge base.
+  The AI listens (or reads the transcript in near-real-time),
+  understands the context, and surfaces:
+    - Relevant knowledge base articles
+    - Suggested next best action
+    - Compliance reminders ("you must read this disclosure")
+    - Benefit plan details specific to the caller's employer
+    - Recommended responses to specific objections
+    - Upsell or retention offers based on customer profile
+    - Escalation triggers ("this caller sounds at risk of churn")
+
+WHY IT IS CALLED "NUDGE"
+  It nudges the human agent toward better decisions rather than
+  replacing the agent. The human remains in control.
+  The AI reduces cognitive load, reduces average handle time (AHT),
+  improves first call resolution (FCR), and reduces errors.
+
+THE ARCHITECTURE
+  Real-time call transcript -> ASR (speech-to-text, AWS Transcribe / Google STT)
+  Transcript stream -> intent classifier (what topic is the caller asking about?)
+  Intent + caller context (CRM data, plan data, history) -> RAG retrieval
+  Retrieved knowledge + intent -> LLM generates suggested response / next action
+  Suggestion surfaces on agent desktop (Salesforce Service Cloud CTI widget)
+  Agent sees suggestion, uses it or ignores it, continues the call
+  Interaction logged: what was suggested, was it used, call outcome
+
+  This is your multi-agent architecture applied to a call center context:
+  - Intent classifier (your intent_classifier.py)
+  - Specialist retrieval agents (your domain specialists via Bedrock KB)
+  - Real-time aggregation (your aggregator.py)
+  - Delivered as a widget in the agent desktop, not a chat interface
+
+THE METRICS THAT MATTER
+  AHT (Average Handle Time): time from call answer to call end.
+    Nudge reduces AHT by surfacing answers faster.
+    Benchmark: 3-5% AHT reduction is meaningful at call center scale.
+    At 1000 calls/day * 5 minutes AHT * 5% reduction = 250 minutes/day saved.
+
+  FCR (First Call Resolution): did the issue get resolved on the first call?
+    Nudge improves FCR by giving the agent the right answer on the first call.
+    Industry average FCR: 70-75%. Improving to 80% is significant.
+
+  CSAT (Customer Satisfaction Score): post-call survey.
+    Better answers, shorter calls, fewer escalations = higher CSAT.
+
+  Compliance adherence: did the agent read required disclosures?
+    Nudge surfaces mandatory disclosures as required prompts.
+    Reduces regulatory risk. Auditable (was the prompt shown? was it acknowledged?).
+
+  Knowledge base deflection: what % of calls used AI-suggested answers
+    vs the agent manually searching. Measures adoption.
+
+HOW TO TALK ABOUT IT IN THE INTERVIEW
+  "The nudge technology use case is essentially a real-time supervisor agent
+  running alongside the human agent on every call. The call transcript is
+  processed continuously. An intent classifier identifies the topic in near
+  real-time — is the caller asking about a claim status, a plan benefit,
+  an enrollment change? That intent triggers parallel retrieval from the
+  relevant knowledge bases — in WEX's case, the benefits plan documents,
+  policy knowledge base, and the caller's account context from Salesforce.
+  The results surface as a suggested response or next action in the agent
+  desktop. The human agent decides to use it or not. The AI is a copilot,
+  not a replacement. I have built this exact retrieval and classification
+  architecture in the multi-agent service assistant I designed — the domain
+  is different but the pattern is identical."
+
+
+---
+PART 4 — SALESFORCE SERVICE CLOUD (what you need to know)
+---
+
+You may not have 5+ years on Salesforce. Prepare the conceptual level.
+Know enough to lead a team that builds on it, even if you did not build on it.
+
+WHAT SERVICE CLOUD IS
+  Salesforce's CRM product for customer service organizations.
+  It is the system of record for:
+    - Customer cases (service tickets, disputes, inquiries)
+    - Case routing (who handles what type of case)
+    - Knowledge base (articles agents use to answer questions)
+    - Contact center integration (CTI — computer telephony integration)
+    - Email, chat, and voice channel management
+    - SLA tracking (service level agreements per case type)
+    - Reporting and dashboards for call center managers
+
+KEY COMPONENTS RELEVANT TO AGENTIC AI
+  Salesforce Einstein: Salesforce's AI platform.
+    Einstein Next Best Action: rule/ML-based recommendations for agents.
+    Einstein Article Recommendations: suggests KB articles during a case.
+    Einstein Conversation Mining: analyses call transcripts for trends.
+    Einstein GPT (now Einstein Copilot): generative AI embedded in Service Cloud.
+    These are Salesforce's native nudge capabilities. Your role is deciding
+    which to use vs building custom agentic AI on top of the platform.
+
+  Salesforce Flows: visual workflow automation within Salesforce.
+    Used to automate case routing, approval processes, data updates.
+    The existing workflow layer before AI augmentation.
+
+  Salesforce Apex / LWC: code-level customization.
+    Apex = server-side Java-like language.
+    LWC (Lightning Web Components) = front-end components in the agent desktop.
+    Your AI nudge widget lives here — a custom LWC that calls your agent API.
+
+  OmniChannel: routes incoming cases, chats, and calls to available agents.
+    Skills-based routing: match the case type to the right agent skill.
+    AI can augment this: predict case type from initial description,
+    route to the optimal agent before a human has read it.
+
+  CTI (Computer Telephony Integration): connects phone system to Salesforce.
+    When a call comes in, Salesforce pops the caller's record automatically.
+    Your real-time nudge widget sits in this CTI context.
+
+WHAT TO SAY WHEN ASKED ABOUT SALESFORCE DEPTH
+  "My primary platform experience is cloud-native on AWS and GCP, not
+  Salesforce. But I have led platform programs where I did not start with
+  deep domain knowledge — the Harness IDP program is an example.
+  What I bring to a Salesforce environment is: clear architectural thinking
+  about where custom AI capability lives vs where you use native platform
+  features (Einstein Copilot vs custom RAG agents), how to govern
+  integrations between Salesforce and external AI services via APIs and
+  event streams, and how to define SDLC and testing standards for
+  AI-augmented Salesforce workflows. I would hire a strong Salesforce
+  technical architect who owns the platform depth while I own the AI
+  architecture and team delivery strategy."
+  This is honest and senior. Do not pretend to know it. Show how you lead it.
+
+
+---
+PART 5 — WEX BUSINESS CONTEXT YOU MUST KNOW
+---
+
+WEX BUSINESS LINES
+  Fleet / Mobility: fuel cards for fleet vehicles. Trucking companies,
+  delivery fleets, government fleets. Cards accepted at fuel stations.
+  Revenue from interchange fees and interest. Very large transaction volume.
+
+  Corporate Payments: travel and expense (T&E) management. Corporate cards
+  for business travel, virtual cards for vendor payments, expense reporting.
+
+  Health Benefits: HSA (Health Savings Account), FSA (Flexible Spending Account),
+  HRA (Health Reimbursement Arrangement), COBRA administration.
+  WEX administers these plans for employers. Members submit claims.
+  WEX processes claims, manages employer contributions, handles compliance.
+  This is the most regulated business line (IRS, ERISA, ACA rules).
+
+WHY THE CALL CENTER AND IMPLEMENTATION TEAMS EXIST
+  Call center: members calling about their HSA balance, FSA claim status,
+  COBRA elections, plan eligibility, dependent coverage, fleet card issues,
+  corporate card disputes. High volume, complex regulatory context.
+
+  Implementation: when a new employer signs with WEX for benefits admin,
+  the implementation team onboards them — configuring their plan rules,
+  integrating with their HRIS, setting up enrollment periods, training
+  their HR team. This can take weeks to months per employer.
+  Highly manual, document-heavy process. Prime for AI automation.
+
+WHERE AGENTIC AI FITS
+  Call center (inbound):
+    Nudge technology: real-time AI assist for agents on live calls.
+    IVR deflection: AI-powered IVR that resolves simple inquiries without
+    agent involvement (balance check, claim status, card activation).
+    Post-call automation: AI summarizes the call, creates the case record,
+    suggests follow-up actions — eliminating manual wrap time.
+
+  Implementation (onboarding):
+    Policy drafting: AI generates employer plan documents based on plan
+    configuration data. Human reviews and approves.
+    Configuration validation: AI checks plan configuration against IRS rules
+    before go-live. Catches errors that currently require manual review.
+    Status communication: AI generates employer status update emails,
+    implementation milestone notifications.
+    Knowledge synthesis: AI answers implementation team questions about
+    edge cases in plan rules, surfacing relevant IRS guidance from the KB.
+
+  Both functions:
+    Forecasting: AI predicts call volume by day, week, season.
+    Helps workforce management (WFM) to right-size staffing.
+    Pattern detection: AI identifies recurring call reasons that indicate
+    a product issue, a communication gap, or a process failure.
+    Gives product and operations teams signal to fix root causes.
+
+THE REGULATORY CONTEXT AT WEX
+  IRS rules govern HSA/FSA/HRA contribution limits, eligible expenses,
+  rollover rules. Errors create tax liability for employers and members.
+  ERISA governs employer benefit plan administration. Fiduciary standards.
+  ACA (Affordable Care Act) rules affect HRA and employer mandate compliance.
+  HIPAA: health information privacy. Members' claim data is PHI.
+  PCI DSS: fleet and corporate card data. Card numbers, transactions.
+  State insurance regulations: vary by state for some benefit products.
+
+  Your healthcare governance work maps directly:
+  PHI redaction, audit trails, human-in-the-loop for material decisions,
+  Bedrock Guardrails, compliance agent — same patterns, same stakes.
+
+
+---
+PART 6 — THE FIVE STORIES TO PREPARE AND REHEARSE
+---
+
+STORY 1 — AGENTIC AI IN A SERVICE / REGULATED CONTEXT
+  The multi-agent healthcare service assistant.
+  Pivot: frame it as a call center / service desk equivalent.
+  "I built a multi-agent system for enterprise service operations.
+  The system handles employee HR, benefits, payroll, IT, and compliance
+  questions — the same types of questions a service center handles.
+  The supervisor agent classifies intent, dispatches domain specialists
+  in parallel, retrieves answers from policy knowledge bases, and
+  aggregates a complete answer. For high-stakes requests, it escalates
+  to a human rather than answering autonomously. This is the same
+  architecture I would bring to WEX's call center AI program."
+
+STORY 2 — PLATFORM TRANSFORMATION WITH MEASURABLE IMPACT
+  Harness IDP program. Use your ROI tables.
+  "I led the transformation of how our engineering organization
+  onboards services and requests platform resources.
+  Before: developers waited 2-5 days for a Jira ticket to be processed.
+  After: self-service workflows completed in minutes.
+  The IDP catalog gave engineers instant access to runbooks, on-call,
+  dependency maps, and health dashboards — saving ~100 minutes per
+  developer per week. This is the same transformation I would bring
+  to WEX's service applications: replace manual, ticket-driven workflows
+  with AI-powered self-service and automation."
+
+STORY 3 — LEADING THROUGH AMBIGUITY TO PRODUCTION
+  Pick a moment where the scope was unclear and you had to define it.
+  Could be: the initial IDP program scope, a new agent capability,
+  an enterprise-wide migration you had to plan from scratch.
+  Key: show that you are comfortable moving from "we have a vague need"
+  to "here is the architecture, the delivery plan, and the success metrics."
+
+STORY 4 — MANAGING MULTIPLE TEAMS / GLOBAL DELIVERY
+  60 people across 4 teams is the specific context at WEX.
+  Be honest about the scale you have managed.
+  If your direct reports were engineers, describe the manager-of-managers
+  thinking: how you set direction, how you created accountability,
+  how you upskilled the team on new technology.
+  If you led through influence (cross-team), say so and describe how.
+
+STORY 5 — EXECUTIVE COMMUNICATION / STAKEHOLDER ALIGNMENT
+  "Board-level materials" is in the JD. They will probe this.
+  Use your TCOE capstone presentations, your IDP Impact slides,
+  your ROI story work. Describe a moment when you had to make a
+  complex technical topic understandable to non-technical leadership.
+  Key: translate outcomes, not components. Frame in business impact.
+
+
+---
+PART 7 — QUESTIONS YOU WILL GET AND HOW TO ANSWER
+---
+
+"What is your experience with Salesforce Service Cloud?"
+  Answer: see Part 4 — honest, structured, shows how you lead what you
+  do not know. Do not pretend. Hire the depth, own the strategy.
+
+"How would you approach transforming a call center with agentic AI?"
+  Answer: Use the nudge technology architecture from Part 3.
+  Phase 1: knowledge base modernization (RAG-grounded answers).
+  Phase 2: real-time intent classification + nudge suggestions.
+  Phase 3: post-call automation (summarization, case creation, follow-up).
+  Phase 4: inbound deflection (AI IVR, chat agent for simple cases).
+  Phase 5: predictive (volume forecasting, churn signal detection).
+  Each phase has measurable outcomes (AHT, FCR, CSAT, cost per contact).
+  Each phase is delivered in a canary rollout, evaluated, then expanded.
+
+"How do you manage a team of 60 across 4 global groups?"
+  Specific answer:
+  Structure: each team has an engineering manager I develop and trust.
+  My role: set direction, remove blockers, review architecture,
+  run a weekly leadership rhythm with my managers.
+  Upskilling: structured learning program (not just self-study).
+  AI literacy is not optional — every team member learns the fundamentals.
+  I create on-ramps: lunch-and-learns, pair programming with AI tools,
+  internal demos, documentation culture.
+  Accountability: OKRs at the team level, visible to everyone.
+  Team health: regular skip-levels, engagement check-ins, honest feedback.
+
+"What does your AI governance framework look like for a call center?"
+  Answer: same principles as your healthcare governance, new vocabulary.
+  1. Human in the loop: agent suggestions never execute without rep action.
+     The human presses the button. The AI suggests.
+  2. Audit trail: every suggestion shown, every suggestion used or ignored,
+     every call outcome. Immutable log. Compliance-ready.
+  3. Explainability: every suggestion has a source citation.
+     "This answer comes from the WEX HSA Eligible Expense Guide, page 4."
+  4. Guardrails: content filtering on what the AI can suggest.
+     Cannot suggest giving wrong regulatory information.
+     Cannot suggest waiving fees without authorization.
+  5. Evaluation: golden question set run against the KB weekly.
+     If faithfulness score drops below threshold, alert the team.
+     Model performance does not degrade silently.
+  6. Model risk: new AI capabilities go through a validation process
+     before touching live calls. Shadow mode first (AI generates suggestions
+     but they are not shown to reps, only logged for evaluation).
+     Validated -> canary (10% of calls) -> full rollout.
+
+"How do you build a business case for AI investment?"
+  Answer: use your ROI framework.
+  Frame it in terms the business already measures:
+  AHT, FCR, cost per contact, CSAT, compliance error rate, churn.
+  "If nudge technology reduces AHT by 4% across 500 agents handling
+  200 calls/day each: that is 500 * 200 * 5min * 0.04 = 20,000 minutes
+  of agent time freed per day. At $X cost per minute of agent time,
+  the annual savings are $Y. The AI platform investment is $Z.
+  Payback period is Z/Y years. Beyond cost: FCR improvement reduces
+  repeat calls, CSAT improvement reduces churn, compliance improvement
+  reduces regulatory exposure."
+  Always close with: "I validate these numbers with a pilot before
+  committing to a full rollout. The pilot is how we earn the trust
+  of the call center leadership."
+
+"How do you handle the 'AI replacing jobs' concern with a call center team?"
+  This will come up. WEX has 60 people in service roles.
+  Answer: frame it correctly.
+  "AI augments the best agents. The reps who use AI effectively handle
+  more complex cases, deliver better outcomes, and have more satisfying
+  work because they spend less time searching for answers and more time
+  actually helping members. The goal is not to reduce headcount —
+  it is to handle growing volume without proportional headcount growth,
+  and to increase the quality and speed of service. I make this explicit
+  with the team from day one. I bring reps into the design process.
+  The people who will use the tool should help define what it surfaces.
+  That buy-in is what makes adoption real."
+
+"How do you prepare board-level AI materials?"
+  Answer: executive communication is about outcomes and risk, not architecture.
+  A board slide on AI strategy has three components:
+  1. Where we are today (baseline — AHT, FCR, cost, CSAT).
+  2. Where AI takes us (target state, timeline, investment required).
+  3. What could go wrong and how we manage it (regulatory risk, adoption risk,
+     technical risk, model performance risk).
+  I work backwards from the decision the board needs to make.
+  If they need to approve investment, the narrative is ROI and payback.
+  If they need to approve risk appetite, the narrative is governance and controls.
+  I use plain language, business metrics, and one architecture diagram max.
+  I leave the technical depth for the appendix.
+
+
+---
+PART 8 — QUESTIONS TO ASK THEM
+---
+
+For the Hiring Manager:
+  1. What does the current agentic AI capability look like across the
+     service applications today — are teams using Salesforce Einstein,
+     custom-built AI, or primarily manual workflows?
+  2. What is the single biggest pain point for the call center teams
+     that you expect AI to address in the first year?
+  3. How does this role interact with the central AI/ML platform
+     team — do we build our own models and infrastructure, or
+     consume a shared internal AI platform?
+  4. What is the current engineering maturity of the 4 teams —
+     are they Salesforce-heavy developers, full-stack engineers,
+     or a mix?
+
+For technical peers or senior engineers:
+  1. What data does WEX have available for training or fine-tuning
+     call center AI models — call recordings, transcript archives,
+     historical case data, resolution labels?
+  2. How is Salesforce integrated with AWS today — event streaming,
+     REST APIs, Salesforce Connect — and what does the data latency
+     look like for real-time use cases?
+  3. What is the current testing and evaluation posture for AI
+     models in production — is there an evaluation framework,
+     or are teams primarily relying on user feedback?
+
+For the VP / executive level:
+  1. How does WEX think about the boundary between what Salesforce
+     Einstein provides natively and where custom AI builds make sense?
+     I want to understand the make vs buy philosophy.
+  2. What is the strategic timeline for the call center transformation —
+     is this a 12-month sprint or a multi-year program?
+  3. How does the board and GM think about AI risk in the benefits
+     and payments context — what is the risk appetite for autonomous
+     AI actions vs human-assisted AI?
+
+
+---
+PART 9 — YOUR POSITIONING STATEMENT FOR WEX
+---
+
+30-SECOND VERSION
+
+"I am a technical leader who has spent the last several years building
+enterprise-grade agentic AI systems and platform automation programs
+in regulated environments. My multi-agent work covers exactly the
+service operations use case — benefits, HR, compliance, payroll
+questions handled by AI-powered specialist agents, grounded in approved
+knowledge bases, with human escalation paths for anything that requires
+judgment or carries regulatory risk. My platform engineering background
+gives me the ability to lead the technology stack, define the SDLC,
+and drive adoption across multiple teams — because I have done that
+at scale with the Harness IDP program. What I bring to WEX is the
+architectural thinking to design this right and the delivery discipline
+to ship it — not as a proof of concept but as production infrastructure
+that the call center teams depend on."
+
+WHY WEX OVER OTHER OPPORTUNITIES
+
+"WEX sits at an interesting intersection. The benefits administration
+and fleet payments businesses are inherently human-intensive — members
+call with complex, specific questions, and implementation teams navigate
+intricate plan configurations. That complexity is exactly where agentic
+AI creates the most value, because the knowledge exists but is hard to
+surface quickly. The regulated context — IRS rules, ERISA, HIPAA — is
+not a constraint I am afraid of. It is what makes the governance work
+important and interesting. I want to build AI systems that the team
+trusts and that the regulators can audit. That is harder than building
+a chatbot. It is also more valuable and more durable."
+
+
+---
+PART 10 — AMEX vs WEX COMPARISON (if you are running both)
+---
+
+                   AMEX                            WEX
+Role title         Director                        Senior Director (higher)
+Company type       Card network / financial svc    Fintech / benefits admin
+Primary stack      AWS, Kubernetes, Python         Salesforce + AWS + custom AI
+Team size          Building / undefined             60 people, 4 teams (defined)
+Agentic AI scope   Enterprise-wide standards        Call center + implementation
+AI use cases       Credit, fraud, service           Nudge tech, policy drafting,
+                                                    claims, implementation AI
+Salesforce         Not in scope                    Central platform (gap for you)
+Regulatory         OCC, CFPB, PCI, Reg B            IRS, ERISA, HIPAA, PCI
+Board materials    Less explicit in JD              Explicitly required
+Pay range          Not stated publicly             $227K-$252K stated
+Risk of rejection  High technical bar              Salesforce gap is the risk
+
+WHICH TO PRIORITIZE
+  If your Salesforce experience is thin: prepare the WEX Salesforce gap
+  answer rigorously (see Part 4) but know that Amex may be a stronger fit
+  because the stack aligns more naturally with what you have built.
+
+  If you want the higher title, global team scope, and explicit pay range:
+  WEX is the better mapped opportunity and the senior director title is
+  more senior than the Amex director title on paper.
+
+  Ideal: run both in parallel, use the prep from each to sharpen your
+  thinking on the other. They share 70% of the same preparation.
+
+
+---
+PART 11 — PREPARATION SCHEDULE (WEX-SPECIFIC ADDITIONS)
+---
+
+IF YOU PREPPED FOR AMEX ALREADY, ADD THESE:
+
+  Day 1 — WEX context:
+    Read WEX annual report executive summary (investor.wexinc.com).
+    Understand the three business lines. Know their revenue breakdown.
+    Read 2-3 recent WEX press releases about AI or digital transformation.
+
+  Day 2 — Salesforce Service Cloud:
+    Watch Salesforce Service Cloud overview (Salesforce YouTube, 20 min).
+    Understand: cases, knowledge, OmniChannel, CTI, Einstein features.
+    Know the vocabulary. You do not need to code in Apex.
+
+  Day 3 — Nudge technology deep dive:
+    Research: Cresta, Balto, Level AI, Observe.AI — these are vendors
+    that build real-time agent assist (nudge) for call centers.
+    Understanding the commercial landscape shows you know the domain.
+    Know: where you would buy vs build for this capability.
+
+  Day 4 — Benefits admin context:
+    Read: IRS Publication 969 (HSAs, FSAs, HRAs) — just the overview.
+    Know: what HSA eligible expenses are, COBRA basics, FSA use-it-or-lose-it.
+    This is the knowledge domain the call center handles. Know it at a surface level.
+
+  Day 5 — Executive narrative:
+    Draft a 5-bullet AI transformation narrative for WEX.
+    "By end of year 1: [metric]. By end of year 2: [metric]."
+    Practice saying it in 2 minutes to a non-technical audience.
