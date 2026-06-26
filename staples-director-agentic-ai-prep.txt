@@ -1,0 +1,677 @@
+Preparation Guide — Director of Engineering, Agentic AI
+Staples Digital Solutions
+==========================================================================
+This guide is written against your specific background and maps it
+directly to what Staples is hiring for. Read all three sections:
+what the role is, what you have, and what to prepare.
+
+
+---
+PART 1 — WHAT THIS ROLE ACTUALLY IS
+---
+
+Strip the title down. This is three things in one:
+
+1. SDLC TRANSFORMATION OWNER
+   Staples wants AI embedded into how software is BUILT — not just
+   into products they sell. Requirements writing, code generation,
+   test automation, deployment, observability. The full development
+   lifecycle. This is an internal engineering platform role with an
+   AI-first mandate. Think: "GitHub Copilot + agentic workflows +
+   developer productivity platform" at enterprise scale.
+
+2. AGENTIC AI PLATFORM ARCHITECT AND DELIVERY LEADER
+   Not a pure people manager. Not a pure strategist.
+   They explicitly say "hands-on experience designing and deploying
+   AI-enabled engineering platforms — not solely defining strategy."
+   You must have built this, not just talked about it.
+
+3. ENTERPRISE GOVERNANCE AND VENDOR OWNER
+   Security, Risk, Legal, Infrastructure, Product are all stakeholders.
+   Vendor evaluation and negotiation is explicitly listed.
+   Executive advisory is listed. This is a Director who operates at
+   the business level, not just the engineering level.
+
+WHAT STAPLES IS
+   Staples is a retail and B2B office products company (~$8B revenue).
+   Digital solutions team = the internal IT and engineering organization.
+   They are NOT a tech company — they are a retailer applying technology.
+   "We are at an inflection point" means: they have done AI in products,
+   now they want to transform how software is built internally.
+   This is an INTERNAL developer productivity and platform role.
+   The customers are Staples engineers, not Staples shoppers.
+
+THE KEY PHRASE IN THE JD
+   "While we have successfully deployed AI across customer-facing and
+   enterprise functions, we are in the early stages of transforming
+   how software is built, tested, and delivered."
+   Translation: they want someone to BUILD this from early stage.
+   This is a greenfield internal AI platform program, not a mature one.
+   That is both an opportunity and a signal — they need a builder,
+   not a maintainer.
+
+
+---
+PART 2 — YOUR ASSET MAP
+---
+
+JOB REQUIREMENT                          YOUR EVIDENCE
+----------------------------             -----------------------------------
+SDLC transformation with AI              Harness IDP program — exactly this:
+                                         AI/automation embedded into repo creation,
+                                         k8s onboarding, cloud provisioning,
+                                         self-service developer workflows
+                                         Harness AI (code assist, pipeline gen)
+
+Agentic AI platform built and deployed  multi_agent_aws_hc_solution_enhance
+                                         multi_agent_gcp_hc_solution_enhance
+                                         Supervisor Agent, 10 specialists,
+                                         tool use, RAG, guardrails, audit trail
+
+Multi-agent workflows and orchestration  Google ADK supervisor pattern
+                                         Parallel specialist dispatch
+                                         Intent classification, aggregation
+
+RAG and knowledge integration            Bedrock Knowledge Bases
+                                         Vertex AI Search
+                                         Hybrid retrieval, citation grounding
+
+AI governance and guardrails             Bedrock Guardrails, PHI redaction
+                                         Audit logging, human-in-the-loop
+                                         Check policy before write actions
+
+Secure AI platform (access, audit,       IAM, Secrets Manager via Vault
+secrets)                                 CloudTrail audit, CloudWatch logs
+                                         Zero-trust data access patterns
+
+AWS Bedrock (enterprise AI platform)     Production multi-agent on Bedrock
+                                         Bedrock KB, Guardrails, Claude models
+                                         ADOT, X-Ray, CloudWatch
+
+GCP / Gemini (enterprise AI platform)   ADK, Vertex AI, Gemini Pro
+                                         Cloud Run, GCS, Vertex AI Search
+
+Observability and telemetry              ADOT sidecar, OTLP, X-Ray traces
+                                         CloudWatch metrics, Grafana, Datadog
+                                         Per-agent span, token usage metrics
+
+Developer productivity metrics           IDP ROI tables:
+                                         100 min/dev/week saved
+                                         2-5 day waits → 5 min self-service
+                                         Ticket deflection rate, adoption rate
+
+Platform ecosystem integration           Harness IDP: GitHub, Jira, ServiceNow,
+                                         SonarQube, Snyk, Datadog, PagerDuty,
+                                         Vault, Kubernetes — all in one catalog
+
+Vendor evaluation and management         Harness IDP vendor relationship
+                                         Tool selection: ADK vs LangChain,
+                                         LiteLLM vs direct Bedrock, model selection
+
+Managing managers / multi-level teams    TCOE program scope
+                                         Platform teams across cloud and DevEx
+
+Model usage strategy (cost/perf)         Claude Opus for high-risk agents,
+                                         Claude Sonnet for general routing,
+                                         Titan Embeddings for RAG
+                                         Model tiering by use case
+
+Code assistants / AI dev tools           Harness AI code assist integration
+                                         GitHub Copilot awareness
+                                         Agentic coding patterns (Devin, Cursor)
+
+Test automation with AI                  53 tests in multi-agent project
+                                         Test strategy: unit, integration, eval
+                                         Golden question sets for agent testing
+
+Python proficiency                       All agent code in Python
+                                         FastAPI, Pydantic, ADK, boto3
+
+
+---
+PART 3 — THE CORE CONCEPT: AI-EMBEDDED SDLC
+---
+
+This is the heart of the Staples role. Know this cold.
+
+WHAT AN AI-EMBEDDED SDLC LOOKS LIKE
+
+  PHASE 1 — REQUIREMENTS
+    AI reads product briefs, user stories, and past tickets.
+    Generates: acceptance criteria, edge cases, non-functional requirements.
+    Agent flags: ambiguous requirements, missing scope, conflicting constraints.
+    Tool: requirements agent connected to Jira/Confluence via MCP or RAG.
+
+  PHASE 2 — DESIGN AND ARCHITECTURE
+    AI reviews proposed designs against architectural standards (RAG on ADR docs).
+    Suggests: component boundaries, API contracts, data models.
+    Agent flags: anti-patterns, missing security controls, scalability concerns.
+    Tool: architecture review agent with Polaris-style governance rules.
+
+  PHASE 3 — DEVELOPMENT (code generation + code assist)
+    IDE-integrated code assistant (GitHub Copilot, Cursor, Harness AI code assist).
+    Generates boilerplate, unit test scaffolding, documentation stubs.
+    Agentic coding: multi-step code generation with tool use
+    (read existing codebase, generate new code consistent with patterns,
+    run linter, fix lint errors, commit).
+    Security: inline secrets scanning, dependency vulnerability detection.
+
+  PHASE 4 — CODE REVIEW
+    AI pre-reviews every PR before a human reviewer sees it.
+    Checks: test coverage, security issues, style violations, logic errors.
+    Summarizes the PR in 3 bullets for the human reviewer.
+    Flags: "this change touches the payment module — requires security sign-off."
+    Tool: code review agent connected to GitHub via MCP.
+
+  PHASE 5 — TESTING
+    AI generates test cases from requirements and code.
+    Agentic test execution: agent runs tests, reads failures, generates fixes,
+    re-runs. Loop until green or escalate.
+    Performance test generation: given an API spec, generate k6 load test.
+    Test data generation: synthetic data that matches schema and constraints.
+
+  PHASE 6 — DEPLOYMENT AND RELEASE
+    AI-assisted release notes (from commit history + PR descriptions).
+    Deployment risk assessment: "this change affects 3 downstream services,
+    deploy to canary first."
+    Rollback trigger: agent monitors post-deploy error rate,
+    auto-triggers rollback if threshold crossed.
+    Feature flag management: agent suggests flag configuration per release.
+
+  PHASE 7 — POST-RELEASE OBSERVABILITY
+    AI watches dashboards and surfaces anomalies proactively.
+    Incident triage agent: "error spike at 14:32 correlates with deployment
+    of commit abc123, affects checkout service, similar to incident INC-441."
+    On-call assist agent: surfaces runbook, relevant logs, suggested first steps.
+    DORA metrics tracking: deploy frequency, lead time, MTTR, change fail rate.
+
+THE PLATFORM THAT MAKES THIS WORK
+  One developer-facing portal that surfaces all of this:
+    - AI tools accessible from one place (code assist, review agent, test gen)
+    - Workflow automation (self-service repo, env, pipeline creation)
+    - Catalog (service ownership, runbooks, dependencies, health)
+    - Metrics (DORA, test coverage, security score, AI usage)
+  This is exactly what your Harness IDP program IS.
+  Frame it this way at Staples: the IDP is the foundation.
+  The agentic AI layer is what you build on top of it.
+
+
+---
+PART 4 — THE FIVE DOMAINS THEY WILL TEST YOU ON
+---
+
+DOMAIN 1: AGENTIC WORKFLOW DESIGN FOR SDLC
+  Expected question: "Design an agentic workflow for automated code review."
+
+  Your answer:
+    Trigger: PR opened in GitHub → webhook → agent gateway.
+    Agent receives: PR diff, commit message, linked Jira ticket, repo context.
+
+    Step 1 — Context retrieval (RAG):
+      Pull: coding standards doc, security checklist, past review comments
+      on similar files, architectural decision records for this service.
+      Source: Bedrock Knowledge Base or vector store of internal docs.
+
+    Step 2 — Parallel specialist agents:
+      SecurityReviewAgent: checks for hardcoded secrets, SQL injection,
+        insecure dependencies, OWASP top 10 patterns.
+      QualityReviewAgent: checks test coverage delta, code complexity,
+        naming conventions, documentation completeness.
+      ArchitectureReviewAgent: checks if the change respects service
+        boundaries, correct use of shared libraries, API contract compliance.
+      LogicReviewAgent: reads the PR description against the diff —
+        does the code do what the PR says it does?
+
+    Step 3 — Aggregation:
+      Supervisor merges findings into a structured review comment:
+        - Blocking issues (must fix before merge)
+        - Warnings (should fix)
+        - Suggestions (optional improvements)
+        - Summary paragraph for the human reviewer
+
+    Step 4 — Post to GitHub:
+      Agent calls GitHub API (via MCP) to post the review comment.
+      If blocking issues found: request changes.
+      If no blocking issues: approve (or flag for human review if threshold).
+
+    Guardrails:
+      Never post a review that names a specific engineer in a negative way.
+      Never auto-merge without human approval.
+      All agent actions logged with PR number, timestamp, findings.
+
+    Metrics: PR review time before/after, defect escape rate, reviewer time saved.
+
+DOMAIN 2: DEVELOPER PRODUCTIVITY METRICS
+  Expected question: "How do you measure the impact of AI on developer productivity?"
+
+  Do NOT say: "lines of code" or "commits per day."
+  Your answer:
+    DORA metrics as the baseline:
+      Deploy Frequency: how often does a team deploy to prod?
+      Lead Time for Changes: commit to prod time.
+      Change Failure Rate: % of deployments causing incidents.
+      MTTR: time to restore service after an incident.
+      AI should improve all four over time.
+
+    AI-specific metrics:
+      Code acceptance rate: % of AI suggestions accepted by developers.
+        High acceptance = AI is useful. Low = noise or poor fit.
+      PR cycle time: time from PR open to merge. AI review shortens this.
+      Test generation coverage delta: did AI-generated tests increase coverage?
+      Defect escape rate: bugs found in prod vs caught earlier by AI review.
+      Developer satisfaction (DevEx score): quarterly survey.
+        "Does AI make your work faster / less frustrating?"
+
+    Cost metrics:
+      Token consumption per developer per day.
+      Cost per AI-assisted PR review.
+      Cost per AI-generated test case.
+      Model tier efficiency: are teams using Opus where Sonnet would do?
+
+    Adoption metrics:
+      % of engineers using code assist actively (weekly).
+      % of PRs reviewed by AI before human review.
+      % of test suites with AI-generated test cases.
+      Self-service workflow adoption rate (from your IDP ROI story).
+
+    Use your IDP ROI tables as the template:
+      Before/After comparison per workflow.
+      Time saved per developer per week.
+      Ticket deflection rate.
+      These are the same metrics, applied to AI-enabled SDLC.
+
+DOMAIN 3: AI GOVERNANCE FOR ENTERPRISE SDLC
+  Expected question: "How do you govern AI use across 200 engineering teams?"
+
+  Your answer — four layers:
+
+  Layer 1 — Policy (what is allowed):
+    Approved models list: which LLMs can be used for which use cases.
+    Data classification: what data can be sent to which model.
+      Public/internal/confidential/restricted.
+      Source code: internal. Customer data: restricted — no external models.
+    Approved tools list: which AI tools are enterprise-approved.
+      GitHub Copilot: approved. Random Chrome extension: not approved.
+
+  Layer 2 — Platform controls (enforced technically):
+    All AI tool calls route through a model gateway (LiteLLM Proxy or similar).
+    Gateway enforces: authentication, rate limits, cost caps per team,
+    data classification checks (no confidential data to unapproved models),
+    audit log every request.
+    No direct model API calls from developer machines (blocked by network policy).
+
+  Layer 3 — Audit and visibility:
+    Every AI interaction logged: who, what model, what input/output (tokenized),
+    what was accepted/rejected, timestamp.
+    Compliance team can query: "Show me all AI-generated code in payment service."
+    Anomaly detection: developer sending unusually large payloads to a model.
+
+  Layer 4 — Education and guardrails:
+    Onboarding: every engineer completes AI responsible use training.
+    Prompt injection awareness: developers know not to trust user input
+    as-is into agent prompts.
+    Red team: quarterly exercise to probe AI tools for misuse vectors.
+    Incident process: if an AI tool produces harmful output, clear escalation.
+
+DOMAIN 4: MODEL STRATEGY (cost vs performance)
+  Expected question: "How do you decide which model to use for which use case?"
+
+  Your tiering framework (use your existing architecture as evidence):
+
+    Tier 1 — Frontier models (Claude Opus, GPT-4o, Gemini Ultra):
+      Use for: high-stakes reasoning, compliance decisions, legal review,
+      architecture design critique, complex code generation.
+      Cost: highest. Use sparingly.
+      Your evidence: Compliance Agent, Provider Operations Agent — Claude Opus
+      because wrong decisions have compliance consequences.
+
+    Tier 2 — Capable models (Claude Sonnet, GPT-4o-mini, Gemini Pro):
+      Use for: general code assist, PR review, test generation, RAG Q&A,
+      documentation generation, intent classification at scale.
+      Cost: medium. Default choice for most SDLC use cases.
+      Your evidence: most of your specialist agents use Sonnet.
+
+    Tier 3 — Fast/cheap models (Claude Haiku, Gemini Flash, Llama 3):
+      Use for: simple classification, spell check, formatting, autocomplete,
+      high-volume low-complexity tasks.
+      Cost: lowest. Use for volume workloads.
+
+    Embeddings (Titan Embeddings, text-embedding-3-small):
+      Use for: vector search, RAG retrieval, semantic similarity.
+      Not an LLM. Cheap. Run at ingestion time, not query time.
+
+    Self-hosted (vLLM + Llama/Mistral on GPU):
+      Use for: sensitive code (source code that cannot leave the perimeter),
+      very high volume where API costs are prohibitive,
+      fine-tuned models for domain-specific tasks.
+      Cost: infrastructure cost. Operationally heavier.
+
+    Decision rule: always start with the cheapest model that passes
+    your quality bar. Measure. Upgrade only where quality requires it.
+
+DOMAIN 5: VENDOR EVALUATION
+  Expected question: "How would you evaluate AI coding tools for Staples?"
+
+  Your framework:
+    Step 1 — Define use cases and success metrics first.
+      What SDLC phases? Code gen, review, test, docs?
+      What metric defines success? PR cycle time, acceptance rate, CSAT.
+      Set the bar before you see vendor demos.
+
+    Step 2 — Security and compliance gate.
+      Data residency: where does the code go? Which country? Which cloud?
+      Model training: does the vendor train on your code? (GitHub Copilot had this issue.)
+      SOC 2 Type II, ISO 27001 — required.
+      Enterprise agreement terms: IP ownership of AI-generated code.
+
+    Step 3 — Technical evaluation (pilot, not demo).
+      Never buy based on a vendor demo.
+      Run a 4-week pilot with 2-3 real engineering teams on real code.
+      Measure: acceptance rate, PR cycle time, developer satisfaction.
+      Compare vendors on the same codebase.
+
+    Step 4 — Integration and platform fit.
+      Does it integrate with GitHub, Jira, your IDP?
+      Does it support the languages your teams use (Java, Python, TypeScript)?
+      API-first or UI-only? (API-first is required for agentic workflows.)
+      MCP support? (Future-proofs against tool ecosystem evolution.)
+
+    Step 5 — Total cost of ownership.
+      Seat cost vs consumption cost.
+      Model gateway to cap spend.
+      Support tier (enterprise SLA required).
+
+    Vendors to know by name:
+      Code assist: GitHub Copilot, Cursor, Cody (Sourcegraph), JetBrains AI
+      Agentic coding: Devin (Cognition), Copilot Workspace, Amazon Q Developer
+      Enterprise AI platforms: AWS Bedrock, Azure OpenAI, Google Vertex AI,
+        Databricks (DBRX, MLflow), Snowflake Cortex
+      Model gateways: LiteLLM Proxy, Portkey, Kong AI Gateway
+      Observability for AI: LangSmith, Weights & Biases, Datadog LLM Observability
+
+
+---
+PART 5 — STORIES TO PREPARE
+---
+
+STORY 1 — PLATFORM TRANSFORMATION WITH AI (your strongest)
+  The Harness IDP program.
+  Frame it as an AI-embedded SDLC transformation story — not just a portal story.
+  "I led the transformation of our engineering operations from manual,
+  ticket-driven workflows to AI-powered self-service. Developers went from
+  waiting 2-5 days for platform resources to provisioning them in minutes.
+  The IDP became the single front door: code quality, security scores,
+  on-call, runbooks, dependencies — all surfaced in one place.
+  This saved ~100 minutes per developer per week on routine lookups alone.
+  The Harness AI integration added code assist and pipeline generation
+  on top of the self-service foundation.
+  This is the same architecture I would bring to Staples:
+  IDP as the foundation, agentic AI as the intelligence layer on top."
+
+STORY 2 — AGENTIC AI BUILT AND SHIPPED
+  The multi-agent AWS healthcare solution.
+  "I designed and built a production multi-agent system from scratch.
+  Supervisor agent orchestrates 10 domain specialists in parallel.
+  Each specialist uses RAG against a Bedrock Knowledge Base.
+  PHI redacted at ingestion. Guardrails at every tool boundary.
+  Human escalation for sensitive decisions. Full audit trail.
+  53 tests covering intent classification, aggregation, and agent behavior.
+  This is not a pilot — it is production-grade architecture with
+  governance baked in from day one."
+
+STORY 3 — GOVERNANCE FRAMEWORK FOR AI
+  The security and compliance layer across both agent projects.
+  "I established the governance framework before writing the first agent.
+  Data classification: what can the agent see? PHI: never in the LLM call.
+  Guardrails: Bedrock content filtering at every knowledge base call.
+  Audit trail: every agent action logged with CloudTrail + CloudWatch.
+  Human-in-the-loop: sensitive decisions escalate before acting.
+  Policy check: write actions require explicit policy approval.
+  This is responsible AI by design, not by retrofit."
+
+STORY 4 — DEVELOPER PRODUCTIVITY METRICS AND ROI
+  Use your IDP ROI tables directly.
+  "I do not measure productivity by lines of code. I measure by outcomes:
+  time saved per developer per week, ticket deflection rate, lead time
+  for platform provisioning, adoption rate of self-service workflows.
+  For the IDP program: ~100 minutes per developer per week saved on
+  routine lookups. 2-5 day waits reduced to minutes for self-service
+  requests. These numbers drove continued investment in the platform."
+
+STORY 5 — EXECUTIVE COMMUNICATION / VISION TO EXECUTION
+  "I translate architectural complexity into business outcomes.
+  When I present to leadership I use three things: the baseline metric
+  (where we are today), the target metric (where AI takes us), and
+  the investment required (cost, time, risk).
+  I do not use architecture diagrams in executive presentations.
+  I use outcome tables and before/after comparisons.
+  The ROI story is always: here is the cost of the status quo,
+  here is the cost of the AI platform, here is when we break even."
+
+
+---
+PART 6 — QUESTIONS YOU WILL GET AND HOW TO ANSWER
+---
+
+"How do you govern AI use across hundreds of engineers who will
+try to use whatever tool they find on the internet?"
+  The model gateway is the technical answer.
+  All outbound AI calls route through a controlled proxy.
+  Unapproved endpoints blocked at the network layer.
+  But the governance answer is: make the approved path the easy path.
+  If your internal AI platform is better than what they can find outside,
+  they use yours. Governance by incentive beats governance by prohibition.
+
+"What is your approach to model selection and cost control?"
+  The three-tier model strategy (see Domain 4 above).
+  Add: token consumption metering per team, per project, per use case.
+  Monthly showback reports (here is what your team spent on AI tokens).
+  Hard caps with alerts before enforcement — not surprise cutoffs.
+  Model gateway enforces the caps automatically.
+
+"How do you evaluate whether an AI tool is actually improving productivity?"
+  Pilot first, 4 weeks, with measurement instruments in place before
+  the pilot starts. Measure the same metrics before and after.
+  PR cycle time, acceptance rate, test coverage delta, developer CSAT.
+  Do not measure what is easy to measure (token count). Measure what matters.
+
+"How do you handle security and IP concerns with AI code generation?"
+  Three controls:
+  1. Enterprise agreement: no training on our code (contractual).
+  2. Network policy: all AI calls via gateway, no direct external calls.
+  3. Code scan: AI-generated code goes through the same security scan
+     (SAST, secrets detection, dependency check) as human-written code.
+  4. IP policy: AI-generated code is reviewed and owned by the engineer
+     who accepts it, same as any other code contribution.
+  Communicate this to engineers: you are responsible for every line
+  you commit, AI-generated or not.
+
+"Staples is a retailer. What specific SDLC use cases matter most here?"
+  E-commerce scale requirements:
+    - Peak season (back to school, holiday) deployment confidence.
+      AI-assisted canary analysis, automated rollback triggers.
+    - High-volume test data generation for load testing.
+    - AI-powered incident triage during Black Friday / back to school.
+  B2B complexity:
+    - Large customer configuration code. AI helps manage complexity.
+    - Integration testing across dozens of partner APIs.
+      AI generates test mocks and contract tests.
+  Developer velocity at retail scale:
+    - Many features shipping fast. AI review catches regressions early.
+    - Documentation generation for APIs used by B2B partners.
+
+"What is your build vs buy philosophy for AI tools?"
+  Default: buy/integrate for developer-facing tools (code assist,
+  PR review, test generation). These are solved problems with
+  mature commercial solutions. Focus engineering on differentiation.
+  Build for: the orchestration layer, the model gateway, the developer
+  productivity metrics platform, anything that requires deep integration
+  with your specific internal systems (your IDP, your CI/CD, your catalog).
+  The golden rule: build the platform that makes AI tools composable.
+  Do not build the AI tools themselves.
+
+"How do you roll out AI tools to 200+ engineers without chaos?"
+  Phased adoption model:
+    Wave 1 (weeks 1-4): 10 volunteer early adopters across 3 teams.
+      Goal: learn, find friction, measure baseline vs after.
+    Wave 2 (weeks 5-12): 50 engineers, 10 teams. Include skeptics.
+      Goal: refine onboarding, fix the rough edges, build the champions.
+    Wave 3 (month 4+): full rollout.
+      Champions from Wave 1/2 lead peer-to-peer adoption.
+    At each wave: training session, written guides, office hours,
+    feedback channel, metrics review.
+  Champions program: identify the most enthusiastic early adopters.
+  They become the internal AI advocates on their teams.
+  They solve peer questions. They reduce your support load.
+
+
+---
+PART 7 — WHAT MAKES THIS ROLE DIFFERENT FROM AMEX AND WEX
+---
+
+                   AMEX                   WEX                    STAPLES
+Role               Director               Senior Director         Director
+Stack focus        Cloud-native AI        Salesforce + AI         SDLC + AI tools
+Domain             Card/financial AI      Call center/benefits    Software engineering
+Primary customer   External customers     Service ops teams       Internal developers
+Core use case      Agent platform         Nudge / call assist     AI-in-SDLC
+Agentic AI depth   Very deep              Moderate                Deep but SDLC-focused
+Vendor mgmt        Less explicit          Moderate                Explicitly required
+Developer portal   Not mentioned          Not mentioned           Central to the role
+Your strongest fit Strong                 Gap: Salesforce         Very strong
+                                                                  (IDP = exact match)
+
+STAPLES IS YOUR STRONGEST FIT OF THE THREE because:
+  - The Harness IDP program IS an AI-embedded developer platform.
+    That is exactly what Staples is building. You have the receipts.
+  - The multi-agent projects prove you built agentic AI, not just talked about it.
+  - The ROI measurement framework maps directly to "outcome-based metrics."
+  - The platform-first, governance-by-design approach matches their ask.
+  - The greenfield nature ("early stages") matches your builder background.
+
+
+---
+PART 8 — QUESTIONS TO ASK THEM
+---
+
+For the Hiring Manager:
+  1. What AI tools have engineers organically adopted already — and is
+     that a signal of appetite or a governance problem to solve?
+  2. What does success look like at 90 days for this role?
+     Is the priority platform strategy, vendor selection, or team building?
+  3. How is the engineering organization structured today —
+     product teams with embedded engineers, or centralized platform?
+  4. What is the relationship between this role and the teams already
+     doing AI for customer-facing products? Is there a shared platform
+     layer or separate stacks?
+
+For technical peers:
+  1. What is the current CI/CD and developer tooling stack?
+     (GitHub? Jenkins? Harness? Azure DevOps?)
+  2. What cloud platform is primary — AWS, Azure, or GCP?
+     Are there multi-cloud constraints from the retail infrastructure?
+  3. Is there an existing internal developer portal or service catalog,
+     or is that part of what this role would build?
+
+For the VP/executive:
+  1. How does the board think about AI investment in internal engineering
+     vs AI in customer-facing products — which has higher priority right now?
+  2. What is the risk appetite for agentic AI that has write access
+     to the SDLC — auto-merging PRs, auto-deploying, auto-rolling back?
+     Where is the human-in-the-loop line drawn?
+  3. Is there a target for AI-assisted developer productivity improvement
+     that this role is accountable to?
+
+
+---
+PART 9 — 30-SECOND POSITIONING FOR STAPLES
+---
+
+"I am an engineering leader who has spent the last several years doing
+exactly what Staples wants to do: embedding AI into developer workflows
+and building the platform that makes it composable and governable at scale.
+My Harness IDP program turned a ticket-driven, manual developer operation
+into a self-service, AI-augmented platform — measurable outcomes:
+100 minutes per developer per week saved, 2-5 day waits reduced to minutes.
+On top of that foundation I built production multi-agent systems on AWS
+and GCP: supervisor orchestration, RAG-grounded knowledge retrieval,
+governance and guardrails from day one, full audit trails.
+I know how to build this, I know how to govern it, and I know how
+to measure it in business terms. That is what Staples is describing —
+and I have done it."
+
+
+---
+PART 10 — RAPID-FIRE VOCABULARY TO KNOW COLD
+---
+
+DORA metrics         Deploy Frequency, Lead Time for Changes,
+                     Change Failure Rate, MTTR.
+                     The standard framework for measuring software delivery
+                     performance. AI improves all four.
+
+SPACE framework      Satisfaction, Performance, Activity, Communication,
+                     Efficiency. Microsoft Research developer productivity
+                     framework. Alternative to DORA for developer experience.
+
+GraphRAG             Microsoft Research extension to RAG.
+                     Builds a knowledge graph over documents.
+                     Better for: multi-hop questions, entity relationships,
+                     "how does X relate to Y" questions.
+                     Standard RAG is better for: direct lookup, single-hop.
+                     Know the distinction — it is in the preferred qualifications.
+
+Prompt injection     Attack where malicious content in tool output or user
+                     input hijacks the agent's instructions.
+                     Defense: input sanitization, output validation, never
+                     trust external content as instructions.
+
+Agent evaluation     How do you know the agent is right?
+                     Golden question set: curated Q&A pairs with expected answers.
+                     Metrics: faithfulness (answer matches source),
+                     relevance (answer addresses the question),
+                     groundedness (every claim has a citation).
+                     Run against every release. Alert on regression.
+
+Model context window  The amount of text (in tokens) a model can process
+                     at once. GPT-4: 128K. Claude 3.5: 200K.
+                     Relevance: long files, large codebases require
+                     chunking strategies for code assist and RAG.
+
+Semantic chunking    Splitting documents for RAG at semantic boundaries
+                     (paragraph, section) rather than fixed character count.
+                     Better retrieval quality. Larger chunks = more context
+                     but fewer results per search. Smaller = more results
+                     but less context per chunk. Tune for your use case.
+
+MLOps                The practice of deploying, monitoring, and managing
+                     ML models in production. Includes: model versioning,
+                     A/B testing, drift detection, retraining pipelines.
+                     For agentic AI: also includes prompt versioning,
+                     evaluation harness, and model upgrade management.
+
+A2A protocol         Agent-to-Agent protocol (Google, 2025).
+                     Defines how agents from different frameworks
+                     discover and communicate with each other.
+                     Complements MCP (which is agent-to-tool).
+                     MCP: agent calls a tool. A2A: agent calls another agent.
+                     Both are in the Optum JD — know both.
+
+LangGraph            Graph-based agent framework. Nodes = steps.
+                     Edges = transitions. State flows through the graph.
+                     Good for: cyclical workflows, well-defined state machines,
+                     human-in-the-loop at specific graph nodes.
+
+Vector database      Stores embeddings (numerical representations of text).
+                     Enables semantic search: find documents similar in meaning
+                     not just keyword match. Examples: Pinecone, Weaviate,
+                     pgvector (PostgreSQL extension), OpenSearch, Chroma.
+                     Bedrock Knowledge Bases manages this for you.
+
+Feature flags        Toggle new features on/off without a new deployment.
+                     Use for: AI feature rollout (show new code assist to 10%
+                     of engineers first), canary testing, instant rollback.
+
+Canary deployment    Deploy new version to a small % of traffic (1-10%).
+                     Monitor metrics. If healthy: expand. If not: rollback.
+                     Apply this to every new AI capability deployment.
