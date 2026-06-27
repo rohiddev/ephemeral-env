@@ -1,0 +1,404 @@
+RAG, Graph RAG, and Agentic RAG
+==========================================================================
+
+
+---
+PART 1 — STANDARD RAG (Retrieval-Augmented Generation)
+---
+
+WHAT IT IS
+   RAG is a pattern where a language model's response is grounded in
+   documents retrieved at query time rather than relying solely on
+   knowledge baked into the model's weights during training.
+
+   The model does not memorize your enterprise documents.
+   Instead, at query time, relevant chunks are fetched and injected
+   into the prompt as context. The model reads those chunks and answers.
+
+THE BASIC PIPELINE
+
+   1. Ingestion (offline)
+      Documents (PDFs, Word, Confluence, SharePoint, S3) are chunked,
+      embedded into vectors, and stored in a vector database.
+      Each chunk: text + embedding vector + metadata (source, timestamp).
+
+   2. Retrieval (online, per query)
+      User query is embedded using the same embedding model.
+      The vector DB finds the k nearest neighbor chunks
+      (cosine similarity or dot product).
+      Top-k chunks are returned.
+
+   3. Augmentation
+      Retrieved chunks are injected into the LLM prompt as context.
+      Prompt structure: [System] + [Retrieved Context] + [User Query].
+
+   4. Generation
+      The LLM reads the context and generates a grounded answer.
+      Good implementations cite the source chunk (filename, page, URL).
+
+WHY IT EXISTS
+   LLMs have a knowledge cutoff and do not know your internal documents.
+   Fine-tuning is expensive, slow, and does not work well for factual lookup.
+   RAG is cheap, updatable (add new documents without retraining), and
+   auditable (you can show which chunk produced which answer).
+
+KEY COMPONENTS
+   Embedding model   Converts text to vectors. Examples: OpenAI text-embedding-3,
+                     Amazon Titan Embeddings, Cohere Embed, BGE.
+   Vector DB         Stores embeddings. Examples: Pinecone, OpenSearch,
+                     pgvector, Weaviate, Chroma, Bedrock Knowledge Bases.
+   Chunking strategy How documents are split. Fixed-size, sentence-aware,
+                     semantic chunking. Chunk size affects recall and precision.
+   Top-k             Number of chunks retrieved per query. More = more context
+                     but higher cost and risk of noise.
+   Reranker          Optional second pass: a cross-encoder rescores the top-k
+                     chunks for relevance before injection. Improves precision.
+                     Examples: Cohere Rerank, Bedrock Reranker.
+
+WEAKNESSES OF STANDARD RAG
+   1. Flat retrieval: treats all chunks independently.
+      Cannot answer questions that require combining information
+      from multiple disconnected documents.
+   2. No reasoning about relationships.
+      "Which HR policies apply to employees who are also contractors?"
+      requires joining across concepts, not just similarity search.
+   3. Recall drops on ambiguous queries.
+      If the user says "my benefits" but the document says "employee
+      entitlements," similarity may not match well.
+   4. No memory or context across queries.
+      Each retrieval is stateless — it does not know what was retrieved before.
+   5. Hallucination risk in gaps.
+      If no relevant chunk is retrieved, the model may generate unsupported text.
+
+
+---
+PART 2 — GRAPH RAG
+---
+
+WHAT IT IS
+   Graph RAG extends standard RAG by structuring the knowledge source
+   as a knowledge graph (entities and relationships) rather than flat
+   document chunks in a vector DB.
+
+   Retrieval is no longer just "find similar text" — it is
+   "traverse the graph to find connected information."
+
+HOW A KNOWLEDGE GRAPH IS BUILT FROM DOCUMENTS
+
+   1. Entity extraction
+      NLP or LLM extracts named entities from documents:
+      people, organizations, concepts, policies, products, dates.
+      Example from a policy doc:
+        Entities: Employee, Parental Leave, 12 Weeks, FMLA, HR Department
+   2. Relationship extraction
+      Relationships between entities are extracted:
+        Employee -[ELIGIBLE_FOR]-> Parental Leave
+        Parental Leave -[GOVERNED_BY]-> FMLA
+        Parental Leave -[ADMINISTERED_BY]-> HR Department
+        Parental Leave -[DURATION]-> 12 Weeks
+   3. Graph storage
+      Stored in a graph database: Neo4j, Amazon Neptune, Azure Cosmos DB
+      (Gremlin API), or an in-memory graph (networkx for development).
+   4. Indexing
+      Nodes and edges are also embedded for hybrid retrieval:
+      vector similarity to find entry nodes + graph traversal to expand.
+
+RETRIEVAL IN GRAPH RAG
+
+   Two-phase retrieval:
+   Phase 1 — Seed retrieval: embed the query, find the most relevant
+             entity nodes in the graph via vector similarity.
+   Phase 2 — Graph traversal: from seed nodes, follow edges to retrieve
+             connected entities and relationships up to N hops.
+   Result: a subgraph (set of nodes and relationships) is returned.
+
+   This subgraph is then serialized (to text or structured format)
+   and injected into the LLM prompt as context.
+
+MICROSOFT GRAPHRAG (2024)
+   Microsoft Research released GraphRAG as open source.
+   Key innovation: community detection.
+     1. Build a full knowledge graph from the corpus.
+     2. Run community detection algorithms (Leiden algorithm) to group
+        related entities into communities (clusters of related concepts).
+     3. Generate a summary for each community using an LLM.
+     4. At query time: retrieve relevant community summaries + local
+        entity context. Two modes:
+        Local search: direct entity + relationship retrieval for specific queries.
+        Global search: across community summaries for broad/thematic queries.
+
+   Example:
+   Corpus: all HR, legal, compliance, benefits policies.
+   Communities: {Leave policies}, {Benefits & Compensation}, {Provider Operations},
+                {Legal & Contracts}, {Compliance & Audit}.
+   Query: "What governs how employee benefits interact with leave policies?"
+   Global search retrieves the Benefits and Leave community summaries.
+   LLM synthesizes an answer that spans both.
+
+WHEN GRAPH RAG BEATS STANDARD RAG
+
+   Multi-hop questions:
+     "Which employees in which departments are eligible for which benefits
+      and what compliance training applies to each?"
+     Standard RAG: retrieves one policy chunk. Misses the connections.
+     Graph RAG: traverses Employee -> Department -> Benefit -> Compliance Training.
+
+   Relationship questions:
+     "What is the relationship between FMLA and parental leave policy?"
+     Standard RAG: may return chunks that mention both. Fragile.
+     Graph RAG: the edge FMLA -[GOVERNS]-> Parental Leave directly answers it.
+
+   Global summarization:
+     "What are all the policies that affect a new employee in their first 90 days?"
+     Standard RAG: retrieves top-k similar chunks. May miss relevant docs.
+     Graph RAG: community summary for {Onboarding} contains all connected policies.
+
+   Fraud / anomaly detection (financial services):
+     Entities: Vendor, Invoice, Employee, Approval, Payment.
+     Relationship traversal reveals: Vendor -> Invoice -> Employee
+     (same employee approved and received payment) — a control violation.
+     Standard RAG does not surface this; it requires graph traversal.
+
+WEAKNESSES OF GRAPH RAG
+   1. Expensive to build: entity/relationship extraction requires LLM calls
+      at ingestion time. Cost scales with corpus size.
+   2. Entity ambiguity: "John Smith" may be two different people.
+      Coreference resolution is hard.
+   3. Graph freshness: when documents change, the graph must be rebuilt
+      or incrementally updated. More complex than re-embedding chunks.
+   4. Over-retrieval: wide graph traversal can pull in too much context.
+      Hop limits and relevance filtering are required.
+   5. Serialization challenge: converting a subgraph to text for the LLM
+      prompt is non-trivial. Quality of the subgraph-to-text step
+      affects answer quality.
+
+GRAPH RAG VS STANDARD RAG QUICK COMPARISON
+
+   Dimension           Standard RAG              Graph RAG
+   Knowledge repr.     Flat text chunks          Entities + relationships
+   Retrieval method    Vector similarity (ANN)   Seed + graph traversal
+   Multi-hop           Weak (chunk independence) Strong (traverse edges)
+   Relationship query  Weak                      Strong
+   Build cost          Low                       High (LLM extraction)
+   Update cost         Low (re-embed chunk)      Medium (update graph)
+   Corpus size sweet spot  Small to large        Medium to large
+   Best for            Factual lookup,           Relationship queries,
+                       Q&A on documents          global summarization,
+                                                 multi-hop reasoning
+
+
+---
+PART 3 — AGENTIC RAG
+---
+
+WHAT IT IS
+   Agentic RAG puts retrieval inside an agent loop instead of a fixed
+   single-shot pipeline.
+
+   Standard RAG: query -> retrieve once -> generate answer.
+   Agentic RAG:  query -> agent decides whether/what to retrieve ->
+                 retrieves -> inspects result -> decides to retrieve again
+                 or call another tool -> synthesizes final answer.
+
+   The retrieval is now a tool the agent can call multiple times,
+   with different queries, with different sources, with different parameters,
+   based on what it has seen so far. The agent reasons about retrieval.
+
+THE AGENT LOOP
+
+   The agent has access to tools:
+     retrieve(query, source_filter, top_k)
+     search_graph(entity, relationship_type, hops)
+     web_search(query)
+     lookup_database(table, filters)
+     create_ticket(summary)
+     etc.
+
+   The agent receives a user query.
+   It reasons (using a ReAct or Chain-of-Thought loop):
+     Thought: "I need to find the parental leave policy."
+     Action: retrieve("parental leave policy", source="hr_policy", top_k=5)
+     Observation: [chunks returned]
+     Thought: "The chunks mention FMLA. I should also retrieve FMLA details."
+     Action: retrieve("FMLA employee eligibility", source="compliance", top_k=3)
+     Observation: [more chunks]
+     Thought: "I now have enough to answer. The policies connect as follows..."
+     Final Answer: synthesized multi-source answer with citations.
+
+   This is Agentic RAG: multi-step, self-directed, iterative retrieval.
+
+PATTERNS IN AGENTIC RAG
+
+   Pattern 1 — Iterative retrieval (ReAct loop)
+     Agent retrieves, inspects results, decides to retrieve again if insufficient.
+     Implements "retrieval until satisfied" logic.
+     Key question after each retrieval: is this enough to answer? If not, refine.
+
+   Pattern 2 — Query decomposition
+     Complex query: "What leave benefits do employees get, what compliance
+     training applies during leave, and how is payroll affected?"
+     Agent decomposes into three sub-queries:
+       q1: leave benefits policy
+       q2: compliance training during leave
+       q3: payroll processing during leave
+     Retrieves each in parallel (asyncio.gather).
+     Synthesizes all three results into one answer.
+     This is used in multi-agent systems: one agent per sub-query domain.
+
+   Pattern 3 — Self-correcting retrieval
+     After retrieval, the agent evaluates: is this chunk actually relevant?
+     Uses a grading step (LLM-as-judge): "Does this document answer the question?"
+     If graded as not relevant: reformulates the query and retries.
+     Prevents low-quality chunks from polluting the answer.
+     LangGraph implementation: conditional edge after retrieval:
+       grade_documents -> if all relevant: generate
+                       -> if some irrelevant: transform_query -> retrieve again
+
+   Pattern 4 — Adaptive retrieval (CRAG — Corrective RAG)
+     Three possible states after retrieval:
+       Relevant: proceed to generation.
+       Ambiguous: supplement with web search to fill gaps.
+       Irrelevant: discard and use web search entirely.
+     The agent decides which state applies and acts accordingly.
+
+   Pattern 5 — Hybrid retrieval (vector + graph)
+     Agent has both vector search and graph traversal as tools.
+     For factual lookup: calls vector search.
+     For relationship query: calls graph traversal.
+     For complex multi-hop: calls both and merges results.
+     Decision about which tool to use is made by the agent at runtime.
+
+   Pattern 6 — RAG + action
+     Retrieval is one of many tools. After answering from documents,
+     the agent can also act: create a ticket, update a record, escalate.
+     "What is the parental leave policy?" -> retrieve -> answer.
+     "Start my parental leave" -> retrieve policy -> check eligibility
+       -> create HR case -> confirm to user.
+     The retrieval informs the action; it is not the end state.
+
+LANGGRAPH AGENTIC RAG IMPLEMENTATION
+
+   LangGraph is well-suited for Agentic RAG because:
+   1. StateGraph models the agent loop as a persistent state machine.
+   2. Conditional edges implement "retrieve again vs generate" decisions.
+   3. Parallel nodes handle simultaneous multi-source retrieval.
+   4. Human-in-the-loop interrupt() for sensitive actions.
+
+   Typical LangGraph Agentic RAG graph:
+
+   START
+     -> web_search_or_retrieve_node   (decides: vector DB or web)
+     -> grade_documents_node          (conditional: relevant? yes/no)
+     -> [transform_query_node]        (if not relevant: rewrite query)
+     -> [retrieve again]              (loop back)
+     -> generate_node                 (generate final answer from context)
+     -> grade_generation_node         (conditional: hallucination? yes/no)
+     -> [regenerate if hallucinated]
+   END
+
+   State: { question, documents, generation, web_search_needed }
+
+AWS AGENTIC RAG STACK
+   Amazon Bedrock Knowledge Bases: managed vector store + retrieval API.
+   Amazon Bedrock Agents: built-in agentic loop with tool calling.
+     Bedrock Agents can call Knowledge Bases as a retrieval tool
+     within their ReAct loop — this is Bedrock's native Agentic RAG.
+   Custom implementation: LangGraph + boto3 Bedrock runtime +
+     Bedrock Knowledge Bases (retrieve API) as a LangChain @tool.
+     The supervisor agent in multi_agent_aws_hc_solution_enhance_lcg
+     uses this pattern: search_enterprise_knowledge is a retrieval tool
+     that specialist agents call within their ReAct loops.
+
+
+---
+PART 4 — COMPARISON TABLE
+---
+
+   Dimension              Standard RAG         Graph RAG            Agentic RAG
+   Retrieval trigger      Once per query        Once (seed + graph)  Agent decides (1 to N times)
+   Retrieval method       Vector ANN            Graph traversal      Any tool (vector, graph, web, DB)
+   Multi-hop              Weak                  Strong               Strong (iterative retrieval)
+   Self-correction        None                  None                 Yes (grade, reformulate, retry)
+   Action capability      None                  None                 Yes (write actions post-retrieval)
+   Parallelism            None                  None                 Yes (multi-source in parallel)
+   Human-in-the-loop      None                  None                 Yes (interrupt on sensitive actions)
+   Complexity             Low                   Medium               High
+   Latency                Low                   Medium               High (multiple LLM calls)
+   Cost                   Low                   Medium               High
+   Best use case          Simple Q&A            Relationship         Complex, multi-step,
+                          on flat docs          queries, multi-hop   multi-source, or
+                                                                     action-requiring queries
+
+
+---
+PART 5 — WHEN TO USE WHICH
+---
+
+Use STANDARD RAG when:
+   - Queries are single-hop factual lookups.
+   - Documents are relatively flat (policies, FAQs, runbooks).
+   - Latency and cost are critical.
+   - The answer is usually in one document.
+   Example: "What is the PTO accrual rate?" -> retrieve pto_policy.md -> answer.
+
+Use GRAPH RAG when:
+   - Questions require combining information across many connected concepts.
+   - The corpus has rich entity relationships that matter to the query.
+   - Global/thematic queries need community-level summarization.
+   - You are building a knowledge management system where relationships
+     between concepts are as important as the concepts themselves.
+   Example: "How do FMLA, parental leave, payroll, and compliance training
+   interact for a new parent employee?" -> community summary + traversal.
+
+Use AGENTIC RAG when:
+   - The answer requires multiple retrieval steps with reasoning in between.
+   - The query is ambiguous and may need reformulation after seeing results.
+   - The system needs to act (create tickets, escalate, update records)
+     based on retrieved information.
+   - High-stakes answers require self-verification before delivery.
+   - Queries span multiple knowledge sources (internal KB + web + database).
+   Example: "Is this employee eligible for parental leave, when does their
+   compliance training deadline fall during that period, and what is the
+   payroll processing schedule?" -> multi-domain parallel retrieval +
+   eligibility check tool + synthesis.
+
+
+---
+PART 6 — HOW THESE MAP TO YOUR WORK
+---
+
+Standard RAG -> multi_agent_aws_hc_solution_enhance (all editions)
+   The search_enterprise_knowledge tool uses Bedrock Knowledge Bases
+   for single-hop vector retrieval. Bedrock KB handles chunking,
+   embedding (Titan), indexing (OpenSearch), and retrieval (RetrieveAPI).
+   Each specialist agent retrieves once per query.
+   This is standard RAG embedded inside an agentic system.
+
+Graph RAG -> future enhancement opportunity
+   The 10-domain policy corpus (HR, benefits, payroll, legal, compliance,
+   procurement, purchasing, facilities, IT, provider operations) has rich
+   entity relationships:
+     Employee -[ELIGIBLE_FOR]-> ParentalLeave
+     ParentalLeave -[GOVERNED_BY]-> FMLA
+     FMLA -[REQUIRES]-> ComplianceTraining
+     ComplianceTraining -[ADMINISTERED_BY]-> ComplianceDomain
+   A Graph RAG layer on top of this corpus would enable multi-hop
+   cross-domain queries that the current flat KB cannot answer well.
+   Amazon Neptune or Neo4j as the graph store.
+   Microsoft GraphRAG or LangGraph + networkx for the traversal agent.
+
+Agentic RAG -> multi_agent_aws_hc_solution_enhance_lcg (current)
+   The LangGraph supervisor dispatches 10 specialist ReAct agents in parallel.
+   Each specialist runs a tool-calling loop: it can call search_enterprise_knowledge
+   multiple times with different queries, check eligibility, create tickets.
+   This is Agentic RAG: retrieval is a tool inside an agent loop,
+   not a fixed pipeline step.
+   The supervisor itself adds the orchestration layer:
+   classify intent -> dispatch relevant agents -> aggregate results.
+   Multi-agent + Agentic RAG = the full enterprise pattern.
+
+The progression:
+   MVP:        Single-agent, single retrieval call per query.
+   Enhanced:   Multi-agent supervisor, parallel dispatch, single retrieval per agent.
+   LangGraph:  Multi-agent, each agent has agentic RAG loop (ReAct + tools).
+   Next step:  Graph RAG layer for cross-domain multi-hop queries.
