@@ -1,0 +1,176 @@
+<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" font-family="Calibri, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrowGreen" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#1B5E37"/>
+    </marker>
+    <marker id="arrowNavy" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#1C3557"/>
+    </marker>
+    <linearGradient id="bannerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1B5E37"/>
+      <stop offset="100%" stop-color="#1C3557"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1920" height="1080" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="1920" height="6" fill="url(#bannerGrad)"/>
+
+  <!-- HEADER -->
+  <text x="960" y="50" text-anchor="middle" font-size="38" font-weight="700" fill="#1B5E37">One Repo, Two Metadata Files, Two Value Streams</text>
+  <text x="960" y="78" text-anchor="middle" font-size="16" fill="#2D7D4F">catalog-info.yaml (Developer Catalog) &#160; &#183; &#160; now.yaml (CMDB Service Mapping) &#160; &#8212; &#160; Same Master Branch, Divergent Purpose</text>
+  <line x1="60" y1="94" x2="1860" y2="94" stroke="#E8F5EE" stroke-width="2"/>
+
+  <!-- ================= TOP: MASTER BRANCH ================= -->
+  <text x="960" y="118" text-anchor="middle" font-size="16" font-weight="700" fill="#1C3557">Repo: Master Branch &#8212; One Commit, Two Files</text>
+
+  <rect x="660" y="126" width="600" height="102" rx="10" fill="#FFFFFF" stroke="#1C3557" stroke-width="2.5"/>
+
+  <rect x="678" y="140" width="272" height="72" rx="8" fill="#E8F5EE" stroke="#1B5E37" stroke-width="1.5"/>
+  <text x="814" y="164" text-anchor="middle" font-size="14" font-weight="700" fill="#1B5E37">&#128196; catalog-info.yaml</text>
+  <text x="814" y="184" text-anchor="middle" font-size="10.5" fill="#2D7D4F">Catalog Definition &#8212; System Value</text>
+  <text x="814" y="200" text-anchor="middle" font-size="10.5" fill="#2D7D4F">&amp; Discoverability</text>
+
+  <rect x="970" y="140" width="272" height="72" rx="8" fill="#F2F4F7" stroke="#1C3557" stroke-width="1.5"/>
+  <text x="1106" y="164" text-anchor="middle" font-size="14" font-weight="700" fill="#1C3557">&#128196; now.yaml</text>
+  <text x="1106" y="184" text-anchor="middle" font-size="10.5" fill="#1C3557">CMDB Service Mapping &#8212;</text>
+  <text x="1106" y="200" text-anchor="middle" font-size="10.5" fill="#1C3557">Microservice Visibility</text>
+
+  <text x="960" y="243" text-anchor="middle" font-size="11.5" font-style="italic" fill="#1C3557">Committed together &#8212; same repo, same master branch &#8212; but each feeds an independent, governed pipeline</text>
+
+  <!-- Divergence arrows from top box to each lane -->
+  <path d="M 800,228 C 700,270 500,272 365,286" fill="none" stroke="#1B5E37" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <path d="M 1120,228 C 1220,270 1420,272 1555,286" fill="none" stroke="#1C3557" stroke-width="2.5" marker-end="url(#arrowNavy)"/>
+
+  <!-- ================= AUDIENCE PILLS ================= -->
+  <rect x="70" y="256" width="220" height="26" rx="13" fill="#1B5E37"/>
+  <text x="180" y="273" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">AUDIENCE: DEVELOPERS</text>
+
+  <rect x="1560" y="256" width="230" height="26" rx="13" fill="#1C3557"/>
+  <text x="1675" y="273" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">AUDIENCE: OPS / SRE / ITOM</text>
+
+  <!-- ================= LEFT LANE: catalog-info.yaml ================= -->
+  <!-- Row 1 -->
+  <rect x="70" y="290" width="590" height="90" rx="8" fill="#E8F5EE" stroke="#1B5E37" stroke-width="2"/>
+  <text x="365" y="311" text-anchor="middle" font-size="13" font-weight="700" fill="#1B5E37">Validation &amp; Workflow Engine (GitHub Actions)</text>
+  <text x="85" y="333" font-size="10.5" fill="#1C3557">&#8226; Schema Validation</text>
+  <text x="85" y="351" font-size="10.5" fill="#1C3557">&#8226; Ownership &amp; Metadata Fields</text>
+  <text x="380" y="333" font-size="10.5" fill="#1C3557">&#8226; Policy &amp; Standards Check</text>
+  <text x="380" y="351" font-size="10.5" fill="#1C3557">&#8226; Audit Logging</text>
+  <text x="365" y="368" text-anchor="middle" font-size="9.5" font-style="italic" fill="#2D7D4F">Runs on every PR touching catalog-info.yaml</text>
+
+  <line x1="365" y1="380" x2="365" y2="386" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Row 2 -->
+  <rect x="70" y="388" width="590" height="90" rx="8" fill="#1B5E37"/>
+  <text x="365" y="409" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">IDP_Catalog Repository (Centralized)</text>
+  <text x="85" y="431" font-size="10.5" fill="#E8F5EE">&#8226; Workflow-Only Writes</text>
+  <text x="85" y="449" font-size="10.5" fill="#E8F5EE">&#8226; Version-Controlled Metadata</text>
+  <text x="380" y="431" font-size="10.5" fill="#E8F5EE">&#8226; Immutable History</text>
+  <text x="380" y="449" font-size="10.5" fill="#E8F5EE">&#8226; Definitive Developer Catalog</text>
+  <text x="365" y="466" text-anchor="middle" font-size="9.5" font-style="italic" fill="#B9DCC5">Powers &#8594; IDP Catalog Portal</text>
+
+  <line x1="365" y1="478" x2="365" y2="484" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Row 3 -->
+  <rect x="70" y="486" width="590" height="90" rx="8" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="2"/>
+  <text x="365" y="507" text-anchor="middle" font-size="13" font-weight="700" fill="#1B5E37">IDP Catalog Portal (Developer Portal)</text>
+  <text x="85" y="529" font-size="10.5" fill="#1C3557">&#8226; Overview / Ownership / Deps / APIs</text>
+  <text x="85" y="547" font-size="10.5" fill="#1C3557">&#8226; Search Across All Services</text>
+  <text x="380" y="529" font-size="10.5" fill="#1C3557">&#8226; Self-Service Scaffolding</text>
+  <text x="380" y="547" font-size="10.5" fill="#1C3557">&#8226; Docs &amp; API Specs, One Place</text>
+  <text x="365" y="564" text-anchor="middle" font-size="9.5" font-style="italic" fill="#2D7D4F">Audience: Engineers, EMs, Architects</text>
+
+  <line x1="365" y1="576" x2="365" y2="582" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Row 4: Value callout -->
+  <rect x="70" y="584" width="590" height="150" rx="8" fill="#F7F9F8" stroke="#1B5E37" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="365" y="608" text-anchor="middle" font-size="14" font-weight="700" fill="#1B5E37">Developer-Facing Value</text>
+  <text x="85" y="632" font-size="11" fill="#1C3557">&#10003; Discoverability &#8212; find any service in seconds</text>
+  <text x="85" y="655" font-size="11" fill="#1C3557">&#10003; Ownership &amp; Accountability &#8212; always know who to contact</text>
+  <text x="85" y="678" font-size="11" fill="#1C3557">&#10003; Self-Service &#8212; scaffolding, docs, and API specs in one place</text>
+  <text x="85" y="701" font-size="11" fill="#1C3557">&#10003; Faster Onboarding &#8212; less tribal-knowledge dependency</text>
+  <text x="85" y="720" font-size="11" font-weight="700" fill="#1B5E37">&#10003; Developer Productivity at Scale</text>
+
+  <!-- ================= RIGHT LANE: now.yaml ================= -->
+  <!-- Row 1 -->
+  <rect x="1260" y="290" width="590" height="90" rx="8" fill="#F2F4F7" stroke="#1C3557" stroke-width="2"/>
+  <text x="1555" y="311" text-anchor="middle" font-size="13" font-weight="700" fill="#1C3557">RapDev Workflow Sync (Auto-Injected)</text>
+  <text x="1275" y="333" font-size="10.5" fill="#1C3557">&#8226; CI Identification (SysID / App Key)</text>
+  <text x="1275" y="351" font-size="10.5" fill="#1C3557">&#8226; Relationship Mapping</text>
+  <text x="1570" y="333" font-size="10.5" fill="#1C3557">&#8226; Injected Across ~20K Repos</text>
+  <text x="1570" y="351" font-size="10.5" fill="#1C3557">&#8226; Governed by RapDev</text>
+  <text x="1555" y="368" text-anchor="middle" font-size="9.5" font-style="italic" fill="#3E5570">Syncs now.yaml from CMDB on schedule</text>
+
+  <line x1="1555" y1="380" x2="1555" y2="386" stroke="#1C3557" stroke-width="2" marker-end="url(#arrowNavy)"/>
+
+  <!-- Row 2 -->
+  <rect x="1260" y="388" width="590" height="90" rx="8" fill="#1C3557"/>
+  <text x="1555" y="409" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">ServiceNow CMDB (System of Record)</text>
+  <text x="1275" y="431" font-size="10.5" fill="#DCE3EC">&#8226; CI Records (cmdb_ci)</text>
+  <text x="1275" y="449" font-size="10.5" fill="#DCE3EC">&#8226; Relationship Records (cmdb_rel_ci)</text>
+  <text x="1570" y="431" font-size="10.5" fill="#DCE3EC">&#8226; Scope: Microservices, DB, MQ</text>
+  <text x="1570" y="449" font-size="10.5" fill="#DCE3EC">&#8226; Kafka, SFTP, Storage</text>
+  <text x="1555" y="466" text-anchor="middle" font-size="9.5" font-style="italic" fill="#B7C4D6">Powers &#8594; ITOM Platform</text>
+
+  <line x1="1555" y1="478" x2="1555" y2="484" stroke="#1C3557" stroke-width="2" marker-end="url(#arrowNavy)"/>
+
+  <!-- Row 3 -->
+  <rect x="1260" y="486" width="590" height="90" rx="8" fill="#FFFFFF" stroke="#1C3557" stroke-width="2"/>
+  <text x="1555" y="507" text-anchor="middle" font-size="13" font-weight="700" fill="#1C3557">ITOM &#8212; Three Pillars</text>
+  <text x="1275" y="529" font-size="10.5" fill="#1C3557">&#8226; Visibility &#8212; Discovers &amp; Maps CIs</text>
+  <text x="1275" y="547" font-size="10.5" fill="#1C3557">&#8226; Health &#8212; Monitors CI Status</text>
+  <text x="1570" y="529" font-size="10.5" fill="#1C3557">&#8226; AIOps &#8212; Event Correlation</text>
+  <text x="1570" y="547" font-size="10.5" fill="#1C3557">&#8226; Instant Blast Radius (P1)</text>
+  <text x="1555" y="564" text-anchor="middle" font-size="9.5" font-style="italic" fill="#3E5570">Audience: SRE, Ops, Incident Commanders</text>
+
+  <line x1="1555" y1="576" x2="1555" y2="582" stroke="#1C3557" stroke-width="2" marker-end="url(#arrowNavy)"/>
+
+  <!-- Row 4: Value callout -->
+  <rect x="1260" y="584" width="590" height="150" rx="8" fill="#F2F4F7" stroke="#1C3557" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="1555" y="608" text-anchor="middle" font-size="14" font-weight="700" fill="#1C3557">Operations-Facing Value</text>
+  <text x="1275" y="632" font-size="11" fill="#1C3557">&#10003; Service Visibility &#8212; accurate, real-time topology</text>
+  <text x="1275" y="655" font-size="11" fill="#1C3557">&#10003; Blast Radius Analysis &#8212; instant impact assessment</text>
+  <text x="1275" y="678" font-size="11" fill="#1C3557">&#10003; Operational Reliability &#8212; faster incident correlation</text>
+  <text x="1275" y="701" font-size="11" fill="#1C3557">&#10003; Compliance &amp; Audit &#8212; SOX ITGC evidence trail</text>
+  <text x="1275" y="720" font-size="11" font-weight="700" fill="#1C3557">&#10003; Foundation for AIOps Automation</text>
+
+  <!-- ================= CENTER RAIL: CONTRAST ANNOTATIONS ================= -->
+  <line x1="960" y1="256" x2="960" y2="734" stroke="#C9D3DA" stroke-width="2" stroke-dasharray="3,5"/>
+
+  <circle cx="960" cy="335" r="5" fill="#1C3557"/>
+  <text x="960" y="322" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">Same commit,</text>
+  <text x="960" y="358" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">divergent governance</text>
+
+  <circle cx="960" cy="433" r="5" fill="#1C3557"/>
+  <text x="960" y="420" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">Two purpose-built</text>
+  <text x="960" y="456" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">governed repositories</text>
+
+  <circle cx="960" cy="531" r="5" fill="#1C3557"/>
+  <text x="960" y="518" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">Two different</text>
+  <text x="960" y="554" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">consumer platforms</text>
+
+  <circle cx="960" cy="659" r="5" fill="#1C3557"/>
+  <text x="960" y="646" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">Two value streams,</text>
+  <text x="960" y="682" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1C3557">one source of truth</text>
+
+  <!-- ================= BOTTOM: WHAT EACH FILE ANSWERS ================= -->
+  <text x="960" y="752" text-anchor="middle" font-size="15" font-weight="700" fill="#1B5E37">What Each File Answers</text>
+
+  <rect x="70" y="762" width="590" height="66" rx="8" fill="#E8F5EE" stroke="#1B5E37" stroke-width="1.5"/>
+  <text x="90" y="784" font-size="12" font-weight="700" fill="#1B5E37">catalog-info.yaml asks:</text>
+  <text x="90" y="805" font-size="11" font-style="italic" fill="#1C3557">"What is this service? Who owns it? Where do I find its docs and APIs?"</text>
+
+  <rect x="1260" y="762" width="590" height="66" rx="8" fill="#F2F4F7" stroke="#1C3557" stroke-width="1.5"/>
+  <text x="1280" y="784" font-size="12" font-weight="700" fill="#1C3557">now.yaml asks:</text>
+  <text x="1280" y="805" font-size="11" font-style="italic" fill="#1C3557">"How does this service map to infrastructure? What's the blast radius if it fails?"</text>
+
+  <!-- ================= FOOTER BANNER ================= -->
+  <rect x="70" y="852" width="1780" height="58" rx="6" fill="url(#bannerGrad)"/>
+  <text x="960" y="887" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">One Source Commit &#160; | &#160; Two Governed Pipelines &#160; | &#160; Full-Stack Service Truth &#8212; Developer Experience to Operational Reliability</text>
+
+  <text x="960" y="945" text-anchor="middle" font-size="16" font-weight="700" font-style="italic" fill="#1B5E37">One Repository. Two Files. Two Missions.</text>
+
+  <text x="1860" y="1055" text-anchor="end" font-size="10" font-style="italic" fill="#2D7D4F">Internal Developer Platform &#8212; Capstone Presentation</text>
+  <rect x="0" y="1074" width="1920" height="6" fill="url(#bannerGrad)"/>
+</svg>
