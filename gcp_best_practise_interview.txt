@@ -3,7 +3,8 @@ Security & Identity
   ---
   1. What is the difference between IAM roles in GCP and AWS?
 
-  In AWS, you attach policies (lists of permissions) to users, groups, or roles. In GCP, you assign roles (pre-packaged sets of permissions) to members on specific resources.
+  In AWS, you attach policies (lists of permissions) to users, groups, or roles.
+  In GCP, you assign roles (pre-packaged sets of permissions) to members on specific resources.
 
   The GCP model: WHO + WHAT ROLE + ON WHICH RESOURCE.
 
@@ -15,15 +16,19 @@ Security & Identity
   ---
   2. What is Workload Identity Federation and why is it better than service account keys?
 
-  A service account key is a JSON file with long-lived credentials. If it leaks — in code, a log, a screenshot — an attacker has permanent access until you manually rotate it. Companies have had
+  A service account key is a JSON file with long-lived credentials. If it leaks — in code, a log, a screenshot —
+  an attacker has permanent access until you manually rotate it. Companies have had
   major breaches from leaked service account keys.
 
-  Workload Identity Federation eliminates keys entirely. Instead: your workload (a GitHub Actions job, a Kubernetes pod, an AWS Lambda) proves its identity using its own platform's credentials.
+  Workload Identity Federation eliminates keys entirely.
+  Instead: your workload (a GitHub Actions job, a Kubernetes pod, an AWS Lambda)
+  proves its identity using its own platform's credentials.
   GCP trusts that proof and issues a short-lived token automatically.
 
   No file to leak. Credentials expire in an hour. No rotation needed.
 
-  Rule: never create service account keys for production workloads. If a system requires a key file, that's a design problem to fix — not a reason to create keys.
+  Rule: never create service account keys for production workloads.
+  If a system requires a key file, that's a design problem to fix — not a reason to create keys.
 
   ---
   3. What is the principle of least privilege in GCP and how do you enforce it?
@@ -42,20 +47,26 @@ Security & Identity
   ---
   4. What is VPC Service Controls and when do you need it?
 
-  VPC Service Controls draws a security perimeter around your GCP services. Even if an attacker steals valid credentials, they cannot use those credentials from outside the perimeter.
+  VPC Service Controls draws a security perimeter around your GCP services.
+  Even if an attacker steals valid credentials, they cannot use those credentials from outside the perimeter.
 
   Without it: stolen credentials work from anywhere in the world.
-  With it: stolen credentials only work from inside your defined perimeter (your VPC, your corporate IP range, your specific GCP projects).
+  With it: stolen credentials only work from inside your defined perimeter
+   (your VPC, your corporate IP range, your specific GCP projects).
 
-  You also control data movement: data in a project inside the perimeter cannot be copied to a project outside the perimeter — even by accident. Critical for preventing data exfiltration.
+  You also control data movement: data in a project inside the perimeter cannot be copied to a project
+  outside the perimeter — even by accident. Critical for preventing data exfiltration.
 
-  When you need it: any workload handling regulated data (PCI, HIPAA, financial data). Any system where credential theft is a realistic threat. Required by most enterprise security teams before
+  When you need it: any workload handling regulated data (PCI, HIPAA, financial data). Any system where credential theft is a realistic threat.
+  Required by most enterprise security teams before
   approving AI/ML workloads on Vertex AI.
 
   ---
   5. What is CMEK and when does a company need it?
 
-  CMEK stands for Customer-Managed Encryption Keys. By default, GCP encrypts all data at rest using keys that Google manages. With CMEK, you provide your own key stored in Cloud KMS.
+  CMEK stands for Customer-Managed Encryption Keys. By default,
+   GCP encrypts all data at rest using keys that Google manages.
+   With CMEK, you provide your own key stored in Cloud KMS.
 
   The difference: if Google is compromised, your data is still protected because they don't hold your key. You also control access — revoke the key and the data becomes unreadable to everyone,
   including Google.
@@ -79,7 +90,8 @@ Security & Identity
 
   Secret Manager gives you: encryption at rest, version history, automatic rotation hooks, audit logs of every access (who read what secret, when), and fine-grained IAM control per secret.
 
-  In Cloud Run or GKE, mount secrets as environment variables or volume mounts — GCP injects them at runtime, your code never calls Secret Manager directly.
+  In Cloud Run or GKE, mount secrets as environment variables or volume mounts —
+  GCP injects them at runtime, your code never calls Secret Manager directly.
 
   ---
   ---
@@ -93,24 +105,30 @@ Security & Identity
   In GCP, a VPC is global — one VPC spans all regions automatically. You create subnets per region, but they all belong to the same VPC. A VM in us-central1 can talk to a VM in europe-west1 over
   private IPs without any extra configuration.
 
-  This makes multi-region architectures simpler. One set of firewall rules, one VPC, resources worldwide. The tradeoff: mistakes in firewall rules affect all regions at once — be careful with
+  This makes multi-region architectures simpler. One set of firewall rules, one VPC, resources worldwide.
+   The tradeoff: mistakes in firewall rules affect all regions at once — be careful with
   broad rules.
 
   ---
   8. What is Private Google Access and why does every production subnet need it?
 
-  Private Google Access lets VMs without external IP addresses call Google APIs (Cloud Storage, BigQuery, Pub/Sub, etc.) over private networking — without going through the internet.
+  Private Google Access lets VMs without external IP addresses call Google APIs
+  (Cloud Storage, BigQuery, Pub/Sub, etc.) over private networking —
+  without going through the internet.
 
-  Without it: a VM in a private subnet that needs to write to Cloud Storage must either have a public IP (bad for security) or route through a NAT gateway (extra cost, extra latency).
+  Without it: a VM in a private subnet that needs to write to Cloud Storage must either have a public IP
+  (bad for security) or route through a NAT gateway (extra cost, extra latency).
 
-  With it: the VM calls storage.googleapis.com and the traffic stays entirely inside Google's network. Faster, cheaper, more secure.
+  With it: the VM calls storage.googleapis.com and the traffic stays entirely inside Google's network.
+   Faster, cheaper, more secure.
 
   How to enable: one checkbox per subnet in the VPC settings. There is no reason not to enable it on every private subnet.
 
   ---
   9. What is Cloud Armor and what does it protect against?
 
-  Cloud Armor is GCP's Web Application Firewall (WAF) and DDoS protection service. It sits in front of your Cloud Load Balancer and filters traffic before it reaches your application.
+  Cloud Armor is GCP's Web Application Firewall (WAF) and DDoS protection service.
+   It sits in front of your Cloud Load Balancer and filters traffic before it reaches your application.
 
   What it protects against:
   - DDoS attacks — absorbs volumetric attacks before they reach your servers (GCP's global network absorbs the traffic)
@@ -119,14 +137,17 @@ Security & Identity
   - Rate limiting — block IPs that make too many requests per second
   - Bot protection — challenge suspicious automated traffic with CAPTCHA
 
-  When to use it: any public-facing web application or API. It's the first line of defence — all traffic passes through it before your application sees it.
+  When to use it: any public-facing web application or API.
+  It's the first line of defence — all traffic passes through it before your application sees it.
 
   ---
   10. What is Cloud NAT and what problem does it solve?
 
-  VMs in private subnets have no external IP address — good for security, but they can't reach the internet for software updates, external API calls, or downloading packages.
+  VMs in private subnets have no external IP address — good for security,
+  but they can't reach the internet for software updates, external API calls, or downloading packages.
 
-  Cloud NAT (Network Address Translation) lets private VMs make outbound internet connections without exposing them to inbound connections. Like VPC NAT Gateway in AWS — private VMs go out
+  Cloud NAT (Network Address Translation) lets private VMs make outbound internet connections without
+  exposing them to inbound connections. Like VPC NAT Gateway in AWS — private VMs go out
   through Cloud NAT, the internet can never initiate a connection back in.
 
   GCP-specific advantage: Cloud NAT is a fully managed, software-defined service. There's no NAT instance to manage, patch, or scale. It scales automatically based on traffic. One configuration
@@ -139,54 +160,70 @@ Security & Identity
   ---
   11. When do you choose Cloud Run vs GKE vs Compute Engine?
 
-  Cloud Run — you give GCP a container, GCP runs everything. Scales to zero (pay nothing when idle), scales up in seconds when traffic arrives. No clusters, no nodes, no Kubernetes to manage.
+  Cloud Run — you give GCP a container, GCP runs everything.
+  Scales to zero (pay nothing when idle), scales up in seconds when traffic arrives.
+  No clusters, no nodes, no Kubernetes to manage.
   Best for: APIs, event-driven services, microservices with variable traffic.
 
-  GKE (Google Kubernetes Engine) — managed Kubernetes. You manage pods and deployments; GCP manages the control plane and nodes. Best for: complex microservice systems, workloads that need
+  GKE (Google Kubernetes Engine) — managed Kubernetes. You manage pods and deployments; GCP manages the control plane and nodes.
+  Best for: complex microservice systems, workloads that need
   fine-grained resource control, teams already using Kubernetes.
 
-  Compute Engine — virtual machines. You manage everything: OS, patching, scaling. Best for: lift-and-shift of existing applications, workloads that need specific OS configurations, legacy
+  Compute Engine — virtual machines. You manage everything: OS, patching, scaling.
+  Best for: lift-and-shift of existing applications, workloads that need specific OS configurations, legacy
   software that can't be containerized.
 
-  Rule of thumb: start with Cloud Run. Move to GKE when Cloud Run's constraints (request timeout, stateless requirement) don't fit. Use Compute Engine only when you have a specific reason.
+  Rule of thumb: start with Cloud Run. Move to GKE when Cloud Run's constraints
+  (request timeout, stateless requirement) don't fit. Use Compute Engine only when you have a specific reason.
 
   ---
   12. What is Cloud Run's scale-to-zero and why does it matter for cost?
 
-  When no requests are coming in, Cloud Run reduces your instances to zero — no containers running, no cost. The moment a request arrives, GCP starts a container in milliseconds.
+  When no requests are coming in, Cloud Run reduces your instances to zero — no containers running, no cost.
+  The moment a request arrives, GCP starts a container in milliseconds.
 
-  For a service that handles 100 requests during business hours and nothing overnight, you pay for 8 hours of compute instead of 24. For dev and staging environments that sit idle most of the
+  For a service that handles 100 requests during business hours and nothing overnight,
+  you pay for 8 hours of compute instead of 24. For dev and staging environments that sit idle most of the
   time, this can cut compute costs by 80%.
 
-  The tradeoff: the first request after a period of inactivity experiences a "cold start" — a delay of a few hundred milliseconds while the container initializes. Mitigate with minimum instances
+  The tradeoff: the first request after a period of inactivity experiences a
+  "cold start" — a delay of a few hundred milliseconds while the container initializes.
+  Mitigate with minimum instances
   (keep one instance warm at all times) for latency-sensitive services.
 
   ---
   13. What are Preemptible VMs and Spot VMs and when should you use them?
 
-  Both are Compute Engine VMs that use GCP's spare capacity at a significant discount (60-90% cheaper than standard VMs).
+  Both are Compute Engine VMs that use GCP's spare capacity at a significant discount
+  (60-90% cheaper than standard VMs).
 
   The catch: GCP can terminate them with 30 seconds notice when it needs that capacity back.
 
   Preemptible — older, always terminated after 24 hours maximum, 80% discount.
   Spot VMs — newer, no 24-hour limit, similar discount, can run indefinitely if GCP has spare capacity.
 
-  Use them for: batch processing, data pipelines, ML training jobs, video transcoding — anything that can be interrupted, checkpointed, and resumed. Never use them for: databases, stateful
+  Use them for: batch processing, data pipelines, ML training jobs, video transcoding —
+  anything that can be interrupted, checkpointed, and resumed. Never use them for: databases, stateful
   services, anything that cannot tolerate sudden termination.
 
-  In GKE, use Spot node pools for non-critical workloads and regular node pools for production services. GKE automatically reschedules pods when a Spot node is terminated.
+  In GKE, use Spot node pools for non-critical workloads and regular node pools for production services.
+  GKE automatically reschedules pods when a Spot node is terminated.
 
   ---
   14. What is GKE Autopilot and how is it different from Standard GKE?
 
-  Standard GKE — you manage node pools. You decide how many VMs, what size, when to scale. GCP manages the Kubernetes control plane. You pay for the nodes whether or not pods are using them.
+  Standard GKE — you manage node pools. You decide how many VMs, what size, when to scale.
+   GCP manages the Kubernetes control plane. You pay for the nodes whether or not pods are using them.
 
-  GKE Autopilot — you deploy pods, GCP manages everything else. No nodes to configure. GCP automatically provisions exactly the right resources for your pods and charges you per pod, not per
+  GKE Autopilot — you deploy pods, GCP manages everything else. No nodes to configure.
+  GCP automatically provisions exactly the right resources for your pods and charges you per pod, not per
   node. Nodes you never see or manage.
 
-  Benefits of Autopilot: no wasted capacity (you pay for what pods use), automatic security hardening (nodes are locked down by GCP), no node management toil.
+  Benefits of Autopilot: no wasted capacity (you pay for what pods use),
+  automatic security hardening (nodes are locked down by GCP), no node management toil.
 
-  When to choose Standard: workloads that need specific node configurations, GPUs, custom OS images, or fine-grained node-level control. For most new workloads — choose Autopilot.
+  When to choose Standard: workloads that need specific node configurations,
+   GPUs, custom OS images, or fine-grained node-level control. For most new workloads — choose Autopilot.
 
   ---
   ---
@@ -216,7 +253,8 @@ Security & Identity
 
   Firestore — NoSQL document database. Scales automatically, real-time sync for mobile/web clients. Best for: user profiles, app data, real-time features, mobile backends. No SQL, no joins.
 
-  Bigtable — wide-column NoSQL, petabyte scale, millisecond latency. Best for: time-series data, IoT sensor data, AdTech, anything with billions of rows and simple access patterns.
+  Bigtable — wide-column NoSQL, petabyte scale, millisecond latency.
+  Best for: time-series data, IoT sensor data, AdTech, anything with billions of rows and simple access patterns.
 
   Quick decision: relational + moderate scale = Cloud SQL. Relational + global + massive scale = Spanner. Hierarchical documents + mobile = Firestore. Time-series + petabytes = Bigtable.
 
@@ -285,7 +323,8 @@ Security & Identity
   ---
   21. What is Cloud Build and how does it fit into a GCP CI/CD pipeline?
 
-  Cloud Build is GCP's managed CI/CD service. You define a pipeline as a YAML file (cloudbuild.yaml). Each step is a container that runs a command — build, test, scan, push, deploy.
+  Cloud Build is GCP's managed CI/CD service. You define a pipeline as a YAML file (cloudbuild.yaml).
+  Each step is a container that runs a command — build, test, scan, push, deploy.
 
   It integrates natively with:
   - Artifact Registry — stores built container images

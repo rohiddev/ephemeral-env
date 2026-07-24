@@ -683,3 +683,726 @@ IF YOU HAVE 3 DAYS:
   Day 1:   5 STAR stories + system design practice
   Day 2:   LangGraph basics + leadership questions + Amex context
   Day 3:   Mock interview + review rapid-fire definitions
+
+
+=========
+1. LangGraph (Highest Priority)
+What is LangGraph?
+
+One-line definition
+
+LangGraph is a framework for building AI agents that can make decisions,
+remember information, call tools, and repeat steps until a task is complete.
+
+Think of it like a workflow engine for AI agents.
+
+Important words
+
+Know these words well.
+
+Word	Meaning
+Node	A step in the workflow
+Edge	Connection between nodes
+State	Shared memory used across the graph
+Conditional Edge	AI decides which node to execute next
+Tool	External API or function
+Agent	LLM + tools + memory
+Loop	Agent repeats until goal achieved
+Checkpoint	Save current state
+Human in the Loop	Person approves before continuing
+Explain State
+
+This is asked frequently.
+
+Instead of each node remembering information separately,
+
+LangGraph stores everything in one shared object called State.
+
+Example
+
+User:
+"I forgot my credit card."
+
+State
+
+{
+ customer_id
+ card_status
+ authentication_status
+ fraud_score
+ conversation_history
+}
+
+Every node reads and updates this.
+
+LangGraph           vs              ADK
+LangGraph	                        Google ADK
+Graph based	                        Agent based
+Explicit workflow	                Higher abstraction
+Full control	                    Easier development
+Better for complex workflows	       Better for Google ecosystem
+Python first	                    Gemini ecosystem
+Build this mentally
+User
+
+↓
+
+Planner Node
+
+↓
+
+Retriever
+
+↓
+
+LLM
+
+↓
+
+Tool
+
+↓
+
+Answer
+
+Interviewers love drawings.
+
+2. RAGAS (Very Important)
+
+RAGAS =
+
+Retrieval Augmented Generation Assessment
+
+Used to evaluate RAG systems.
+
+Know these metrics.
+
+Faithfulness
+
+Did the answer come from retrieved documents?
+
+Example
+
+Document says
+
+Interest rate = 8%
+
+LLM says
+
+Interest rate = 12%
+
+Faithfulness is poor.
+
+Answer Relevancy
+
+Did the answer actually answer the user's question?
+
+Context Precision
+
+How much retrieved context was actually useful?
+
+Higher precision
+
+↓
+
+Less junk
+
+↓
+
+Better retrieval
+
+Context Recall
+
+Did retrieval find ALL important documents?
+
+Context Relevancy
+
+Were retrieved documents relevant?
+
+Interview definition
+
+RAGAS evaluates retrieval quality and answer quality without requiring human labels.
+
+3. Agent Evaluation
+
+Know these words
+
+Latency
+
+Cost
+
+Accuracy
+
+Hallucination
+
+Tool Success Rate
+
+Task Completion
+
+Human Satisfaction
+
+Groundedness
+
+Groundedness
+
+Means
+
+Answer comes from trusted data.
+
+Not imagination.
+
+4. MRM (SR 11-7)
+
+Very likely in banking.
+
+MRM
+
+Model Risk Management
+
+Federal Reserve guidance.
+
+Purpose
+
+Control AI models.
+
+Prevent
+
+Bias
+
+Incorrect predictions
+
+Regulatory violations
+
+Know these terms
+
+Model Inventory
+
+Model Validation
+
+Independent Review
+
+Monitoring
+
+Documentation
+
+Governance
+
+Model Owner
+
+SR 11-7
+
+Simply remember
+
+Every important model must be validated and continuously monitored.
+
+5. PCI DSS
+
+Payment Card Industry Data Security Standard
+
+Protects credit card information.
+
+Know
+
+Encryption
+
+Access Control
+
+Least Privilege
+
+Tokenization
+
+Logging
+
+Network Segmentation
+
+Vulnerability Scanning
+
+Interview answer
+
+PCI DSS protects payment card information.
+
+6. Regulation B
+
+Fair lending law.
+
+Banks cannot discriminate based on
+
+Race
+
+Gender
+
+Religion
+
+National origin
+
+Age
+
+Marital status
+
+AI relevance
+
+AI decisions must be explainable.
+
+No discrimination.
+
+7. Kafka
+
+Extremely important.
+
+Know these words.
+
+Producer
+
+Consumer
+
+Topic
+
+Partition
+
+Broker
+
+Offset
+
+Consumer Group
+
+Replication
+
+Retention
+
+Producer
+
+Creates events.
+
+Example
+
+Payment service.
+
+Consumer
+
+Reads events.
+
+Topic
+
+Message queue.
+
+Partition
+
+Allows parallel processing.
+
+Offset
+
+Message position.
+
+Consumer Group
+
+Multiple consumers sharing work.
+
+Example
+
+Topic
+
+↓
+
+Consumer Group
+
+↓
+
+Consumer A
+
+Consumer B
+
+Consumer C
+
+Exactly Once
+
+Processing occurs only once.
+
+No duplicates.
+
+At Least Once
+
+May process twice.
+
+At Most Once
+
+May lose messages.
+
+Interview question
+
+Why Kafka?
+
+Answer
+
+Loose coupling
+
+Scalable
+
+Reliable
+
+Asynchronous
+
+Event driven
+
+8. Event Driven Agent
+
+Typical design
+
+Customer submits dispute
+
+↓
+
+Kafka Event
+
+↓
+
+Agent wakes up
+
+↓
+
+Authenticate
+
+↓
+
+Retrieve transactions
+
+↓
+
+Fraud model
+
+↓
+
+Generate recommendation
+
+↓
+
+Human approval
+
+↓
+
+Update case
+
+↓
+
+Notify customer
+
+Know
+
+Event
+
+Publisher
+
+Subscriber
+
+Asynchronous
+
+Retry
+
+Dead Letter Queue
+
+9. Embeddings
+
+Asked almost everywhere.
+
+Definition
+
+Numbers representing meaning.
+
+Example
+
+Dog
+
+Cat
+
+Wolf
+
+Vectors are close together.
+
+Dog
+
+Apple
+
+Far apart.
+
+Use
+
+Semantic Search
+
+RAG
+
+Recommendations
+
+Similarity Search
+
+10. LoRA
+
+Low Rank Adaptation
+
+Instead of retraining
+
+500 billion parameters
+
+Train only
+
+small adapter weights.
+
+Advantages
+
+Cheap
+
+Fast
+
+Less GPU
+
+Interview answer
+
+LoRA fine tunes only a small subset of parameters.
+
+11. vLLM
+
+Fast inference engine.
+
+Optimized for
+
+Serving LLMs.
+
+Important features
+
+PagedAttention
+
+Continuous batching
+
+GPU memory optimization
+
+Higher throughput
+
+Lower latency
+
+12. Hugging Face
+
+Platform for
+
+Models
+
+Datasets
+
+Pipelines
+
+Transformers
+
+Inference
+
+Know
+
+Transformers Library
+
+Model Hub
+
+Datasets
+
+PEFT
+
+Tokenizers
+
+13. PyTorch
+
+Deep learning framework.
+
+Know
+
+Tensor
+
+Dataset
+
+DataLoader
+
+GPU
+
+Autograd
+
+Training Loop
+
+Inference
+
+Checkpoint
+
+14. System Design
+
+Dispute Resolution Agent
+
+Architecture
+
+Customer
+
+↓
+
+Web / Mobile
+
+↓
+
+API Gateway
+
+↓
+
+Authentication
+
+↓
+
+Kafka Event
+
+↓
+
+LangGraph Supervisor
+
+↓
+
+Identity Agent
+
+↓
+
+Transaction Agent
+
+↓
+
+Policy Agent
+
+↓
+
+Fraud Agent
+
+↓
+
+LLM
+
+↓
+
+Decision
+
+↓
+
+Human Approval
+
+↓
+
+Case System
+
+↓
+
+Notification
+
+Must mention
+
+RAG
+
+Vector Database
+
+Audit Logs
+
+Monitoring
+
+Human in Loop
+
+PII Masking
+
+Caching
+
+Retries
+
+Evaluation
+
+15. Leadership Questions
+
+Know these themes
+
+Conflict
+
+Failure
+
+Influence
+
+Innovation
+
+Scaling Teams
+
+Hiring
+
+Mentoring
+
+Executive Communication
+
+Prioritization
+
+Stakeholder Management
+
+STAR Method
+
+Situation
+
+Task
+
+Action
+
+Result
+
+Always quantify the result.
+
+Example
+
+Reduced onboarding
+
+From
+
+5 days
+
+↓
+
+30 minutes
+
+American Express AI Focus
+
+Research these areas before the interview:
+
+AI-powered customer service and fraud detection.
+Generative AI initiatives for customer support and developer productivity.
+Responsible AI, governance, and compliance.
+Cloud modernization and platform engineering investments.
+Financial regulations affecting AI systems.
+Rapid-Fire Definitions (Memorize)
+Term	15-Second Definition
+LangGraph	Framework for building stateful AI agent workflows.
+Node	One step in an AI workflow.
+State	Shared memory across all nodes.
+Tool	External API or function an agent can call.
+RAG	Retrieves documents before generating an answer.
+Embedding	Numeric representation of meaning.
+Vector DB	Stores embeddings for semantic search.
+RAGAS	Framework to evaluate RAG quality.
+Faithfulness	Answer is supported by retrieved documents.
+Context Precision	Percentage of retrieved information that is relevant.
+Context Recall	Ability to retrieve all needed information.
+LoRA	Efficient fine-tuning by training a small number of adapter weights.
+vLLM	High-performance LLM inference engine optimized for throughput and latency.
+Kafka	Distributed event streaming platform.
+Offset	Position of a message in a Kafka partition.
+Consumer Group	Multiple consumers sharing the work of processing messages.
+Exactly Once	Guarantees each message is processed only once.
+MRM	Model Risk Management for governing AI models.
+PCI DSS	Security standard for protecting payment card data.
+Reg B	Fair lending regulation prohibiting discrimination in credit decisions.
+Human-in-the-Loop	A person reviews or approves important AI decisions.
+Director-Level Interview Tips
+
+At the director level, interviewers care less about coding syntax and more about architecture, leadership, and trade-offs. Be prepared to answer questions like:
+
+Why did you choose a multi-agent architecture instead of a single agent?
+How do you measure whether an AI agent is successful?
+How would you reduce hallucinations in a production system?
+How would you secure customer data in an AI workflow?
+How would you monitor AI performance after deployment?
+What risks concern you most when deploying AI in a financial institution?
+How do you balance innovation with regulatory compliance?
+Tell me about a time you influenced leaders without direct authority.
+
+Given your experience leading internal developer platforms and building AI solutions,
+you should also be ready to connect every technical decision back to business outcomes—improved
+customer experience, reduced operational cost, increased developer productivity, lower risk, and
+stronger governance. This is often what differentiates director-level candidates from senior engineers.

@@ -6,56 +6,82 @@ Interview Q&A — Multi-Agent AWS Architecture
   ---
   1. This runs on AWS Bedrock but the agent framework is Google ADK. Why mix them?
 
-  ADK is just the orchestration layer — it handles the conversation flow, routing between agents, and session memory. It doesn't care which AI model powers the thinking. By pointing ADK at
-  Bedrock via LiteLLM (a translation layer), you get Google's excellent agent framework with AWS's model and data services.
+  ADK is just the orchestration layer — it handles the conversation flow,
+  routing between agents, and session memory. It doesn't care which AI model powers the thinking.
+  By pointing ADK at
+  Bedrock via LiteLLM (a translation layer),
+  you get Google's excellent agent framework with AWS's model and data services.
 
-  The business reason: your data, your documents, your audit logs all stay in AWS. Your security team never has to approve a Google Cloud connection. You get the best of both — ADK's multi-agent
+  The business reason: your data, your documents, your audit logs all stay in AWS.
+  Your security team never has to approve a Google Cloud connection.
+  You get the best of both — ADK's multi-agent
   patterns running entirely within your AWS perimeter.
 
   ---
   2. What does Bedrock Knowledge Bases replace, and why is that valuable?
 
-  Without Bedrock Knowledge Bases, you'd have to build and manage: a document ingestion pipeline, a chunking and embedding system, a vector database, and a search API. That's 4 moving parts your
+  Without Bedrock Knowledge Bases, you'd have to build and manage: a document ingestion pipeline,
+  a chunking and embedding system,
+  a vector database, and a search API.
+  That's 4 moving parts your
   team owns, monitors, and scales.
 
-  Bedrock Knowledge Bases replaces all four with one managed service. Connect it to S3, SharePoint, Confluence, or OneDrive, and AWS handles everything. Your team's job is to point the agent at
-  the Knowledge Base ID — nothing else. For an enterprise with 10,000 policy documents, that's months of infrastructure work eliminated.
+  Bedrock Knowledge Bases replaces all four with one managed service.
+  Connect it to S3, SharePoint, Confluence, or OneDrive, and AWS handles everything.
+  Your team's job is to point the agent at
+  the Knowledge Base ID — nothing else.
+  For an enterprise with 10,000 policy documents, that's months of infrastructure work eliminated.
 
   ---
   3. What are Bedrock Guardrails and why are they applied at the tool level, not the agent level?
 
-  Bedrock Guardrails are AWS's content filtering system. They can block harmful queries, prevent PII from leaking in responses, restrict topics, and redact sensitive information — before or after
+  Bedrock Guardrails are AWS's content filtering system.
+  They can block harmful queries, prevent PII from leaking in responses,
+  restrict topics, and redact sensitive information — before or after
    the model processes text.
 
-  They're applied at the tool level (inside search_knowledge_base) because that's where user input first touches a real system. If a user tries to ask the knowledge base something harmful, the
-  guardrail blocks it before retrieval happens — the model never even sees the documents. This is safer than filtering at the agent level, where the model has already processed the input.
+  They're applied at the tool level (inside search_knowledge_base) because that's where user
+  input first touches a real system. If a user tries to ask the knowledge base something harmful, the
+  guardrail blocks it before retrieval happens — the model never even sees the documents.
+  This is safer than filtering at the agent level, where the model has already processed the input.
 
   ---
   4. How does the audit trail work in this architecture, and what can a compliance team see?
 
   Two separate trails:
-  - CloudTrail records every Bedrock API call — which model was invoked, when, by which IAM role, with what parameters. This is automatic and tamper-proof.
-  - CloudWatch Logs records application-level events — which agent handled a request, what the guardrail decision was, which ticket was created.
+  - CloudTrail records every Bedrock API call — which model was invoked, when, by which IAM role,
+  with what parameters. This is automatic and tamper-proof.
+  - CloudWatch Logs records application-level events — which agent handled a request,
+  what the guardrail decision was, which ticket was created.
   - X-Ray shows the full request timeline as a visual trace.
 
-  A compliance team can answer: "On March 15th, who asked the AI about salary data, and what did it return?" They can also prove: "The guardrail was active on every knowledge base query."
+  A compliance team can answer: "On March 15th, who asked the AI about salary data,
+  and what did it return?" They can also prove: "The guardrail was active on every knowledge base query."
 
   ---
   5. The Policy Agent uses Claude Opus while other agents use Claude Sonnet. Why?
 
-  Claude Opus is AWS's most capable (and most expensive) model. Claude Sonnet is fast and accurate for most tasks.
+  Claude Opus is AWS's most capable (and most expensive) model.
+  Claude Sonnet is fast and accurate for most tasks.
 
-  The Policy Agent makes PERMITTED / DENIED / REQUIRES_APPROVAL decisions. A wrong verdict — letting something through that should be denied — is a compliance failure. That's worth spending more
+  The Policy Agent makes PERMITTED / DENIED / REQUIRES_APPROVAL decisions.
+   A wrong verdict — letting something through that should be denied — is a compliance failure.
+   That's worth spending more
   on the strongest model.
 
-  Supervisor, RAG, and Action agents handle routing, retrieval, and execution. These are lower-risk decisions where Sonnet's speed and cost savings matter more than raw reasoning power.
+  Supervisor, RAG, and Action agents handle routing, retrieval, and execution.
+  These are lower-risk decisions where Sonnet's speed and cost savings matter more
+  than raw reasoning power.
 
   ---
   6. What is ADOT and why is it a sidecar rather than a library?
 
-  ADOT is the AWS Distro for OpenTelemetry — AWS's packaged version of the OpenTelemetry standard. It collects traces from your application and sends them to CloudWatch and X-Ray.
+  ADOT is the AWS Distro for OpenTelemetry —
+  AWS's packaged version of the OpenTelemetry standard.
+  It collects traces from your application and sends them to CloudWatch and X-Ray.
 
-  It runs as a sidecar (a separate container alongside your app) rather than a library inside your app for three reasons:
+  It runs as a sidecar (a separate container alongside your app) rather than a
+  library inside your app for three reasons:
   1. Your app just sends traces to localhost:4317 — it doesn't need AWS SDK knowledge.
   2. The ADOT sidecar handles retries, buffering, and routing to AWS services. If X-Ray is slow, your app isn't slowed down.
   3. You can update the ADOT version independently of your application code.
@@ -66,19 +92,27 @@ Interview Q&A — Multi-Agent AWS Architecture
   7. How does this system handle secrets — no hardcoded credentials anywhere?
 
   Three layers:
-  1. IAM roles — in EKS/ECS, the container never has an access key. It has a role attached to the task/pod, and AWS automatically provides short-lived credentials via the metadata service.
-  2. Secrets Manager — API keys for ticketing systems, email APIs, etc. are stored in Secrets Manager and fetched at runtime via get_secret().
-  3. No environment variables for secrets in prod — .env files are for local development only. Production secrets live in Secrets Manager, not in any config file.
+  1. IAM roles — in EKS/ECS, the container never has an access key.
+  It has a role attached to the task/pod, and AWS automatically provides short-lived credentials
+  via the metadata service.
+  2. Secrets Manager — API keys for ticketing systems, email APIs, etc. are stored in Secrets
+  Manager and fetched at runtime via get_secret().
+  3. No environment variables for secrets in prod — .env files are for local development only.
+  Production secrets live in Secrets Manager, not in any config file.
 
-  If a developer accidentally commits a key, it doesn't matter — no real keys exist in code or environment variables in production.
+  If a developer accidentally commits a key, it doesn't matter —
+  no real keys exist in code or environment variables in production.
 
   ---
   8. What happens when the Bedrock Knowledge Base goes down?
 
-  The retrieval layer returns an empty list [] on exception, with the error logged to CloudWatch. The RAGAgent receives no results and tells the user: "I couldn't find relevant information right
+  The retrieval layer returns an empty list [] on exception,
+  with the error logged to CloudWatch. The RAGAgent receives no results and tells the user:
+  "I couldn't find relevant information right
   now — please try again or contact support."
 
-  The system degrades gracefully — it doesn't crash, it doesn't expose the error details to the user, and the failure is fully visible in CloudWatch Logs and X-Ray with the exact error message.
+  The system degrades gracefully — it doesn't crash, it doesn't expose the error details to the user,
+   and the failure is fully visible in CloudWatch Logs and X-Ray with the exact error message.
   An alarm on Bedrock API error rate can page the on-call team automatically.
 
   ---
@@ -94,12 +128,16 @@ Interview Q&A — Multi-Agent AWS Architecture
   ---
   10. How would you scale this to 10,000 concurrent enterprise users?
 
-  The agent layer (ADK + LiteLLM) is stateless — deploy it on EKS with horizontal pod autoscaling. Each pod handles its own requests.
+  The agent layer (ADK + LiteLLM) is stateless — deploy it on EKS with horizontal pod autoscaling.
+  Each pod handles its own requests.
 
-  Bedrock scales automatically — it's a managed service with no capacity to provision. Knowledge Base retrieval is also managed.
+  Bedrock scales automatically — it's a managed service with no capacity to provision.
+  Knowledge Base retrieval is also managed.
 
-  The bottleneck is Bedrock's InvokeModel API rate limits — measured in tokens per minute per model per region. Mitigation: spread load across multiple AWS regions, use Bedrock's provisioned
-  throughput for predictable high-volume workloads, and cache frequent knowledge search results in ElastiCache to reduce retrieval calls.
+  The bottleneck is Bedrock's InvokeModel API rate limits — measured in tokens per minute per model
+  per region. Mitigation: spread load across multiple AWS regions, use Bedrock's provisioned
+  throughput for predictable high-volume workloads,
+  and cache frequent knowledge search results in ElastiCache to reduce retrieval calls.
 
   ---
   ---

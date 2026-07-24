@@ -6,9 +6,15 @@
 
 ## 1. Overview
 
-This document describes the architecture for an enterprise-grade Retrieval-Augmented Generation (RAG) agent deployed on Google Cloud Platform (GCP). The system enables employees to query internal knowledge bases — HR policies, IT runbooks, compliance docs, engineering wikis, SOPs — using natural language, and receive grounded, cited answers backed by authoritative internal sources.
+This document describes the architecture for an enterprise-grade 
+Retrieval-Augmented Generation (RAG) agent deployed on Google Cloud Platform (GCP). 
+The system enables employees to query internal knowledge bases — HR policies, 
+IT runbooks, compliance docs, engineering wikis, SOPs — using natural language, 
+and receive grounded, cited answers backed by authoritative internal sources.
 
-This is the GCP-native equivalent of the AWS RAG architecture, using Gemini models and Vertex AI as the primary AI layer, Document AI for intelligent document processing, and Vertex AI Search as the managed retrieval and ranking engine.
+This is the GCP-native equivalent of the AWS RAG architecture, 
+using Gemini models and Vertex AI as the primary AI layer, Document AI for intelligent 
+document processing, and Vertex AI Search as the managed retrieval and ranking engine.
 
 ---
 
@@ -96,7 +102,8 @@ Employees interact via one or more of:
 - **Google Chat Bot** — native GCP integration via Chat API and Pub/Sub event push
 - **Internal Portal Widget** — embeddable JS widget for existing intranet
 
-All entry points are stateless — session context managed in Firestore (conversation history per user/session).
+All entry points are stateless — session context managed in Firestore 
+(conversation history per user/session).
 
 ---
 
@@ -116,7 +123,9 @@ This ensures a Finance employee cannot retrieve IT infrastructure runbooks marke
 
 ### 4.3 Orchestration Layer (RAG Orchestrator)
 
-The core orchestration runs in **Cloud Run** (containerized, auto-scales to zero) or **Cloud Functions 2nd gen** for lightweight event-driven flows. Complex multi-step agentic flows use **Vertex AI Agent Builder** or **Google Cloud Workflows**.
+The core orchestration runs in **Cloud Run** (containerized, auto-scales to zero) 
+or **Cloud Functions 2nd gen** for lightweight event-driven flows. 
+Complex multi-step agentic flows use **Vertex AI Agent Builder** or **Google Cloud Workflows**.
 
 **Step-by-step flow:**
 

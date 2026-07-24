@@ -1,0 +1,696 @@
+INTERVIEW PREP — Director, Brand Analytics & Agentic Enablement
+UnitedHealthcare — E&I Marketing Ops
+===============================================================
+
+ROLE SNAPSHOT
+─────────────
+Title:    Director, Brand Analytics & Agentic Enablement
+Team:     E&I (Employer & Individual) Marketing Operations
+Reports:  Manages MMM specialists, data scientists, analytics/viz engineers
+Budget:   $134,600 – $230,800
+Mission:  Make marketing investment smarter and faster using MMM + AI/agents
+
+
+WHAT THIS ROLE IS REALLY ABOUT
+───────────────────────────────
+Three jobs in one:
+
+1. MMM Authority
+   Be the internal expert who can push back on vendor models, integrate
+   internal data, and turn model outputs into media investment decisions.
+   Vendors deliver a model — you make it usable and defensible.
+
+2. Brand Intelligence
+   Translate brand perception shifts (NPS, surveys, competitive signals,
+   regulatory news) into leading indicators of acquisition and conversion.
+   Tell leadership: "Brand sentiment dropped in this segment — here is what
+   it costs us in leads and what we should do."
+
+3. Agentic Analytics Architect
+   Design and build AI-agent workflows that automate insight generation,
+   surface emerging signals, and run continuous MMM-driven optimization.
+   This is the new part of the role — UHC wants to move from periodic
+   reporting to always-on, automated decision support.
+
+
+═══════════════════════════════════════════════════════════════
+PART 1 — CORE CONCEPTS TO KNOW COLD
+═══════════════════════════════════════════════════════════════
+
+MARKETING MIX MODELING (MMM)
+─────────────────────────────
+What it is:
+  Statistical model (typically regression-based, Bayesian, or deep learning)
+  that attributes sales/leads/conversions to marketing channels, price,
+  promotions, macro-economic factors, and competitor activity.
+
+Key terms:
+  Adstock          — carryover effect of advertising. Past spend still affects
+                     today's results. Decay rate varies by channel.
+  Saturation       — diminishing returns as spend increases. S-curve or
+                     Hill function. Critical for budget allocation.
+  Baseline         — what sales would be without marketing. Usually 50-70%
+                     of total. Understanding baseline = understanding brand.
+  Halo effect      — brand advertising lifts conversion rates in other channels
+                     (paid search clicks convert better after TV exposure).
+  Decomposition    — how much of total revenue is attributed to each factor.
+  In-sample fit    — how well model explains historical data.
+  Out-of-sample    — how well it predicts holdout periods. More important.
+  ROAS             — Return on Ad Spend. Revenue attributed / spend.
+  mROAS            — Marginal ROAS. Next dollar of spend return. Drives
+                     optimization decisions.
+
+Bayesian MMM (modern approach):
+  PyMC-Marketing, Meridian (Google), Robyn (Meta) are common open-source.
+  Bayesian gives uncertainty intervals — critical for executive decisions.
+  Prior beliefs encoded (adstock, saturation) — reduces overfitting.
+  Posterior predictive checks validate model health.
+
+Challenging vendor models:
+  Key questions to always ask:
+  - What is the holdout MAPE? (mean absolute percentage error)
+  - How was adstock estimated? Is it channel-specific?
+  - Are macro factors (GDP, unemployment, competitor spend) included?
+  - What internal data was excluded that should be in?
+  - How does the model handle seasonality specific to open enrollment?
+  - Is brand awareness included as a variable or treated as unexplained?
+
+
+BRAND HEALTH MEASUREMENT
+─────────────────────────
+Key metrics:
+  Awareness        — unaided vs aided. Leading indicator. Brand ads move this.
+  Consideration    — "Would you consider this plan?" Moves slower.
+  Preference       — "Which plan do you prefer?" Even slower.
+  NPS              — Net Promoter Score. Member experience signal.
+  Brand Equity     — aggregate measure of brand strength.
+
+Healthcare-specific brand dynamics:
+  - Open enrollment windows create burst demand — brand lifts happening
+    outside OE still affect in-OE conversion.
+  - Regulatory events (ACA changes, CMS rate approvals) directly shift
+    perception and competitive position.
+  - Affordability is the #1 brand driver in healthcare payer.
+    Premium increases → brand perception drops → leads drop → acquisition cost rises.
+  - Network disruption (losing a hospital from network) creates negative
+    brand signal faster than any media campaign can counter.
+  - Member experience (claims denial, prior auth delays) drives NPS and
+    word-of-mouth — both affect organic acquisition.
+
+How brand connects to funnel:
+  Brand awareness   → organic search volume (trackable)
+  Brand perception  → paid search CTR and conversion rate (measurable)
+  NPS/satisfaction  → renewal rate and referral rate (measurable)
+  Brand preference  → cost per lead in paid channels (measurable)
+
+Halo effect quantification:
+  Run controlled geo tests: strong brand market vs weak brand market.
+  Same digital spend, measure conversion rate difference.
+  That delta = halo effect. Feed into MMM as brand index variable.
+
+
+HEALTHCARE PAYER MARKET DYNAMICS
+──────────────────────────────────
+Key market drivers to track:
+  Regulatory        — CMS benchmark changes, ACA subsidy cliff, MLR rules
+  Competitive       — BCBS, Cigna, Aetna/CVS pricing actions in each market
+  Affordability     — premium-to-income ratios in target segments
+  Network           — hospital and physician network breadth vs competitors
+  Clinical quality  — HEDIS scores, Star ratings (4+ stars = bonus revenue)
+  Member experience — CAHPS, NPS, claims turnaround
+  Policy            — Medicaid expansion, employer mandate enforcement
+
+E&I = Employer & Individual. Two segments:
+  Employer          — group plans sold through brokers and employers.
+                     Brand matters less — broker relationships matter more.
+  Individual        — ACA marketplace, direct-to-consumer.
+                     Brand matters a lot. Comparison shopping is real.
+
+
+═══════════════════════════════════════════════════════════════
+PART 2 — AGENTIC ANALYTICS (THE DIFFERENTIATOR FOR THIS ROLE)
+═══════════════════════════════════════════════════════════════
+
+WHAT AGENTIC ANALYTICS MEANS HERE
+───────────────────────────────────
+Not just dashboards. Not just scheduled reports.
+Agents that:
+  - Pull new MMM outputs when the vendor delivers → automatically compare
+    to prior run → flag what changed and why → draft executive summary
+  - Monitor brand tracking survey results weekly → detect signal shifts →
+    notify the right team with context, not just raw numbers
+  - Run budget reallocation scenarios when spend changes → output optimised
+    channel mix → route to finance for approval
+  - Ingest news, earnings calls, CMS announcements → classify as brand-
+    relevant market signals → add to MMM context layer
+
+The ask: reduce time from "model delivered" to "decision made" from days to hours.
+
+
+AGENTIC ARCHITECTURE FOR MMM
+──────────────────────────────
+Practical design pattern for this role:
+
+```
+DATA SOURCES
+  ├── Vendor MMM outputs (CSV/API)
+  ├── Internal data (Snowflake/Databricks)
+  ├── Brand tracker surveys (weekly syndicated)
+  ├── Media plan actuals (DV360, The Trade Desk, Meta)
+  └── Market signals (news, CMS, competitor filings)
+
+        │
+        ▼
+
+INGESTION AGENTS
+  ├── MMM Ingestion Agent  — parses vendor deliverables, validates schema
+  ├── Brand Signal Agent   — monitors survey data, NPS feeds
+  └── Market Signal Agent  — scans news/regulatory sources, classifies signals
+
+        │
+        ▼
+
+ANALYSIS AGENTS
+  ├── MMM Delta Agent      — compares current vs prior model run, flags changes
+  ├── Budget Optimizer     — runs scenario analysis given new model parameters
+  └── Attribution Agent    — connects brand shifts to funnel performance
+
+        │
+        ▼
+
+OUTPUT AGENTS
+  ├── Insight Generator    — drafts executive narrative from analysis
+  ├── Recommendation Agent — proposes media reallocation with rationale
+  └── Approval Router      — routes recommendations to finance/media team
+
+        │
+        ▼
+
+HUMAN IN THE LOOP
+  Finance/Media team reviews → approves or adjusts → actioned in media platforms
+```
+
+Tools: Python, LangGraph or Google ADK, Snowflake, Databricks, Claude/GPT-4o,
+       Temporal for durable long-running workflows (approval waits, retries)
+
+
+FRAMEWORKS TO NAME IN INTERVIEW
+─────────────────────────────────
+- LangChain / LangGraph    — agent orchestration, tool use, state machines
+- Google ADK               — Google's agent framework, multi-agent support
+- Temporal                 — durable workflow orchestration for long-running agents
+- PyMC-Marketing           — Bayesian MMM in Python
+- Meridian (Google)        — modern open-source MMM, Bayesian
+- Robyn (Meta)             — open-source MMM with budget optimizer
+- Databricks               — unified analytics platform, MLflow for model tracking
+- Snowflake                — data warehouse, common in enterprise marketing data
+- dbt                      — data transformation layer
+- Prefect / Airflow        — workflow orchestration for data pipelines
+
+
+═══════════════════════════════════════════════════════════════
+PART 3 — INTERVIEW QUESTIONS & ANSWERS
+═══════════════════════════════════════════════════════════════
+
+LEADERSHIP & STRATEGY QUESTIONS
+─────────────────────────────────
+
+Q: How have you used MMM outputs to influence media investment decisions?
+
+A: The real value of MMM is not the model — it is changing a budget conversation
+   from "what do we feel worked" to "here is the measured marginal return on
+   every dollar in each channel." In my experience, the moment you show a senior
+   leader that their highest-spend channel has a mROAS of 0.6 while a lower-
+   spend channel is at 2.1, the conversation changes immediately.
+
+   The challenge is always translation. Model outputs in raw form — decomp
+   charts, adstock curves, response functions — do not move executives.
+   What moves executives is: "If we reallocate $5M from channel X to channels
+   Y and Z, our model projects incremental revenue of $8.2M with a 70%
+   credible interval above breakeven." That is the output format I optimize for.
+
+   I also build in explicit challenge sessions before results go to leadership —
+   where my team and the vendor sit in a room and I ask hard questions about
+   holdout accuracy and what the model cannot explain. That builds credibility
+   when results go upward.
+
+
+Q: How do you challenge external analytics vendors without losing the relationship?
+
+A: The frame I use is "helping you help us." Vendors want their model to be
+   trusted and acted on — that only happens if we understand and validate it.
+
+   Practically: I require vendors to provide holdout validation metrics before
+   any deliverable is considered final. I bring internal data they did not have
+   — claims data, broker activity, call center volume — and ask them to show how
+   incorporating it changes model outputs. If it doesn't change outputs, either
+   the data is truly not predictive or the model is not flexible enough to use it.
+
+   I also insist on model documentation — not just results. If I cannot explain
+   to a CFO how a number was generated, I cannot defend the investment decision
+   it supports. Vendors who cannot provide that documentation cannot support
+   enterprise decision-making.
+
+
+Q: How do you make brand analytics actionable for media and finance teams?
+
+A: The gap between brand research and media investment is usually translation,
+   not data. Brand teams produce awareness and consideration scores. Media teams
+   make CPM and reach decisions. Finance teams think in ROAS and IRR.
+
+   I close that gap by building leading indicator frameworks. Specifically:
+   measuring how a 1-point change in brand consideration in a given market
+   correlates with change in paid search conversion rate and organic traffic
+   30-60 days later. Once that relationship is established, brand metrics become
+   financially legible — "our consideration dropped 3 points in the Southwest
+   market, which historically predicts a 7% lift in cost per lead in 45 days."
+   That gives media teams time to respond and gives finance a basis for the
+   brand investment.
+
+
+Q: How have you built and led analytics teams?
+
+A: I hire for a mix of strong statistical/modeling depth and the ability to
+   communicate. A team of brilliant modelers who cannot tell a story to a
+   non-technical VP creates value that never gets acted on.
+
+   My operating model: weekly team syncs focus on blockers, not status. Status
+   lives in a shared tracker. I run monthly "insight reviews" where each person
+   presents one finding to peers — builds cross-training and presentation skills.
+   I use a tiered project model: every team member has one long-horizon strategic
+   project (MMM refresh, new brand model), one medium-term delivery (quarterly
+   dashboard, attribution update), and one fast-feedback task (executive question
+   that needs a turn in 48 hours). That structure prevents people from living
+   entirely in either reactive mode or a long project with no short-term wins.
+
+
+Q: How do you think about the ROI of brand investment in a direct-to-consumer
+   healthcare context?
+
+A: Brand investment in healthcare payer is a long-cycle asset with two ROI paths.
+
+   Path 1 — direct conversion: brand awareness lowers cost per lead in paid
+   channels during open enrollment because consumers who have seen your brand
+   are more likely to click, more likely to convert, and more likely to trust
+   a quote. This is quantifiable through MMM halo coefficients and geo holdout tests.
+
+   Path 2 — retention: members who associate strong positive brand with their
+   health plan have higher renewal rates and lower churn probability. In
+   healthcare, retention is everything — a one-point improvement in renewal rate
+   on a 2M member book can be worth $40-80M in preserved premium revenue,
+   depending on plan mix. Brand investment that improves NPS by 5 points may
+   pay out primarily through retention, not acquisition.
+
+   The mistake is measuring brand investment only against acquisition metrics.
+   Full ROI includes retention, referral, and reduced cost-per-renewal.
+
+
+ANALYTICS & TECHNICAL QUESTIONS
+──────────────────────────────────
+
+Q: What are the biggest pitfalls in MMM for healthcare payer marketing?
+
+A: Four major ones:
+
+   1. Ignoring open enrollment concentration.
+      Most healthcare acquisition happens in a 6-week window. Standard time-series
+      MMM that spreads effects evenly across weeks will misattribute brand
+      investment that runs outside OE but drives in-OE conversion.
+      Fix: use weekly granularity, add OE-period dummy variables, and consider
+      hierarchical models by market.
+
+   2. Not including competitive spend data.
+      If a competitor pulls back $30M in a market, your acquisition improves —
+      but your model will credit your own brand investment. MMM without
+      competitor data systematically overstates your own channel effectiveness.
+      Fix: require vendor to source competitive spend via Kantar, Nielsen, or
+      Vivvix and include it as an external regressor.
+
+   3. Conflating brand channels with direct-response channels.
+      Brand channels (TV, streaming, OOH) move awareness on a long adstock
+      timeline (8-16 weeks). Direct response (paid search, programmatic)
+      moves conversion on a 1-2 week timeline. Using the same adstock structure
+      for both produces bad decompositions.
+      Fix: channel-specific adstock priors in Bayesian MMM.
+
+   4. Missing network effects and regulatory events.
+      A CMS announcement on premium subsidies affects every market at once.
+      A major hospital leaving the network creates a demand shock in a specific
+      geo. These are not captured by standard regressors.
+      Fix: add event flags (binary dummies) for major regulatory and network
+      events. These often explain what looks like "unexplained baseline" movement.
+
+
+Q: How would you design an agentic solution to accelerate MMM insight delivery?
+
+A: The current state in most orgs is: vendor delivers model → analytics team
+   spends 2-3 days validating → team builds slides → leadership reviews in a
+   meeting 2 weeks later. The insight is often stale by the time it's acted on.
+
+   The agentic design I would build:
+
+   Stage 1 — Automated Ingestion and Validation (Day 0, hours not days)
+   Agent 1 pulls vendor deliverable the moment it lands (email, SFTP, API).
+   Runs schema validation, checks holdout MAPE against prior runs, flags any
+   channel decomp that changed more than threshold from last model.
+   Output: validation report in 30 minutes vs 2 days of manual review.
+
+   Stage 2 — Delta Analysis and Narrative Draft (Day 0-1)
+   Agent 2 compares current model to prior run. Identifies: which channels
+   gained or lost attribution, what changed in baseline, which markets diverged.
+   Drafts executive summary narrative: "Brand TV attribution increased 12%
+   in the Southwest — coincides with the Q2 OE campaign flight. mROAS for
+   digital display declined from 1.4 to 0.9 — recommend reducing allocation."
+
+   Stage 3 — Budget Scenario Generation (Day 1)
+   Agent 3 takes current model response curves and current budget plan.
+   Generates 3 reallocation scenarios (conservative, moderate, aggressive)
+   with projected incremental impact and confidence intervals.
+   Routes scenarios to media planning team for review.
+
+   Stage 4 — Approval and Action (Day 2)
+   Human reviews agent-generated scenarios. Approves one. Agent updates
+   media plan in planning system and notifies finance.
+
+   Total time: 2 days instead of 2 weeks.
+   Tools: Python, Google ADK or LangGraph for agent orchestration,
+   Temporal for durable approval workflows, Claude for narrative generation.
+
+
+Q: How do you quantify brand halo effects?
+
+A: Three approaches, used together for triangulation:
+
+   1. Geo holdout experiment
+      Select matched geographic markets. Run brand campaign in test markets only.
+      Hold spend constant in all digital/direct channels. Measure conversion rate
+      difference between test and control after 4-8 weeks.
+      The conversion lift in test markets is the halo effect.
+      This gives a clean causal estimate but requires pre-planned test design.
+
+   2. MMM interaction terms
+      In the MMM, add an interaction variable: brand_GRP × digital_impression_volume.
+      If the coefficient is positive and significant, brand exposure is amplifying
+      digital conversion. Quantify as: at observed brand GRP levels, digital
+      conversion rate is X% higher than it would be without the brand flight.
+
+   3. Syndicated brand tracker correlation
+      Plot weekly brand awareness/consideration scores against paid search
+      CTR and organic traffic volume with appropriate lag (4-8 weeks).
+      Estimate the correlation coefficient. Use this as a leading indicator —
+      when awareness drops, alert the media team that digital efficiency will
+      likely follow.
+
+   All three methods have limitations. Geo tests are clean but expensive and
+   slow. MMM interaction terms depend on model quality. Tracker correlation
+   is observational, not causal. Using all three and triangulating gives
+   a defensible range, which is what leadership actually needs.
+
+
+AGENTIC AND AI QUESTIONS
+─────────────────────────
+
+Q: What is your vision for agentic analytics in a marketing operations context?
+
+A: The way I think about it: every recurring analytics workflow that follows a
+   predictable pattern — ingest data, validate, compare, summarize, route —
+   is a candidate for an agent. Not because agents are new and exciting, but
+   because the current way (analyst exports data, builds slide, emails to VP,
+   VP asks question, analyst comes back next week) is too slow for the pace
+   of media markets.
+
+   The vision I'd bring to this role has three layers:
+
+   Layer 1 — Automated insight delivery: MMM outputs, brand tracker data,
+   and media performance data automatically synthesized into weekly insight
+   briefings without an analyst touching them. The analyst's job shifts from
+   building the report to reviewing the agent's output and adding judgment.
+
+   Layer 2 — Continuous optimization: agents that monitor media performance
+   daily and flag when a channel is underperforming relative to MMM-predicted
+   efficiency — before the week's budget is spent. The human still approves
+   changes but the signal arrives in real time.
+
+   Layer 3 — Strategic signal monitoring: agents that scan competitor press
+   releases, CMS announcements, and brand tracker results for signals that
+   should update the MMM context. When Cigna announces a major benefit
+   expansion in a target market, that is a competitive signal that affects
+   brand positioning — an agent should surface it and tag it to the right
+   market in the MMM context layer.
+
+   What I'm not doing: replacing human judgment on investment decisions.
+   Agents accelerate the time to the decision point. The decision itself
+   stays with the leader.
+
+
+Q: How do you govern AI-generated analytics outputs?
+
+A: Two failure modes: trusting agent outputs without validation (garbage in,
+   confident garbage out) and being so cautious about AI that you never use it.
+
+   My governance framework has four elements:
+
+   1. Source traceability: every agent output must cite its data source,
+      model version, and the exact query or logic that produced the number.
+      If an insight says "brand consideration dropped 4 points," the system
+      must show which survey wave, which demographic, and which geography.
+
+   2. Confidence signaling: agent outputs include explicit confidence signals.
+      "High confidence — same result in 3 of 3 data sources" vs "Low confidence
+      — based on a single data pull with limited sample size." Leaders need
+      to know when to lean in and when to verify before acting.
+
+   3. Human checkpoint at decision gates: agents generate, humans decide.
+      Budget changes, executive narrative, external vendor actions — always
+      require human sign-off. The agent workflow pauses and routes to the
+      appropriate approver before anything consequential is executed.
+
+   4. Model validation cadence: MMM agent outputs are back-tested quarterly
+      against actuals. If the agent's optimization recommendations are
+      systematically biased (it always recommends channel X), that is a signal
+      the underlying model needs recalibration, not just a UI issue.
+
+
+SITUATIONAL / BEHAVIORAL QUESTIONS
+────────────────────────────────────
+
+Q: Tell me about a time you had to challenge a recommendation from an external
+   analytics partner.
+
+A: Frame: vendor delivered MMM showing TV was our highest ROAS channel.
+   Internal team was ready to shift $20M into TV based on the output.
+
+   I pushed back. The model had been built during a period when TV spend was
+   at historic highs — adstock was likely picking up baseline brand equity
+   built over years of TV investment, not the marginal return of recent spend.
+   I asked the vendor for holdout validation. They had not run one.
+
+   We ran a 6-week geo holdout test before committing the $20M shift. TV's
+   in-market lift was measurable but 40% lower than the MMM decomp suggested.
+   We shifted $10M to TV instead of $20M and reallocated the rest to digital
+   where we had cleaner causal evidence. That protected $10M from a likely
+   over-investment.
+
+   The vendor relationship survived. They updated their validation process
+   because of it. And leadership trusted our analytics function more because
+   we self-corrected before the budget was committed.
+
+
+Q: How do you build trust with senior stakeholders who are skeptical of
+   model-driven decisions?
+
+A: Skepticism is usually not about the model — it is about the last time
+   someone told them a model said one thing and reality said another.
+
+   My approach: start with a post-mortem. Find a past decision where we can
+   run the MMM retrospectively and show what it would have predicted vs what
+   actually happened. If the model is good, this builds credibility fast.
+   If the model is bad, better to know now than after a $50M commitment.
+
+   Then I move to parallel running: for the first 2 cycles, present model
+   recommendations alongside the traditional "experience and judgment"
+   recommendation. Show where they agree and where they differ. The leader
+   gets to choose. Over time, when the model-aligned decisions outperform,
+   the trust builds organically.
+
+   What I never do: present model output as "the answer" without
+   acknowledging uncertainty. Confidence intervals are not a weakness —
+   they are honesty about what we know and do not know.
+
+
+Q: How do you measure the impact of your analytics team's work?
+
+A: Three levels:
+
+   Output metrics (team productivity):
+   - Time from data availability to insight delivery
+   - Number of executive decisions informed by analytics (not just dashboards opened)
+   - Model validation pass rate vs prior cycle
+
+   Outcome metrics (marketing impact):
+   - Change in marketing ROI over comparable period
+   - Reduction in cost per lead attributable to channel reallocation
+   - Improvement in brand tracker scores in markets where insights were acted on
+
+   Business metrics (enterprise impact):
+   - Revenue attributed to analytically-optimized media investment
+   - Reduction in brand-related churn (measurable via NPS correlation)
+   - Accuracy of MMM-predicted lead volume vs actuals during OE
+
+   The mistake is measuring only output. If the team produces beautiful
+   reports that no one acts on, the team has no impact regardless of
+   how fast or sophisticated the output is. I track which insights became
+   decisions, not just which insights were delivered.
+
+
+═══════════════════════════════════════════════════════════════
+PART 4 — QUESTIONS TO ASK THE INTERVIEWER
+═══════════════════════════════════════════════════════════════
+
+ABOUT THE ROLE
+───────────────
+1. What is the current state of the MMM program — how long has it been running,
+   which vendors are involved, and what is the biggest gap in how outputs are
+   being used today?
+
+2. Where does the biggest friction sit today between model delivery and
+   leadership action — is it a communication gap, a trust gap, or a speed gap?
+
+3. How integrated is this role in the actual media planning and budget allocation
+   process? Does the analytics recommendation directly influence the final plan
+   or does it feed into a separate media team that makes the final call?
+
+4. What does "agentic enablement" mean concretely in this context today —
+   is there existing infrastructure, a platform, a team working on it —
+   or is this role expected to define and build that from scratch?
+
+5. What data assets does the team have access to today — claims data, NPS,
+   brand tracker, third-party competitive intelligence — and what are the
+   known gaps?
+
+ABOUT THE TEAM
+───────────────
+6. What is the current team composition — how many MMM specialists, data
+   scientists, and viz engineers — and what is the biggest capability gap
+   you are hoping this leader brings or fills?
+
+7. How does this team interact with the broader data and technology
+   organization — is there a central data platform team, a shared ML
+   platform, or is the analytics team largely self-sufficient on tooling?
+
+ABOUT SUCCESS
+──────────────
+8. What does success look like in the first 90 days — is it
+   relationship-building, assessing the current state, a specific deliverable,
+   or a quick win on an in-flight project?
+
+9. What would make someone fail in this role — what has been hard about it
+   historically that the team has not fully solved?
+
+ABOUT CULTURE
+──────────────
+10. How does the organization handle it when analytics recommendations
+    conflict with an executive's prior belief or intuition — is there a
+    culture of evidence-based decision making or is analytics primarily
+    used for validation rather than discovery?
+
+
+═══════════════════════════════════════════════════════════════
+PART 5 — YOUR STORY — CONNECTING YOUR BACKGROUND TO THIS ROLE
+═══════════════════════════════════════════════════════════════
+
+HOW TO FRAME YOUR POSITIONING
+───────────────────────────────
+The things that make this role unusual vs a standard analytics director:
+
+1. MMM depth required — not just "we use MMM" but can you push back on the
+   vendor model and defend a reallocation decision to a CFO.
+
+2. Healthcare context — regulatory dynamics, OE seasonality, network effects,
+   HIPAA-adjacent data governance.
+
+3. Agentic enablement — this is the differentiator. Most analytics directors
+   cannot speak credibly about agent orchestration, LLMs in analytics workflows,
+   or how to build automated insight pipelines. If you can, you stand out.
+
+OPENING STATEMENT (adapt to your story)
+─────────────────────────────────────────
+"My background sits at exactly the intersection this role describes —
+I have deep experience making MMM outputs actionable at the executive level,
+I understand how brand perception dynamics connect to acquisition and retention
+in regulated consumer markets, and I have been building AI and agent-driven
+analytics workflows that compress the time between a model output and a
+business decision. What draws me to this specific role is the scale — the
+opportunity to make that approach work at the complexity and volume of
+UnitedHealthcare's E&I portfolio is genuinely interesting."
+
+
+KEY PROOF POINTS TO PREPARE (fill in with your own examples)
+──────────────────────────────────────────────────────────────
+  [ ] A time you pushed back on an external model and it saved or made money
+  [ ] A time brand analytics directly influenced a media investment decision
+  [ ] A time you quantified a brand halo or spillover effect
+  [ ] A time you built an automated analytics workflow that saved analyst hours
+  [ ] A time you translated complex analytics into an executive decision
+  [ ] A time you hired / developed someone on an analytics team
+  [ ] A time you worked in a regulated industry and navigated data constraints
+
+
+HEALTHCARE-SPECIFIC SIGNALS TO SHOW
+─────────────────────────────────────
+  - Know what open enrollment means for marketing seasonality
+  - Know that HEDIS and Star ratings exist and affect brand perception
+  - Know that CMS rate approvals are public and affect competitive positioning
+  - Know the difference between commercial, Medicare Advantage, and Medicaid
+    segments and that E&I = primarily commercial employer and ACA individual
+  - Reference affordability as the primary brand driver in payer markets
+  - Show awareness of HIPAA constraints on member-level data use in analytics
+
+
+═══════════════════════════════════════════════════════════════
+PART 6 — COMPENSATION & OFFER
+═══════════════════════════════════════════════════════════════
+
+Posted range: $134,600 – $230,800
+
+The range is wide. Director level in Minneapolis or remote will likely land
+$160K-$200K base depending on experience depth.
+
+Anchoring: lead with the upper half. Your experience in MMM + agentic enablement
+is niche — most candidates will have one or the other, not both.
+Frame: "Based on the scope — managing a team, owning MMM strategy, and leading
+the agentic enablement build — and given that this requires both deep technical
+analytics credibility and senior stakeholder influence, I am looking at the
+$190-210K range."
+
+Benefits noted: equity stock purchase, 401k, comprehensive benefits, incentive/
+recognition programs. UHG is a large stable employer — total comp matters.
+
+
+═══════════════════════════════════════════════════════════════
+GLOSSARY — TERMS TO USE FLUENTLY IN INTERVIEW
+═══════════════════════════════════════════════════════════════
+
+MMM terms:
+  adstock, saturation, diminishing returns, mROAS, decomposition, prior, posterior,
+  holdout validation, MAPE, response function, S-curve, baseline, halo coefficient,
+  incrementality, attribution, media mix optimization
+
+Brand terms:
+  unaided awareness, aided awareness, consideration, preference, NPS, brand equity,
+  brand tracker, brand health score, sentiment, perception shift, halo effect,
+  brand-to-performance linkage, spillover, top-of-funnel brand, leading indicator
+
+Healthcare payer terms:
+  open enrollment (OE), commercial, Medicare Advantage, ACA, Medicaid,
+  HEDIS, Star ratings, MLR (Medical Loss Ratio), CMS, premium, risk adjustment,
+  network, CAHPS, claims data, prior authorization, member experience
+
+Agentic / AI terms:
+  LangGraph, ADK, Temporal, orchestration, durable execution, human-in-the-loop,
+  RAG (retrieval-augmented generation), insight automation, continuous optimization,
+  agentic workflow, model validation, audit trail, confidence interval
+
+Platform / data terms:
+  Snowflake, Databricks, MLflow, dbt, Prefect, PyMC-Marketing, Meridian, Robyn,
+  Python, Bayesian inference, time series regression, panel data

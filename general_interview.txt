@@ -1,0 +1,321 @@
+Why transformers are important
+
+Before transformers, AI had a harder time remembering long context and understanding
+relationships across many words. Transformers introduced a powerful idea called attention.
+
+What is attention?
+
+Attention means the model decides which words are important to focus on.
+
+Example:
+
+Rohid created a repo for a GCP multi-agent project.
+
+===
+In an LLM, transformer does this
+
+When you ask a question, the transformer:
+
+1. Breaks text into tokens
+2. Converts tokens into numbers
+3. Looks at relationships between tokens using attention
+4. Predicts the next best token
+5. Repeats this until it produces an answer
+
+
+Input: What is GCP?
+Output prediction:
+GCP → stands → for → Google → Cloud → Platform
+
+Transformer in one sentence
+
+A transformer is the engine inside an LLM that uses attention to understand
+context and predict the next word/token intelligently.
+
+====
+An LLM is a very large neural network trained to predict the next word/token.
+
+A neural network is the engine. The LLM is the final trained system that can answer questions,
+summarize, write code, etc.
+
+The LLM does this:
+
+1. Breaks your sentence into tokens
+2. Converts tokens into numbers
+3. Passes those numbers through a neural network
+4. Neural network applies learned weights
+5. It predicts the next likely token
+6. It repeats until it forms an answer
+
+An LLM neural network works like this:
+
+Input text
+   ↓
+Tokenization
+   ↓
+Embeddings
+   ↓
+Transformer neural network layers
+   ↓
+Attention + weights
+   ↓
+Prediction of next token
+   ↓
+Final response
+
+==
+Great question. Your example 1+1=2 is actually a very good way to understand how weights are learned.
+Let's simplify it.
+
+A neural network starts with random weights. It does not know that 1+1=2.
+
+Think of weights as adjustable knobs that control the answer.
+
+Step 1: The model starts with random weights
+
+Imagine a very simple neural network:
+
+Input:
+1 + 1
+
+        Weight
+1  ------------\
+                \
+                 → Prediction
+                /
+1  ------------/
+
+        Weight
+
+Initially, the weights might be wrong.
+
+The model may predict:
+
+1 + 1 = 3
+Step 2: Compare prediction with the correct answer
+
+The training data says:
+
+Input:
+1 + 1
+
+Correct answer:
+2
+
+The model predicted:
+
+3
+
+The difference is called error or loss.
+
+Expected: 2
+
+Model says: 3
+
+Error = 1
+
+The model asks:
+
+"Which weights caused me to be wrong?"
+
+Step 3: Adjust the weights
+
+The training algorithm changes the weights slightly.
+
+Before:
+
+Weight A = 0.8
+Weight B = 0.6
+
+After learning:
+
+Weight A = 0.75
+Weight B = 0.55
+
+The goal is:
+
+Reduce error
+Improve prediction
+
+This adjustment process is called:
+
+Backpropagation
+Gradient Descent
+Step 4: More examples
+
+The model sees millions of examples:
+
+1 + 1 = 2
+2 + 2 = 4
+3 + 3 = 6
+5 + 5 = 10
+
+Each time:
+
+Model predicts
+Compare with correct answer
+Calculate error
+Adjust weights
+
+Over many iterations:
+
+Wrong predictions
+       ↓
+Adjust weights
+       ↓
+Better predictions
+       ↓
+More adjustment
+       ↓
+Accurate model
+Now your example:
+Example A
+
+Training example:
+
+Input:
+1 + 1
+
+Expected:
+2
+
+Model predicts:
+
+2 ✅
+
+The weights are already good.
+
+Very little adjustment happens.
+
+Example B
+
+Training example:
+
+Input:
+1 + 2
+
+Expected:
+3
+
+Model predicts:
+
+2 ❌
+
+The error is:
+
+Expected = 3
+Prediction = 2
+
+The model changes the weights so that next time it sees similar patterns:
+
+1 + 2
+2 + 1
+3 + 1
+
+it is more likely to produce the correct result.
+
+But how does this work in an LLM?
+
+An LLM does not really learn arithmetic rules like:
+
+1 + 1 = 2
+
+Instead, it learns patterns from huge amounts of text.
+
+Example:
+
+Training sentence:
+
+"The capital of France is Paris"
+
+The model predicts:
+
+The capital of France is London ❌
+
+The correct answer is:
+
+Paris ✅
+
+The weights are adjusted.
+
+After seeing billions of examples:
+
+France → Paris
+Japan → Tokyo
+India → Delhi
+
+those relationships become encoded in the weights.
+
+Simple analogy
+
+Think about learning to drive.
+
+Your brain has "weights":
+
+How hard to press brake
+How much to turn steering wheel
+How much gas to give
+
+First attempt:
+
+Turn too much ❌
+
+Instructor corrects you.
+
+Your brain adjusts.
+
+After many attempts:
+
+Smooth driving ✅
+
+The adjustments you made are like changing weights.
+
+Interview-level explanation
+
+"Weights are numerical parameters inside a neural network that determine how strongly
+one piece of information influences another. During training, the model makes predictions,
+compares them with the correct answers, calculates the error, and uses backpropagation
+to adjust the weights slightly.
+After billions of adjustments across massive datasets,
+the weights encode patterns and relationships that allow the model to make accurate predictions."
+
+A useful way to remember:
+
+Weights = what the model has learned.
+Training = adjusting weights to reduce mistakes.
+Inference = using those learned weights to make predictions.
+==
+
+What is Attention?
+
+Attention is the model's way of deciding which words are most important when understanding the current word.
+
+Example:
+
+The cat climbed the tree because it was scared.
+
+When the model processes "it", it asks:
+
+Should I pay attention to:
+
+The?          2%
+
+Cat?         70%  ✅
+
+Climbed?      5%
+
+Tree?        20%
+
+Because?      3%
+
+==
+Attention vs. Weights
+Attention	Weights
+Temporary	Permanent (until the model is retrained or fine-tuned)
+Changes for every question	Learned during training
+Decides which words to focus on	Stores what the model has learned
+Like highlighting important words	Like the model's accumulated knowledge
+
+
+
+

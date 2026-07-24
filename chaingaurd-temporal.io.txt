@@ -1,0 +1,46 @@
+Chainguard
+What it is: A supply-chain security company that provides hardened, minimal ("distroless") container
+images built to have zero or near-zero known CVEs — instead of scanning after the fact and filing tickets,
+ they build images clean from the start. As of February 2026, Chainguard has delivered over 500 million
+ unique container build manifests and offers a catalog of more than 2,000 projects.
+How it works: Every image is built on Wolfi, Chainguard's own minimal Linux distro purpose-built for
+containers, and rebuilt nightly from source — not just a base-layer patch, the whole image is
+reconstructed to pull in the latest upstream fixes. Images strip out shells, package managers, and debugging tools by default (a separate -dev tag exists for local debugging). Every image ships with a build-time SBOM and Sigstore cryptographic signatures for provenance.
+Why it matters for your world: This maps directly onto your SBOM-to-ServiceNow/CSDM-as-code work and the
+SOX ITGC / governance findings you already produced — Chainguard is essentially the "shift-left,
+prove provenance at build time" answer to the same supply-chain risk category. Its newer Chainguard OS
+Packages (launched March 2026) lets teams compose their own custom Linux images from 30,000+ zero-CVE
+packages rather than just consuming pre-built images, which is relevant if IDP ever standardizes a
+golden-image pipeline.
+
+Temporal.io
+What it is: An open-source durable execution platform for writing long-running, stateful, fault-tolerant business
+logic as ordinary code, instead of hand-building retry loops, state machines, and job queues. Originated from Cadence,
+an internal Uber project, founded 2019 by the same team (Maxim Fateev, Samar Abbas).
+Core model:
+
+Workflow — your business logic, written in normal code (Go, Java, TypeScript, Python, etc.).
+Temporal persists
+its full execution state automatically.
+Activity — the "risky" part that talks to the outside world (an API call, a DB write) — gets automatic
+retries, timeouts, and backoff.
+Worker — polls a task queue and executes workflow/activity code; if a worker crashes, another worker
+replays the event history and resumes exactly where it left off.
+
+If a process crashes mid-workflow — even one running for months — Temporal reconstructs
+state from its event history and continues, rather than losing progress or needing custom checkpoint logic.
+Deployment options: self-host the open-source server, or use Temporal Cloud (fully managed).
+As of early 2026: Temporal Nexus (cross-namespace workflow connections) went GA,
+multi-region replication went GA at a 99.99% SLA, and new Ruby/.NET SDKs entered pre-release/beta.
+Why it's showing up everywhere right now: it's become the default answer to reliably
+productionizing agentic AI workflows — durable execution solves exactly the failure
+modes multi-step agent loops run into (crashed mid-tool-call, lost state,
+race conditions between agents). Companies like Stripe, Netflix, Datadog, and NVIDIA
+use it for both classic orchestration (payments, order processing) and newer agentic use cases.
+Relevance to your work: this is the same pattern you already scoped in the IDP market-landscape
+deck's Temporal integration architecture — think of it as the durable-orchestration layer that could sit
+underneath multi-step provisioning workflows
+(repo creation → AD group → K8s namespace → CMDB registration) so a failure at
+step 3 doesn't require restarting the whole pipeline,
+similar to the "resume from failed stage" pattern you already designed for the K8s onboarding
+SVG.Want to be notified when Claude responds?

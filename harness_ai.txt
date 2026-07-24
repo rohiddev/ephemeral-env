@@ -1,7 +1,8 @@
 ---
   What's New + What It Changes
 
-  The biggest thing here: AIDA can generate complete Workflow YAML from a natural language description. You describe what you want, it writes the YAML.
+  The biggest thing here: AIDA can generate complete Workflow YAML from a natural
+  language description. You describe what you want, it writes the YAML.
 
   Practical use for us right now:
 

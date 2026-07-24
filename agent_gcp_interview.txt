@@ -21,7 +21,8 @@
   - RAG Engine — use it when you need production reliability and your documents change frequently.
   - Vector Search — use it when you need full control, custom ranking, or hybrid search.
 
-  Switching cost is low — it's one line in your .env file (RETRIEVAL_BACKEND=rag_engine). The rest of the code doesn't change because the abstraction layer hides the difference.
+  Switching cost is low — it's one line in your .env file (RETRIEVAL_BACKEND=rag_engine).
+   The rest of the code doesn't change because the abstraction layer hides the difference.
 
   ---
   3. Build vs buy decision?
@@ -35,31 +36,38 @@
   - Your use case is simple enough for a single prompt to a commercial API
   - Your team has no Python or cloud skills to maintain it
 
-  The honest answer: use this template for enterprise workflows with compliance requirements. Use a SaaS chatbot for simple Q&A.
+  The honest answer: use this template for enterprise workflows with compliance requirements.
+  Use a SaaS chatbot for simple Q&A.
 
   ---
   4. Selling the Policy Agent as a feature, not friction?
 
-  Frame it this way: "The AI can never delete a record, send an email, or create a ticket that a human policy hasn't already pre-approved."
+  Frame it this way: "The AI can never delete a record, send an email, or create a ticket
+  that a human policy hasn't already pre-approved."
   That's not friction — that's an audit trail your legal
   and compliance team will love.
 
-  If the policy engine goes down, the Policy Agent returns DENIED by default. It fails closed, not open. Nothing gets executed without a green
+  If the policy engine goes down, the Policy Agent returns DENIED by default.
+  It fails closed, not open. Nothing gets executed without a green
   light.
 
   ---
   5. How to phase a rollout?
 
-  - Phase 1: Read-only. Knowledge search only (RAG Agent). No actions. Users can ask questions, get answers. Zero risk.
+  - Phase 1: Read-only. Knowledge search only (RAG Agent). No actions. Users can ask questions,
+  get answers. Zero risk.
   - Phase 2: Low-risk actions. Ticket creation only. Monitor for wrong policy decisions for 30 days.
   - Phase 3: Higher-risk actions. Approvals, data lookups, integrations.
 
-  Signal to expand: error rate below 1%, no policy mismatches reported, support team comfortable with the audit logs.
+  Signal to expand: error rate below 1%, no policy mismatches reported,
+  support team comfortable with the audit logs.
 
   ---
   6. Cost model — where does it grow fastest?
 
-  Gemini API calls grow fastest. Every agent turn (Supervisor deciding, Policy Agent checking, RAG Agent retrieving) is a separate API call. A single user request can be 3-5 Gemini calls.
+  Gemini API calls grow fastest. Every agent turn
+  (Supervisor deciding, Policy Agent checking, RAG Agent retrieving) is a separate API call.
+  A single user request can be 3-5 Gemini calls.
 
   Control it by:
   - Caching frequent knowledge search results
@@ -71,35 +79,48 @@
   ---
   7. Proving AI never acted without a policy check?
 
-  Every request goes: Supervisor → Policy Agent → Action Agent. The Policy Agent call and its verdict (PERMITTED/DENIED/REQUIRES_APPROVAL) is logged in Cloud Logging with a trace ID. Cloud Trace
+  Every request goes: Supervisor → Policy Agent → Action Agent.
+  The Policy Agent call and its verdict (PERMITTED/DENIED/REQUIRES_APPROVAL)
+  is logged in Cloud Logging with a trace ID. Cloud Trace
   shows the full timeline.
 
-  You can pull a report: "Show me every create_ticket call and the Policy Agent verdict that preceded it." If there's a create_ticket with no preceding PERMITTED verdict in the trace — that's a
+  You can pull a report: "Show me every create_ticket call and the Policy Agent
+  verdict that preceded it."
+   If there's a create_ticket with no preceding PERMITTED verdict in the trace — that's a
   bug and an alert.
 
   ---
   8. Wrong routing — how do you detect and fix it?
 
-  Cloud Trace shows exactly which agent handled each request. If a knowledge question went to Action Agent instead of RAG Agent, you see it in the trace timeline.
+  Cloud Trace shows exactly which agent handled each request.
+  If a knowledge question went to Action Agent instead of RAG Agent,
+  you see it in the trace timeline.
 
-  Fix without redeploy: the routing rules are in the Supervisor's instruction text (plain English). Update the routing prompt, redeploy the Supervisor only. The specialist agents don't change. In
+  Fix without redeploy: the routing rules are in the Supervisor's instruction text (plain English).
+  Update the routing prompt, redeploy the Supervisor only. The specialist agents don't change. In
    ADK, this is one file edit — agents/supervisor.py.
 
   ---
   9. Data residency and model training concerns?
 
-  This runs entirely in your GCP project, in your chosen region. Documents in your retrieval backend stay in your project. Gemini Enterprise on Vertex AI contractually does not use your data for
+  This runs entirely in your GCP project, in your chosen region. Documents in your retrieval
+  backend stay in your project.
+  Gemini Enterprise on Vertex AI contractually does not use your data for
   model training — unlike consumer products.
 
-  Before signing: require a Data Processing Agreement (DPA), confirm the Vertex AI Enterprise tier, and enable VPC Service Controls so data cannot leave your defined network perimeter. Also
+  Before signing: require a Data Processing Agreement (DPA), confirm the Vertex AI Enterprise tier,
+  and enable VPC Service Controls so data cannot leave your defined network perimeter. Also
   enable CMEK — you hold the encryption key for your documents, not Google.
 
   ---
   10. Why ADK + Vertex AI instead of ChatGPT?
 
-  1. Data stays in your perimeter. ChatGPT sends your enterprise documents to OpenAI's servers. This sends nothing outside your GCP project.
-  2. Policy and auditability are built in. ChatGPT has no native policy gate before actions. This architecture enforces it structurally.
-  3. Integration with Google Cloud services. Cloud Logging, Trace, IAM, and your existing GCP data sources connect natively — no custom connectors needed.
+  1. Data stays in your perimeter. ChatGPT sends your enterprise documents to OpenAI's servers.
+  This sends nothing outside your GCP project.
+  2. Policy and auditability are built in. ChatGPT has no native policy gate before actions.
+  This architecture enforces it structurally.
+  3. Integration with Google Cloud services. Cloud Logging, Trace, IAM, and your existing
+  GCP data sources connect natively — no custom connectors needed.
 
   ---
   ---
@@ -226,3 +247,105 @@
   bugs.
 
 ✻ Churned
+
+"We start by selecting a foundation model from Model Garden. If needed, we tune it with
+enterprise-specific data and evaluate it against quality and latency metrics. Approved models
+are stored in the Model Registry, deployed through Endpoints, and monitored in production.
+Pipelines automate the entire lifecycle, while Metadata provides lineage, Feature Store ensures
+consistent features, Datasets manage training data, and Monitoring detects drift and operational
+issues. For high-scale production, we use Provisioned Throughput, and Ray supports distributed AI workloads."
+
+
+Datasets → raw data
+Feature Store → the engineered, ready-to-use features built from that raw data (the "pantry" from before)
+Training → pulls features from the Feature Store to train a model
+Endpoints → the live serving side, pulls the same features from the Feature Store at prediction time
+
+Data goes into Datasets and Feature Store, gets trained via Training or
+Tuning against a Model Garden base model, tracked through Experiments and Evaluation,
+versioned in Model Registry, then served through Endpoints or Batch Inference —
+with Pipelines automating the whole chain and Monitoring watching it once it's live."
+
+
+Here's a quick, interview-ready rundown of each item in that menu — grouped the way they naturally
+cluster in the ML lifecycle:
+Build & customize a model
+
+Model Garden — curated catalog of foundation models (Gemini, open-source, partner models) you can browse and deploy from, rather than starting from scratch.
+Studio — the interactive playground for prompting/testing models before you build anything production-grade.
+Tuning — fine-tuning a foundation model on your own data instead of using it off-the-shelf.
+
+Data & features
+Datasets — raw/labeled data used for training or evaluation.
+Feature Store — the shared repository of engineered features, used by both training and serving to prevent
+training-serving skew (what we just covered).
+
+Train & evaluate
+
+Training — running custom training jobs (your code, your infra, at scale).
+Experiments — tracking and comparing multiple training runs (hyperparameters, metrics) to find the best one.
+Evaluation — scoring model quality against benchmarks or your own eval sets.
+Model Registry — the versioned catalog of trained models ready to deploy,
+with lineage back to the training run that produced them.
+
+Serve & scale
+
+Endpoints — real-time, low-latency serving for online predictions.
+Batch Inference — running predictions over large datasets asynchronously, no live endpoint needed.
+Provisioned Throughput — reserved, guaranteed-capacity serving for predictable high-volume workloads (vs. on-demand).
+
+Orchestration & ops
+
+Pipelines — chaining these steps (data → train → eval → deploy) into a repeatable, automated workflow (MLOps).
+Ray on Agent Platform — distributed compute framework for large-scale training/data processing jobs.
+Metadata — automatic lineage tracking across datasets, models, and pipeline runs — answers "what data trained this model."
+Monitoring — tracking deployed model health: drift, latency, prediction quality over time.
+
+==
+Vertex AI (Agent Platform) — ML Lifecycle Cheat Sheet
+
+One-liner (lead with this)
+
+
+Data goes into Datasets and Feature Store, gets trained via Training or Tuning
+against a Model Garden base model, tracked through Experiments and Evaluation,
+versioned in Model Registry, then served through Endpoints or Batch Inference —
+with Pipelines automating the whole chain and Monitoring watching it once it's live.
+
+
+
+
+Build & Customize a Model
+
+ServiceWhat it doesModel GardenCurated catalog of foundation models (Gemini, open-source, partner models) —
+browse and deploy instead of starting from scratch.StudioInteractive playground for prompting/testing models before building anything production-grade.TuningFine-tune a foundation model on your own data instead of using it off-the-shelf.
+
+Data & Features
+
+ServiceWhat it doesDatasetsRaw or labeled data used for training/evaluation.Feature StoreCentralized repo of engineered features, shared between training and production — prevents training-serving skew.
+
+Train & Evaluate
+
+ServiceWhat it doesTrainingCustom training jobs — your code, your infra, at scale.ExperimentsTracks and compares multiple training runs (hyperparameters, metrics) to find the best one.EvaluationScores model quality against benchmarks or your own eval sets.Model RegistryVersioned catalog of trained models ready to deploy, with lineage back to the training run.
+
+Serve & Scale
+
+ServiceWhat it doesEndpointsReal-time, low-latency serving for online predictions.Batch InferenceAsync predictions over large datasets — no live endpoint needed.Provisioned ThroughputReserved, guaranteed-capacity serving for predictable high-volume workloads (vs. on-demand).
+
+Orchestration & Ops
+
+ServiceWhat it doesPipelinesChains data → train → eval → deploy into a repeatable, automated MLOps workflow.Ray on Agent PlatformDistributed compute framework for large-scale training/data processing.MetadataAutomatic lineage tracking across datasets, models, and pipeline runs — answers "what data trained this model."MonitoringTracks deployed model health: drift, latency, prediction quality over time.
+
+
+Feature Store — likely follow-up
+
+Plain-English definition:
+
+
+A shared, central place where engineered features (e.g. "avg logins in last 7 days") are
+computed once and reused by both training and production — so the model never sees data at
+serving time that looks different from what it learned on.
+
+
+
+

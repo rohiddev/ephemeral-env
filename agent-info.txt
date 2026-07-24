@@ -15,7 +15,9 @@ Pipelines → Agent orchestration
 
 
 
-Mental shortcut: if microservices were the unit of compute in your old architecture, agents are the unit of compute in this one. If pipelines wired microservices together, orchestration wires agents together.
+Mental shortcut: if microservices were the unit of compute in your old architecture,
+agents are the unit of compute in this one.
+If pipelines wired microservices together, orchestration wires agents together.
 
 
 🔷 Key Characteristics

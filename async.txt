@@ -1,4 +1,5 @@
- i am getting connection time out in 2 of my api end points when it takes 2 minutes to complete. these  calls are sync calls. making it async and using http step in the pipeline to make asycn
+ i am getting connection time out in 2 of my api end points when it takes 2 minutes to complete.
+ these  calls are sync calls. making it async and using http step in the pipeline to make asycn
   call would it solve the problem
 
 ⏺ Yes, it solves the problem completely. Here's why and how.
@@ -6,8 +7,11 @@
   ---
   Why sync times out
 
-  A synchronous HTTP call holds an open TCP connection for the full 2 minutes. Load balancers, proxies, and the Harness delegate gateway all have idle connection timeouts — typically 30-60
-  seconds — that will kill the connection before your API responds, regardless of what timeout you set in the step.
+  A synchronous HTTP call holds an open TCP connection for the full 2 minutes.
+  Load balancers, proxies, and the
+  Harness delegate gateway all have idle connection timeouts — typically 30-60
+  seconds — that will kill the connection before your API responds, regardless of what
+  timeout you set in the step.
 
   ---
   Why async + poll fixes it

@@ -1,0 +1,12 @@
+This is a real compliance gap, and the pattern is familiar — let me make sure I'm tracking what you've described before jumping to a fix:
+Current state:
+
+You built a UI with proper auth/authz and role-based access for OpenShift cluster actions
+That UI calls Jenkins pipelines to actually do the work
+Pipeline results land in a DB that gives you history
+Separately, the Jenkins team has exposed pipeline endpoints directly — so end users can trigger pipelines without going through your UI
+When triggered that way, there's no attribution (you can't tell who triggered it) and Jenkins' own history rolls off after a few days
+This creates an audit/compliance gap: actions are happening against OpenShift with no durable, attributable record
+
+That's the core problem — your governed path exists, but there's an ungoverned side door that bypasses identity, authorization, and durable audit logging.
+A few things would shape the right fix:

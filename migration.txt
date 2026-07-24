@@ -1,0 +1,7 @@
+Strangler Fig vs. Big Bang Rewrite
+Strangler Fig	Big Bang Rewrite
+Incremental migration	Entire system replaced at once
+Lower deployment risk	Higher deployment risk
+Continuous business value	Long period before value is realized
+More operational complexity during transition	Simpler architecture during development, but riskier cutover
+Easier to rollback individual pieces	Difficult to rollback after launch

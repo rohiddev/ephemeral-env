@@ -1,0 +1,8 @@
+LangGraph feels like a graph DSL — powerful, but you're working at a lower abstraction level.
+It rewards engineers who want transparency and deterministic behavior.
+The cost: more boilerplate, steeper learning curve, fragmented documentation. GitHub
+It also requires a genuine conceptual shift: requires understanding of graph theory concepts,
+and one comparison flags steeper learning curve than LangChain itself, let alone ADK. GitHubGitHub
+But once you're past that hump, you get more durable control:
+LangGraph gives you an explicit graph (state machine) to control agent flows with precision,
+ideal for complex or highly-regulated workflows.

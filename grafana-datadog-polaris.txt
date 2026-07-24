@@ -557,15 +557,15 @@ POLARIS IN A CI/CD PIPELINE (Harness example)
 
 POLARIS vs OTHER TOOLS
 
-  Tool          What it checks
-  ----------    --------------------------------------------------
-  Polaris       Kubernetes workload config (Pod spec best practices)
+  Tool              What it checks
+  ----------        --------------------------------------------------
+  Polaris           Kubernetes workload config (Pod spec best practices)
   OPA / Gatekeeper  Custom policy engine (any Kubernetes resource, complex rules)
-  Kyverno       Policy-as-code for Kubernetes (similar to Gatekeeper, simpler)
-  Trivy         Container image vulnerability scanning (CVEs in packages)
-  Falco         Runtime security (detects suspicious behaviour in running containers)
-  kube-bench    CIS Kubernetes benchmark (node-level config checks)
-  Checkov       IaC scanning (Terraform, Helm, YAML — broader scope)
+  Kyverno           Policy-as-code for Kubernetes (similar to Gatekeeper, simpler)
+  Trivy             Container image vulnerability scanning (CVEs in packages)
+  Falco             Runtime security (detects suspicious behaviour in running containers)
+  kube-bench        CIS Kubernetes benchmark (node-level config checks)
+  Checkov           IaC scanning (Terraform, Helm, YAML — broader scope)
 
   Polaris + Trivy is a common pairing:
     Polaris: is the workload configured securely and correctly?

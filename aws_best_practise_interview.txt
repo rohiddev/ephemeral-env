@@ -6,39 +6,55 @@ Interview Q&A — AWS Best Practices
   ---
   1. What is the principle of least privilege and how do you apply it in AWS?
 
-  Give every person and every system only the permissions it needs to do its specific job — nothing more.
+  Give every person and every system only the permissions it needs to do its specific job —
+  nothing more.
 
-  A Lambda function that reads from one S3 bucket should have permission to read from that one bucket only. Not all buckets. Not write access. Not EC2 access. Nothing else.
+  A Lambda function that reads from one S3 bucket should have permission to read from that one
+  bucket only. Not all buckets. Not write access.
+   Not EC2 access. Nothing else.
 
-  In practice: create a separate IAM role for each workload. Write the narrowest policy that makes it work. Never use "Action": "*" or "Resource": "*" in production. Start with no permissions and
+  In practice: create a separate IAM role for each workload.
+   Write the narrowest policy that makes it work.
+   Never use "Action": "*" or "Resource": "*" in production.
+   Start with no permissions and
    add only what's needed — not the other way around.
 
-  The reason: if that Lambda is compromised, the attacker can only read that one bucket. They can't delete your databases, spin up Bitcoin miners, or exfiltrate everything else.
+  The reason: if that Lambda is compromised, the attacker can only read that one bucket.
+  They can't delete your databases, spin up Bitcoin miners, or exfiltrate everything else.
 
   ---
   2. What is the difference between IAM Users, Roles, and Groups?
 
-  - Users — a person. Has a username and password (or access keys). Used for humans logging into the console or CLI.
-  - Groups — a collection of users. Attach a policy to a group and everyone in it inherits it. Easier than setting permissions per person.
-  - Roles — an identity for a service or application. No password, no access keys. Instead, AWS issues short-lived temporary credentials automatically.
+  - Users — a person. Has a username and password (or access keys).
+  Used for humans logging into the console or CLI.
+  - Groups — a collection of users. Attach a policy to a group and everyone in it inherits it.
+  Easier than setting permissions per person.
+  - Roles — an identity for a service or application. No password, no access keys.
+  Instead, AWS issues short-lived temporary credentials automatically.
 
-  Best practice: humans use Roles via SSO (not long-lived access keys). Applications and services always use Roles — never embed access keys in code or config files. Roles = credentials that
+  Best practice: humans use Roles via SSO (not long-lived access keys).
+  Applications and services always use Roles — never embed access keys in code or config files.
+  Roles = credentials that
   expire automatically, reducing the blast radius if compromised.
 
   ---
   3. Why should you never use the AWS root account for day-to-day work?
 
-  The root account has unlimited access to everything in your AWS account — it can delete all resources, close the account, and bypass IAM policies. There is no way to restrict it.
+  The root account has unlimited access to everything in your AWS account —
+  it can delete all resources, close the account, and bypass IAM policies. There is no way to restrict it.
 
   If a root account's credentials are stolen, the attacker owns everything with no recourse.
 
-  Best practice: use root only to create the first admin IAM user, then lock root away. Enable MFA on root. Never create access keys for root. Store the root credentials in a password manager
+  Best practice: use root only to create the first admin IAM user, then lock root away.
+   Enable MFA on root. Never create access keys for root. Store the root credentials in a password manager
   that requires two people to unlock.
 
   ---
   4. What is MFA and where should it be required in AWS?
 
-  MFA (Multi-Factor Authentication) requires two things to log in: your password plus a one-time code from your phone or hardware key. Even if someone steals your password, they can't log in
+  MFA (Multi-Factor Authentication) requires two things to log in: your password plus a
+  one-time code from your phone or hardware key. Even if someone steals your password,
+  they can't log in
   without the second factor.
 
   Require it everywhere:
@@ -52,13 +68,17 @@ Interview Q&A — AWS Best Practices
   ---
   5. What is secrets management and why can't you store secrets in environment variables?
 
-  A secret is anything that grants access — database passwords, API keys, encryption keys, certificates.
+  A secret is anything that grants access — database passwords, API keys, encryption keys,
+  certificates.
 
   Environment variables seem convenient but have two problems:
-  1. They're readable by anyone with access to the container, instance, or Lambda — including in CloudWatch logs if you accidentally log them
+  1. They're readable by anyone with access to the container, instance, or Lambda —
+  including in CloudWatch logs if you accidentally log them
   2. They're static — once set, they don't rotate automatically
 
-  The right approach: store secrets in AWS Secrets Manager. Your application fetches the secret at runtime by name. Benefits: secrets are encrypted, access is audited (who fetched what, when),
+  The right approach: store secrets in AWS Secrets Manager. Your application fetches the secret at runtime by name.
+
+  Benefits: secrets are encrypted, access is audited (who fetched what, when),
   secrets can rotate automatically, and no secret ever lives in your code, config files, or CI/CD system.
 
   ---
@@ -66,11 +86,17 @@ Interview Q&A — AWS Best Practices
 
   Both control network traffic — what can connect to what.
 
-  Security Groups — work at the instance/resource level. They are stateful: if you allow traffic in, the response is automatically allowed out. Think of them as a lock on each individual door.
+  Security Groups — work at the instance/resource level.
+  They are stateful: if you allow traffic in, the response is automatically allowed out.
+  Think of them as a lock on each individual door.
 
-  NACLs (Network Access Control Lists) — work at the subnet level. They are stateless: you must explicitly allow traffic in AND out. Think of them as a wall around a neighbourhood.
+  NACLs (Network Access Control Lists) — work at the subnet level.
+  They are stateless: you must explicitly allow traffic in AND out.
+  Think of them as a wall around a neighbourhood.
 
-  In practice: Security Groups handle 90% of cases. NACLs add a second layer for blocking large ranges of IPs (e.g., blocking a country, blocking a known malicious IP range). Use both together
+  In practice: Security Groups handle 90% of cases. NACLs add a second layer for
+  blocking large ranges of IPs (e.g., blocking a country, blocking a known malicious IP range).
+  Use both together
   for defence in depth — a mistake in one layer is caught by the other.
 
   ---
@@ -80,44 +106,61 @@ Interview Q&A — AWS Best Practices
   ---
   7. What is a VPC and why do you need one?
 
-  A VPC (Virtual Private Cloud) is your own private section of AWS — like renting a floor in an office building where only your company's people can walk around.
+  A VPC (Virtual Private Cloud) is your own private section of AWS —
+  like renting a floor in an office building where only your company's people can walk around.
 
-  Without a VPC, your servers would be on a shared network where other AWS customers could potentially reach them. With a VPC, your resources are isolated. You control who can enter, who can
+  Without a VPC, your servers would be on a shared network where other
+  AWS customers could potentially reach them. With a VPC, your resources are isolated.
+  You control who can enter, who can
   leave, and what can talk to what inside.
 
-  Every production workload should be in a VPC. AWS gives you a default VPC, but best practice is to create a custom one — the default has overly permissive settings designed for convenience, not
+  Every production workload should be in a VPC. AWS gives you a default VPC, but best practice is to create a
+  custom one — the default has overly permissive settings designed for convenience, not
    security.
 
   ---
   8. What is the difference between a public subnet and a private subnet?
 
-  Public subnet — resources here can be reached from the internet and can reach the internet. Used for: load balancers, bastion hosts, NAT gateways.
+  Public subnet — resources here can be reached from the internet and can reach the internet.
+  Used for: load balancers, bastion hosts, NAT gateways.
 
-  Private subnet — resources here cannot be reached from the internet. They can reach the internet only through a NAT gateway (outbound only). Used for: application servers, databases, Lambda
+  Private subnet — resources here cannot be reached from the internet.
+  They can reach the internet only through a NAT gateway (outbound only).
+   Used for: application servers, databases, Lambda
   functions.
 
-  Best practice: put almost everything in private subnets. The only thing in a public subnet should be the front door (load balancer). Your databases and app servers should never be directly
+  Best practice: put almost everything in private subnets. The only thing in a public subnet
+  should be the front door (load balancer). Your databases and app servers should never be directly
   reachable from the internet — only the load balancer can reach them.
 
   ---
   9. What is a NAT Gateway and what problem does it solve?
 
-  Resources in a private subnet have no internet access by default — which is secure but sometimes too restrictive. Your app server might need to download a software update or call an external
+  Resources in a private subnet have no internet access by default —
+  which is secure but sometimes too restrictive. Your app server might need to download a software
+  update or call an external
   API.
 
-  A NAT Gateway sits in a public subnet and acts as a middleman. Your private server sends outbound traffic to the NAT Gateway, which forwards it to the internet. The response comes back through
-  the NAT Gateway to your server. The internet never initiates a connection to your private server — it can only respond.
+  A NAT Gateway sits in a public subnet and acts as a middleman. Your private server sends outbound traffic to the
+  NAT Gateway, which forwards it to the internet. The response comes back through
+  the NAT Gateway to your server. The internet never initiates a connection to your private server —
+  it can only respond.
 
-  One NAT Gateway per Availability Zone. Put one in each AZ for high availability — if the AZ goes down, the other NAT Gateways keep working.
+  One NAT Gateway per Availability Zone.
+  Put one in each AZ for high availability — if the AZ goes down, the other NAT Gateways keep working.
 
   ---
   10. What is PrivateLink and when do you need it?
 
-  PrivateLink lets your resources call AWS services (like S3, DynamoDB, Bedrock) without traffic ever leaving the AWS network or touching the internet.
+  PrivateLink lets your resources call AWS services (like S3, DynamoDB, Bedrock)
+  without traffic ever leaving the AWS network or touching the internet.
 
-  Without PrivateLink: your Lambda in a private subnet calls the S3 API, which goes out through a NAT Gateway, across the internet, and into AWS's public endpoint. Traffic leaves your VPC.
+  Without PrivateLink: your Lambda in a private subnet calls the S3 API,
+  which goes out through a NAT Gateway, across the internet, and into AWS's public endpoint.
+  Traffic leaves your VPC.
 
-  With PrivateLink (VPC Endpoint): the call goes directly from your VPC to S3 inside AWS's private network. Never touches the internet. No NAT Gateway needed. Faster, cheaper, and far more
+  With PrivateLink (VPC Endpoint): the call goes directly from your VPC to S3 inside AWS's private network.
+  Never touches the internet. No NAT Gateway needed. Faster, cheaper, and far more
   secure.
 
   Required for any compliance framework (PCI, HIPAA, SOC 2) that restricts data leaving your network perimeter.
@@ -134,7 +177,9 @@ Interview Q&A — AWS Best Practices
   Lambda — you provide a function, AWS runs everything else. Best for: short tasks triggered by events (an API call comes in, a file lands in S3, a timer fires). Limit: 15-minute max execution
   time. No server to manage at all.
 
-  ECS (Fargate) — you provide a container, AWS runs the infrastructure. Best for: long-running services, APIs, background workers. You control what's in the container but not the servers
+  ECS (Fargate) — you provide a container, AWS runs the infrastructure.
+  Best for: long-running services, APIs, background workers.
+  You control what's in the container but not the servers
   underneath.
 
   EC2 — you manage everything: the server, OS, patches, scaling. Best for: when you need specific hardware, custom kernels, or workloads that don't fit containers. Most new workloads should not
@@ -186,7 +231,8 @@ Interview Q&A — AWS Best Practices
   ---
   15. What is the difference between RDS, Aurora, and DynamoDB?
 
-  RDS — managed relational database (MySQL, PostgreSQL, SQL Server, Oracle). You write standard SQL. AWS handles backups, patching, and failover. Best for: existing applications that use SQL,
+  RDS — managed relational database (MySQL, PostgreSQL, SQL Server, Oracle).
+  You write standard SQL. AWS handles backups, patching, and failover. Best for: existing applications that use SQL,
   complex queries with joins.
 
   Aurora — AWS's own relational database, compatible with MySQL and PostgreSQL but built for the cloud. 5x faster than standard MySQL, automatically grows storage, replicates across 3 AZs
@@ -300,7 +346,8 @@ Interview Q&A — AWS Best Practices
 
   All three tell you what's happening in your system — but at different levels of detail:
 
-  Monitoring — numbers over time. CPU is at 80%. Response time is 200ms. Error rate is 0.1%. Tells you something is wrong. Shown in dashboards, triggers alarms.
+  Monitoring — numbers over time. CPU is at 80%. Response time is 200ms.
+  Error rate is 0.1%. Tells you something is wrong. Shown in dashboards, triggers alarms.
 
   Logging — a diary of events. "At 14:32:01, user 12345 requested /api/orders and got a 500 error." Tells you what happened. Stored in CloudWatch Logs.
 
@@ -350,12 +397,14 @@ Interview Q&A — AWS Best Practices
   ---
   25. What is state in Terraform and why is it important?
 
-  Terraform keeps a record of everything it has created — this is called state. It's stored in a file called terraform.tfstate.
+  Terraform keeps a record of everything it has created — this is called state.
+   It's stored in a file called terraform.tfstate.
 
   State is how Terraform knows what already exists. When you run terraform apply a second time, it compares the current code with the state file and makes only the changes needed. Without state,
   Terraform would try to create everything again — resulting in duplicate resources or errors.
 
-  Best practice for teams: never store the state file locally. Store it in S3 with a DynamoDB lock table. This means:
+  Best practice for teams: never store the state file locally.
+  Store it in S3 with a DynamoDB lock table. This means:
   - The state is not lost if your laptop dies
   - Two people can't run Terraform at the same time (the lock prevents it)
   - Every state change is versioned in S3 so you can roll back
@@ -365,11 +414,15 @@ Interview Q&A — AWS Best Practices
 
   It's AWS's checklist for building good systems, organized into six pillars:
 
-  1. Operational Excellence — can you run it, monitor it, and improve it? (pipelines, runbooks, post-mortems)
+  1. Operational Excellence — can you run it, monitor it, and improve it?
+  (pipelines, runbooks, post-mortems)
   2. Security — is it protected? (least privilege, encryption, MFA, no hardcoded secrets)
   3. Reliability — does it recover from failure? (multi-AZ, backups, health checks)
   4. Performance Efficiency — is it fast and efficient? (right-size, caching, CDN)
-  5. Cost Optimization — are you spending only what you need? (Reserved Instances, right-sizing, unused resource cleanup)
-  6. Sustainability — are you minimizing environmental impact? (efficient instance types, managed services over self-hosted)
+  5. Cost Optimization — are you spending only what you need?
+  (Reserved Instances, right-sizing, unused resource cleanup)
+  6. Sustainability — are you minimizing environmental impact?
+  (efficient instance types, managed services over self-hosted)
 
-  AWS provides a free Well-Architected Review tool where you answer questions about your system and get a report showing exactly where you have gaps. Use it before any major launch.
+  AWS provides a free Well-Architected Review tool where you answer questions about your system and
+  get a report showing exactly where you have gaps. Use it before any major launch.

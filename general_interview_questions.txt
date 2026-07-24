@@ -3,23 +3,29 @@
   ---
   1. What is a pipeline and why does it matter?
 
-  A pipeline is a series of automatic steps that take code from a developer's laptop to running in production — without anyone doing it manually.
+  A pipeline is a series of automatic steps that take code from a developer's laptop to running in
+  production — without anyone doing it manually.
 
-  Before pipelines: a developer writes code, emails it to someone, that person manually copies it to a server, tests it by hand, and hopes nothing breaks. That takes days and breaks constantly.
+  Before pipelines: a developer writes code, emails it to someone, that person manually copies it to a server,
+  tests it by hand, and hopes nothing breaks. That takes days and breaks constantly.
 
-  With a pipeline: developer pushes code, the pipeline automatically tests it, builds it, scans it for security issues, and deploys it — in minutes. Everyone on the team sees the same result
+  With a pipeline: developer pushes code, the pipeline automatically tests it, builds it,
+  scans it for security issues, and deploys it — in minutes. Everyone on the team sees the same result
   every time. No "it worked on my machine."
 
   ---
   2. What is CI/CD and what is the difference between the two?
 
-  CI — Continuous Integration: Every time a developer saves their work, the pipeline automatically checks that it doesn't break anything. Think of it as a spell-checker running on every
+  CI — Continuous Integration: Every time a developer saves their work, the pipeline automatically
+  checks that it doesn't break anything. Think of it as a spell-checker running on every
   keystroke.
 
-  CD — Continuous Delivery/Deployment: Once code passes checks, it automatically moves toward production. Delivery means it's ready to deploy with one click. Deployment means it goes live
+  CD — Continuous Delivery/Deployment: Once code passes checks, it automatically moves toward production.
+  Delivery means it's ready to deploy with one click. Deployment means it goes live
   automatically.
 
-  The key idea: small changes go out frequently (daily, even hourly) rather than big releases every few months. Small changes are easier to test, easier to fix if something breaks, and less scary
+  The key idea: small changes go out frequently (daily, even hourly) rather than big releases every few months.
+  Small changes are easier to test, easier to fix if something breaks, and less scary
    to deploy.
 
   ---
@@ -49,7 +55,8 @@
   - Error-prone — humans make mistakes on repetitive tasks (copying config values, updating version numbers)
   - Blocking — someone has to wait for a person to approve or respond before they can continue
 
-  The biggest hidden savings: not just the time of the task itself, but the waiting time. A test that takes 10 minutes but runs automatically saves 4 hours of "I forgot to run tests, now I'm
+  The biggest hidden savings: not just the time of the task itself, but the waiting time.
+   A test that takes 10 minutes but runs automatically saves 4 hours of "I forgot to run tests, now I'm
   blocked on review."
 
   ---
@@ -57,12 +64,16 @@
 
   It means making systems talk to each other automatically so information flows without human handoffs.
 
-  Example without connection: Developer closes a Jira ticket → manually sends Slack message → manually updates the deployment spreadsheet → manually notifies the on-call team.
+  Example without connection:
+  Developer closes a Jira ticket → manually sends Slack message → manually updates
+  the deployment spreadsheet → manually notifies the on-call team.
 
-  Example with connection: Developer closes Jira ticket → Jira webhook fires → pipeline automatically triggers → deployment runs → monitoring dashboard updates → on-call team gets one automated
+  Example with connection: Developer closes Jira ticket → Jira webhook fires → pipeline automatically
+  triggers → deployment runs → monitoring dashboard updates → on-call team gets one automated
   notification with everything they need.
 
-  Every manual handoff is a place where things get delayed, forgotten, or done inconsistently. Connecting systems eliminates those gaps.
+  Every manual handoff is a place where things get delayed, forgotten, or done inconsistently.
+   Connecting systems eliminates those gaps.
 
   ---
   ---
@@ -77,10 +88,13 @@
   2. Compare a fast run from 2 weeks ago with a slow run today — what changed between them?
   3. Check if it's consistent (always slow) or intermittent (sometimes slow) — those are different problems.
 
-  Common causes: someone added 500 new tests without removing old ones, a dependency download step lost its cache, an external API the pipeline calls is now slow, or a new security scan step was
+  Common causes: someone added 500 new tests without removing old ones,
+  a dependency download step lost its cache, an external API the pipeline calls is now slow,
+  or a new security scan step was
   added without anyone realizing the cost.
 
-  Fix the biggest single bottleneck first. A 35-minute pipeline can often be cut to 15 minutes by parallelizing tests or caching dependencies — without changing any test logic.
+  Fix the biggest single bottleneck first. A 35-minute pipeline can often be cut to 15 minutes by
+   parallelizing tests or caching dependencies — without changing any test logic.
 
   ---
   7. How do you automate something that has never been automated before?
@@ -94,7 +108,8 @@
    breaks — not what you think might break.
 
   ---
-  8. Your automation works perfectly in dev but breaks in production. Why does this happen and how do you prevent it?
+  8. Your automation works perfectly in dev but breaks in production.
+  Why does this happen and how do you prevent it?
 
   The environments are different in a way you didn't account for. Common culprits:
 
@@ -103,7 +118,8 @@
   - Different config — a URL, port, or feature flag is set differently
   - Different versions — the library version in dev and prod don't match
 
-  Prevention: make environments as identical as possible using containers (Docker). Store all config differences in environment variables, never in code. Test on a staging environment that
+  Prevention: make environments as identical as possible using containers (Docker).
+  Store all config differences in environment variables, never in code. Test on a staging environment that
   mirrors production before deploying. Run the same pipeline for all environments — only the config changes.
 
   ---
@@ -111,9 +127,11 @@
 
   Automate when: the task happens frequently, the steps are identical every time, errors are costly, and it's blocking people from doing more valuable work.
 
-  Leave manual when: the task happens rarely, it requires genuine judgment that changes each time, or the cost of building the automation exceeds the cost of doing it manually for the next year.
+  Leave manual when: the task happens rarely, it requires genuine judgment that changes each time,
+  or the cost of building the automation exceeds the cost of doing it manually for the next year.
 
-  Quick calculation: if a task takes 2 hours and happens weekly, that's 100 hours per year. If automation takes 40 hours to build and 5 hours to maintain yearly, you break even in 6 months. If it
+  Quick calculation: if a task takes 2 hours and happens weekly, that's 100 hours per year.
+  If automation takes 40 hours to build and 5 hours to maintain yearly, you break even in 6 months. If it
    takes 200 hours to build — skip it.
 
   The trap: automating something that happens once a quarter just because it feels like it should be automated.
@@ -137,14 +155,18 @@
   ---
   11. What does "shift left" mean and why do companies talk about it?
 
-  Shift left means finding problems earlier in the process — closer to when code is written, not after it's deployed.
+  Shift left means finding problems earlier in the process — closer to when code is written,
+  not after it's deployed.
 
   Picture a timeline: Write code → Test → Build → Deploy → Monitor.
 
-  If a security vulnerability is found at the Monitor stage (after deployment), it costs 10x more to fix than if it's found at the Test stage, and 100x more than if it's found while the developer
+  If a security vulnerability is found at the Monitor stage (after deployment),
+  it costs 10x more to fix than if it's found at the Test stage,
+  and 100x more than if it's found while the developer
    is still writing code.
 
-  Shift left: run security scans, code quality checks, and tests at the Write stage — before the developer even finishes. The developer fixes it immediately, before it becomes anyone else's
+  Shift left: run security scans, code quality checks, and tests at the Write stage —
+  before the developer even finishes. The developer fixes it immediately, before it becomes anyone else's
   problem.
 
   ---
@@ -153,7 +175,8 @@
   Three rules:
 
   1. Don't remove steps, make them optional first. Mark a failing step as "warning" rather than blocking for 2 weeks while teams adapt.
-  2. Change one thing at a time. If you change the test runner, the build tool, and the deployment method in the same week and something breaks, you won't know which change caused it.
+  2. Change one thing at a time. If you change the test runner, the build tool,
+  and the deployment method in the same week and something breaks, you won't know which change caused it.
   3. Announce and document. A pipeline change that breaks 50 developers' workflows with no warning destroys trust. Write one paragraph explaining what's changing, why, and what to do if it
   breaks.
 
@@ -162,24 +185,32 @@
   ---
   13. What is an API and why does it matter for automation?
 
-  An API is a door that one system opens so other systems can talk to it — using a defined, predictable language.
+  An API is a door that one system opens so other systems can talk to it —
+  using a defined, predictable language.
 
-  Without APIs: you automate by screen-scraping — your script clicks buttons on a website, reads text from the screen. It breaks every time the website redesigns.
+  Without APIs: you automate by screen-scraping — your script clicks buttons on a website,
+  reads text from the screen. It breaks every time the website redesigns.
 
-  With APIs: your script sends a structured request ("give me all open tickets") and gets back a structured response. It works regardless of what the website looks like, as long as the API
+  With APIs: your script sends a structured request ("give me all open tickets") and gets back a structured response.
+  It works regardless of what the website looks like, as long as the API
   contract doesn't change.
 
-  For automation and connecting systems, APIs are the foundation. If a tool doesn't have an API, automating it is fragile and expensive. When evaluating tools to buy, "does it have a good API?"
+  For automation and connecting systems, APIs are the foundation.
+  If a tool doesn't have an API, automating it is fragile and expensive.
+  When evaluating tools to buy, "does it have a good API?"
   is as important as "does it have the features we need?"
 
   ---
   14. What is idempotency and why should every automation have it?
 
-  Idempotency means: running the same automation twice gives the same result as running it once. No duplicate tickets created. No double-charges. No extra resources spun up.
+  Idempotency means: running the same automation twice gives the same result as running it once.
+  No duplicate tickets created. No double-charges. No extra resources spun up.
 
-  Without it: a network blip causes your automation to retry. Now there are two tickets for the same issue, two servers running the same service, two emails sent to the customer.
+  Without it: a network blip causes your automation to retry. Now there are two tickets for the same issue,
+  two servers running the same service, two emails sent to the customer.
 
-  With it: the automation checks "does this already exist?" before creating. Or it uses a unique key so creating the same thing twice is harmless — the second call just returns "already exists."
+  With it: the automation checks "does this already exist?" before creating. Or it uses a unique key so
+  creating the same thing twice is harmless — the second call just returns "already exists."
 
   Real example: a pipeline that provisions a cloud server should check if that server already exists before creating a new one. Otherwise a retry after a timeout creates two servers and nobody
   knows which one is real.
@@ -205,8 +236,12 @@
 
   Ask three questions before saying yes:
 
-  1. What happens if this step fails? Does it block the entire team? Every step you add is a new way the pipeline can fail.
-  2. How long does it add? A pipeline that grows from 10 minutes to 20 minutes because of 20 "just one more" requests is a pipeline nobody trusts.
-  3. Can it run in parallel with existing steps? Most new steps don't need to be sequential. A security scan can run at the same time as a build — not after it.
+  1. What happens if this step fails? Does it block the entire team?
+  Every step you add is a new way the pipeline can fail.
+  2. How long does it add? A pipeline that grows from 10 minutes to 20 minutes because of 20
+  "just one more" requests is a pipeline nobody trusts.
+  3. Can it run in parallel with existing steps? Most new steps don't need to be sequential.
+  A security scan can run at the same time as a build — not after it.
 
-  The right answer is never automatic "yes" or "no" — it's "let me understand the impact and find the right way to add it."
+  The right answer is never automatic "yes" or "no" — it's "let me understand the impact and
+  find the right way to add it."

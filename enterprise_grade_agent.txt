@@ -5,7 +5,10 @@
 
 ## 1. Overview
 
-This document describes the architecture for an enterprise-grade Retrieval-Augmented Generation (RAG) agent deployed on AWS. The system enables employees to query internal knowledge bases — HR policies, IT runbooks, compliance docs, engineering wikis, SOPs — using natural language, and receive grounded, cited answers backed by authoritative internal sources.
+This document describes the architecture for an enterprise-grade Retrieval-Augmented Generation (RAG)
+agent deployed on AWS. The system enables employees to query internal knowledge bases — HR policies,
+IT runbooks, compliance docs, engineering wikis, SOPs — using natural language, and receive grounded,
+cited answers backed by authoritative internal sources.
 
 ---
 
