@@ -76,7 +76,8 @@ Interview Q&A — AWS Best Practices
   including in CloudWatch logs if you accidentally log them
   2. They're static — once set, they don't rotate automatically
 
-  The right approach: store secrets in AWS Secrets Manager. Your application fetches the secret at runtime by name.
+  The right approach: store secrets in AWS Secrets Manager. \
+  Your application fetches the secret at runtime by name.
 
   Benefits: secrets are encrypted, access is audited (who fetched what, when),
   secrets can rotate automatically, and no secret ever lives in your code, config files, or CI/CD system.
@@ -185,20 +186,26 @@ Interview Q&A — AWS Best Practices
   EC2 — you manage everything: the server, OS, patches, scaling. Best for: when you need specific hardware, custom kernels, or workloads that don't fit containers. Most new workloads should not
   start here.
 
-  Rule of thumb: start with Lambda, move to ECS when you hit Lambda limits, use EC2 only when you have a specific reason.
+  Rule of thumb: start with Lambda, move to ECS when you hit Lambda limits,
+  use EC2 only when you have a specific reason.
 
   ---
   12. What is Auto Scaling and why is it not just "turn it on and forget it"?
 
-  Auto Scaling automatically adds servers when traffic increases and removes them when traffic drops. You pay only for what you use.
+  Auto Scaling automatically adds servers when traffic increases and removes them when traffic drops.
+   You pay only for what you use.
 
   But "turn it on" isn't enough:
 
-  - Scaling policies matter. Scale based on the right metric — CPU usage is often wrong. A web server might have low CPU but be overwhelmed by open connections. Use the metric that actually
+  - Scaling policies matter. Scale based on the right metric — CPU usage is often wrong. A web server might
+  have low CPU but be overwhelmed by open connections. Use the metric that actually
   reflects load on your application.
-  - Warm-up time matters. A new server takes 2-3 minutes to start. If you only scale when you're already at 90% capacity, the new server arrives too late. Scale earlier (at 60-70%).
-  - Scale-in protection matters. Auto Scaling might terminate a server that's in the middle of processing a long job. Configure termination protection for instances doing active work.
-  - Test scale-down. Most teams test that scaling up works. They don't test that removing servers doesn't cause dropped requests.
+  - Warm-up time matters. A new server takes 2-3 minutes to start. If you only scale when you're already at
+  90% capacity, the new server arrives too late. Scale earlier (at 60-70%).
+  - Scale-in protection matters. Auto Scaling might terminate a server that's in the middle of processing
+  a long job. Configure termination protection for instances doing active work.
+  - Test scale-down. Most teams test that scaling up works. They don't test that removing servers
+  doesn't cause dropped requests.
 
   ---
   13. What is the difference between vertical and horizontal scaling?
@@ -208,7 +215,9 @@ Interview Q&A — AWS Best Practices
 
   Horizontal scaling (scale out): add more servers — same size, just more of them. Like adding more lanes to a highway. No limit in theory, and you can add capacity without stopping anything.
 
-  AWS best practice is to design for horizontal scaling from the start. This means: servers should be stateless (no data stored on the server itself), sessions stored externally (ElastiCache or
+  AWS best practice is to design for horizontal scaling from the start. This means:
+  servers should be stateless (no data stored on the server itself),
+  sessions stored externally (ElastiCache or
   DynamoDB), and any server should be replaceable at any time without losing data.
 
   ---
@@ -235,10 +244,13 @@ Interview Q&A — AWS Best Practices
   You write standard SQL. AWS handles backups, patching, and failover. Best for: existing applications that use SQL,
   complex queries with joins.
 
-  Aurora — AWS's own relational database, compatible with MySQL and PostgreSQL but built for the cloud. 5x faster than standard MySQL, automatically grows storage, replicates across 3 AZs
+  Aurora — AWS's own relational database, compatible with MySQL and PostgreSQL but built for the cloud.
+
+  5x faster than standard MySQL, automatically grows storage, replicates across 3 AZs
   automatically. Best for: new relational workloads where you want maximum performance and resilience.
 
-  DynamoDB — AWS's NoSQL database. No SQL, no schemas, no joins. Stores items by key. Scales to millions of requests per second automatically. Best for: high-throughput simple lookups (user
+  DynamoDB — AWS's NoSQL database. No SQL, no schemas, no joins. Stores items by key. Scales to millions of
+  requests per second automatically. Best for: high-throughput simple lookups (user
   sessions, shopping carts, event streams) where the access pattern is always "get item by ID."
 
   Choose RDS/Aurora when your data has relationships and complex queries. Choose DynamoDB when you need massive scale and simple access patterns.
@@ -246,13 +258,18 @@ Interview Q&A — AWS Best Practices
   ---
   16. What is RDS Multi-AZ and why is it not the same as a Read Replica?
 
-  Multi-AZ — AWS maintains an exact copy of your database in a second Availability Zone, kept in sync synchronously. If your primary database goes down, AWS automatically switches to the standby
-  in 60-90 seconds. The standby cannot handle any traffic — it exists only for failover. This is for availability.
+  Multi-AZ — AWS maintains an exact copy of your database in a second Availability Zone, kept in sync
+  synchronously. If your primary database goes down, AWS automatically switches to the standby
+  in 60-90 seconds. The standby cannot handle any traffic — it exists only for failover.
+  This is for availability.
 
-  Read Replica — a copy of your database that handles read queries (SELECT). Your primary handles writes (INSERT, UPDATE, DELETE). Read replicas are kept in sync asynchronously — they might be a
+  Read Replica — a copy of your database that handles read queries (SELECT).
+  Your primary handles writes (INSERT, UPDATE, DELETE). Read replicas are kept in sync asynchronously —
+  they might be a
   few seconds behind. You can have multiple read replicas in different regions. This is for performance.
 
-  Use both together: Multi-AZ for failover protection, Read Replicas to take read load off the primary database.
+  Use both together: Multi-AZ for failover protection,
+  Read Replicas to take read load off the primary database.
 
   ---
   ---
@@ -261,12 +278,14 @@ Interview Q&A — AWS Best Practices
   ---
   17. What does "designing for failure" mean in AWS?
 
-  Assume every component will fail at some point — and build the system so that when it does, users don't notice.
+  Assume every component will fail at some point — and build the system so that when it does,
+  users don't notice.
 
   Practical rules:
   - Never deploy in only one Availability Zone. Always spread across at least 2 AZs.
   - Use a load balancer so traffic automatically routes around failed servers.
-  - Use managed services (RDS, SQS, S3) instead of running your own databases and queues on EC2 — AWS handles the failure for you.
+  - Use managed services (RDS, SQS, S3) instead of running your own databases and
+  queues on EC2 — AWS handles the failure for you.
   - Test failure regularly. Terminate random servers in production during business hours (Netflix invented this with "Chaos Monkey"). If your system only survives failure in theory, it doesn't
   survive failure.
 
@@ -275,9 +294,11 @@ Interview Q&A — AWS Best Practices
   ---
   18. What is RTO and RPO and why do they matter for DR planning?
 
-  RTO (Recovery Time Objective) — how long can you be down? "We can be offline for 4 hours before it costs us money." This determines how quickly your DR plan must get you back up.
+  RTO (Recovery Time Objective) — how long can you be down? "We can be offline for 4 hours before it
+  costs us money." This determines how quickly your DR plan must get you back up.
 
-  RPO (Recovery Point Objective) — how much data can you lose? "We can afford to lose up to 1 hour of transactions." This determines how frequently you must back up.
+  RPO (Recovery Point Objective) — how much data can you lose? "We can afford to lose up to 1 hour of
+  transactions." This determines how frequently you must back up.
 
   These are business decisions, not technical ones. Get them from the business owner, then design the technical solution to meet them.
 
@@ -296,13 +317,18 @@ Interview Q&A — AWS Best Practices
 
   These are four DR strategies in order from cheapest/slowest to most expensive/fastest:
 
-  Backup/Restore — back up data to S3, restore when disaster strikes. Takes hours. Costs almost nothing until you need it. Good for: non-critical systems.
+  Backup/Restore — back up data to S3, restore when disaster strikes. Takes hours.
+  Costs almost nothing until you need it. Good for: non-critical systems.
 
-  Pilot Light — core systems (databases) run in the DR region at minimum scale. App servers are off. In a disaster, turn on the app servers (15-30 min). Good for: moderate criticality.
+  Pilot Light — core systems (databases) run in the DR region at minimum scale.
+  App servers are off. In a disaster, turn on the app servers (15-30 min). Good for: moderate criticality.
 
-  Warm Standby — a scaled-down but fully running copy in the DR region. In a disaster, scale it up and redirect traffic (minutes). Good for: important systems.
+  Warm Standby — a scaled-down but fully running copy in the DR region.
+  In a disaster, scale it up and redirect traffic (minutes). Good for: important systems.
 
-  Multi-Region Active-Active — full system running in two regions simultaneously. Traffic splits between them. One region fails, the other absorbs all traffic instantly. Zero downtime. Highest
+  Multi-Region Active-Active — full system running in two regions simultaneously.
+  Traffic splits between them. One region fails, the other absorbs all traffic instantly.
+  Zero downtime. Highest
   cost. Good for: payment systems, healthcare, anything that cannot go down.
 
   ---
@@ -325,9 +351,11 @@ Interview Q&A — AWS Best Practices
   ---
   21. What is the difference between Reserved Instances, Savings Plans, and Spot Instances?
 
-  On-Demand — pay by the hour, no commitment. Most expensive. Use for: unpredictable workloads, short-term experiments.
+  On-Demand — pay by the hour, no commitment. Most expensive. Use for: unpredictable workloads,
+  short-term experiments.
 
-  Reserved Instances — commit to a specific instance type for 1 or 3 years. Up to 72% cheaper. Use for: databases, always-on production servers with predictable size.
+  Reserved Instances — commit to a specific instance type for 1 or 3 years.
+  Up to 72% cheaper. Use for: databases, always-on production servers with predictable size.
 
   Savings Plans — commit to a dollar amount of compute spend per hour for 1 or 3 years. More flexible than Reserved Instances — the discount applies across instance types and even Lambda. Use
   for: general compute where you know roughly how much you'll spend but not exactly which instances.
@@ -351,10 +379,12 @@ Interview Q&A — AWS Best Practices
 
   Logging — a diary of events. "At 14:32:01, user 12345 requested /api/orders and got a 500 error." Tells you what happened. Stored in CloudWatch Logs.
 
-  Tracing — follows a single request through every service it touched. "This request went through the load balancer → API server → database → cache → back to the user, and the database step took
+  Tracing — follows a single request through every service it touched.
+  "This request went through the load balancer → API server → database → cache → back to the user, and the database step took
   4 seconds." Tells you exactly where the slowness or failure is. Shown in X-Ray.
 
-  You need all three. Monitoring tells you there's a fire. Logging tells you where the smoke is. Tracing tells you exactly which wire sparked.
+  You need all three. Monitoring tells you there's a fire. Logging tells you where the smoke is.
+  Tracing tells you exactly which wire sparked.
 
   ---
   23. What should every production system have in terms of alarms?
@@ -362,14 +392,17 @@ Interview Q&A — AWS Best Practices
   At minimum, alarm on:
 
   - Error rate — if more than 1% of requests return errors, alert immediately
-  - Latency (p99) — if the slowest 1% of requests take more than X seconds, alert (don't use average — averages hide spikes)
+  - Latency (p99) — if the slowest 1% of requests take more than X seconds,
+  alert (don't use average — averages hide spikes)
   - CPU/Memory — if consistently above 80%, you're close to the edge
   - Disk space — if above 85%, you will run out soon
   - Failed deployments — every deployment failure should alert the team
 
-  Alarm to the right place: not a shared email inbox. A dedicated channel or on-call rotation where someone is responsible for responding within 5 minutes for P1 issues.
+  Alarm to the right place: not a shared email inbox. A dedicated channel or on-call rotation where
+  someone is responsible for responding within 5 minutes for P1 issues.
 
-  Alarm at the right threshold: not so sensitive that it fires 20 times a day for noise, not so loose that it fires only when users are already calling to complain.
+  Alarm at the right threshold: not so sensitive that it fires 20 times a day for noise,
+  not so loose that it fires only when users are already calling to complain.
 
   ---
   ---
@@ -400,7 +433,8 @@ Interview Q&A — AWS Best Practices
   Terraform keeps a record of everything it has created — this is called state.
    It's stored in a file called terraform.tfstate.
 
-  State is how Terraform knows what already exists. When you run terraform apply a second time, it compares the current code with the state file and makes only the changes needed. Without state,
+  State is how Terraform knows what already exists. When you run terraform apply a second time,
+  it compares the current code with the state file and makes only the changes needed. Without state,
   Terraform would try to create everything again — resulting in duplicate resources or errors.
 
   Best practice for teams: never store the state file locally.

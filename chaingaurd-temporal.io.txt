@@ -14,8 +14,10 @@ packages rather than just consuming pre-built images, which is relevant if IDP e
 golden-image pipeline.
 
 Temporal.io
-What it is: An open-source durable execution platform for writing long-running, stateful, fault-tolerant business
-logic as ordinary code, instead of hand-building retry loops, state machines, and job queues. Originated from Cadence,
+What it is: An open-source durable execution platform for writing long-running,
+stateful, fault-tolerant business
+logic as ordinary code, instead of hand-building retry loops, state machines, and job queues.
+Originated from Cadence,
 an internal Uber project, founded 2019 by the same team (Maxim Fateev, Samar Abbas).
 Core model:
 

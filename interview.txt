@@ -1202,7 +1202,8 @@ Common pitfalls:
   • No idempotency on async consumers.
   • Missing dead-letter queues and retry policies.
 
-What they want to hear: "I choose based on latency requirements and failure tolerance, not what's trendy."
+What they want to hear: "I choose based on latency requirements and failure tolerance,
+not what's trendy."
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -1223,7 +1224,8 @@ Common pitfalls:
   • Trying to do joins in a document database.
   • No migration strategy.
 
-What they want to hear: "I match the data model and access patterns to the database, not the other way around."
+What they want to hear: "I match the data model and access patterns to the database,
+not the other way around."
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -2220,7 +2222,8 @@ Q29. "How do you handle a CEO who wants to ship a feature you know is unsafe?"
 
 Q30. "What is your philosophy on technical debt?"
 
-  • "Debt is a tool. Some is strategic, some is accidental. I manage it like a financial portfolio: understand the cost, pay down the high-interest
+  • "Debt is a tool. Some is strategic, some is accidental.
+  I manage it like a financial portfolio: understand the cost, pay down the high-interest
   debt, and don't let it compound."
 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

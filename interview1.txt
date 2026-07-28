@@ -1,0 +1,111 @@
+Director Interview: Gap Analysis & Supplemental Material
+
+This supplements the existing prep doc rather than repeating it. The existing material is strong on technical breadth and frameworks — this fills what a real Director loop tests that frameworks alone can't cover: your actual story, your money/people ownership, and whether you sound rehearsed or real.
+
+
+1. The Opening Narrative — "Tell Me About Yourself"
+This is asked in nearly 100% of Director loops, usually first, and it sets the interviewer's frame for every question after it. It is completely absent from the existing material, and it is the highest-leverage 90 seconds you have.
+Structure (3 acts, ~90 seconds spoken):
+
+Arc — where you started technically, and the throughline to today (one sentence: "I started as a hands-on engineer and have spent the last several years building platforms that let other engineers move faster").
+Current altitude — what you own right now, framed at Director-scope language even if your title is EM: scope of the org, what you're accountable for, one concrete proof point (a platform, a program, a measurable outcome).
+Forward pointer — why this role, specifically, is the next right step (not "I'm ready for more" — tie it to something concrete about their org's stage or problem).
+
+Template to fill with your own specifics:
+
+"I've spent [N years] as a hands-on engineering leader, most recently leading [platform/initiative] — [one-line concrete description]. What I've focused on is [the through-line: e.g., 'turning fragmented tooling into governed, self-service platforms']. That's brought me to [current scope: team size, systems owned]. I'm looking at this role because [specific reason tied to their stage/problem, not a generic reason]."
+
+Common mistake: starting with your resume in chronological order. Panels don't want a timeline, they want a thesis about who you are as a leader.
+
+2. The Real Story Bank (the biggest gap)
+Everything in the existing doc under "Say: ..." is a framework, not a story. A framework tells the panel you know the theory of good leadership. A story tells them you've done it. Directors are hired on stories.
+The fix: build 6-8 STAR stories before the interview, not 30 framework answers.
+STAR = Situation, Task, Action, Result — but for Director level, add a fifth beat: Reflection (what you'd do differently / what it taught you about scaling leadership). Panels at this level specifically probe for self-awareness; a story with no reflection reads as either lucky or unexamined.
+The 8 stories every Director candidate needs, mapped to what they cover:
+#Story TypeCovers These Questions1A time you built something from ambiguity (0-to-1 platform/initiative)Technical vision, build-vs-buy, org design2A time you killed something that was technically interesting but wrong for the businessBusiness judgment, saying no3A time you disagreed with your own boss and how it resolvedManaging up, influence without authority4A time you navigated a governance/compliance/audit finding across a team or orgRegulated-industry fluency, risk management5A time you restructured or scaled a team through significant growth or a reorgOrg design, change management6A time you made a call under real ambiguity with incomplete dataDecision-making, risk tolerance7Your biggest technical or people mistake and what changed afterwardSelf-awareness, growth8A time you delivered bad news to leadership and what happened nextExecutive presence, honesty under pressure
+Do this now: for each row, write down the actual situation from your own background — not a hypothetical. You already have real material that maps cleanly onto several of these:
+
+Story #1 (0-to-1 build) → your IDP/Backstage platform build
+Story #4 (governance/compliance) → your CSDM-as-code work and the SOX ITGC control-gap finding (any team member being able to directly edit pipeline YAML) — this is a genuinely strong story because it's specific, has a real finding, and shows you catching a control gap before it became an incident
+Story #1 or #6 → your RAG/agentic architecture build-outs across AWS and GCP, especially any point where you had to choose between build vs. buy or reconcile competing platform options
+
+The instruction to yourself here isn't "memorize an answer" — it's "write the actual five beats down in bullet form so you're recounting a memory, not constructing an answer live."
+
+3. Budget, Headcount & Vendor Ownership (missing entirely)
+Directors are expected to own money and people planning at a scale the existing EM-level material doesn't touch.
+Q: "Walk me through how you'd build and defend your annual budget."
+
+Start from committed roadmap capacity, not last year's number plus inflation.
+Separate run/grow/transform spend explicitly (keep-the-lights-on vs. new capability vs. platform investment) — this is the same 70/20/10 framing already in your doc, but applied to dollars, not just engineering capacity.
+Build in a contingency line and name it as such, rather than padding every line item quietly.
+Defend it with unit economics where possible: cost per transaction, cost per deploy, cost per incident avoided — not just headcount times salary.
+Pitfall: presenting a budget as a single number instead of a range with named assumptions — makes it look like you haven't stress-tested it.
+
+Q: "How do you do headcount planning across multiple teams?"
+
+Anchor to committed outcomes per team, not historical headcount.
+Use a common scoring rubric across teams competing for the same req (impact, urgency, risk of not funding, team health) — same rubric idea as the "two managers fighting over headcount" question already in your doc, but now you're the one building the rubric org-wide, not just refereeing one dispute.
+Reserve a small unallocated pool for the highest-leverage unplanned need instead of committing 100% of headcount at the start of the year.
+
+Q: "How do you manage a vendor relationship that's become expensive or underperforming?"
+
+Know your renewal date and negotiate 90+ days out, never at the deadline.
+Benchmark against at least one credible alternative even if you don't intend to switch — leverage requires a real BATNA.
+Separate "vendor is expensive" from "vendor is the wrong tool" — the fix is different (renegotiate vs. replace).
+Build exit-cost awareness into every vendor decision at signing time, not when you're already trying to leave.
+
+
+4. Regulated-Industry Director Questions (thin coverage)
+The existing doc has one "AI in a regulated org" question. At Director level in banking/financial services, this needs much more depth.
+Q: "Walk me through how you handle an audit finding that spans multiple teams."
+
+Triage severity and scope first — is this a documented control gap or a live risk?
+Assign a single accountable owner even if the finding touches five teams, to avoid diffusion of responsibility.
+Distinguish remediation (fix the instance) from control design (fix the systemic gap) — auditors care about the latter far more.
+Build the evidence trail as you remediate, not after — retrofitting audit evidence is a common and visible mistake.
+Close the loop with a report-out showing the control is now enforced, not just "fixed" — a compensating control with no verification doesn't satisfy audit.
+
+Q: "How do you build a relationship with regulators/auditors rather than just responding to them?"
+
+Treat recurring auditors as a stakeholder relationship, not an annual event — proactive updates outside of audit season build credibility.
+Bring findings to them before they find it themselves when you catch something internally — this is the single highest-trust move available to you.
+Speak their language: control effectiveness, evidence, sampling, not engineering jargon.
+
+Q: "Tell me about a control gap you found yourself, not one that was found in an audit."
+
+This is a genuinely strong question to have a real answer for, since it demonstrates you don't wait for external pressure to find risk. If you have a real example (a governance gap in a pipeline, a permission structure that was too broad, an unowned system), this is one of your highest-value stories — pair it with Story #4 above.
+
+
+5. The 30-60-90 Day Plan (completely absent)
+Extremely commonly requested, either explicitly ("what would your first 90 days look like") or implicitly through Q30 in the existing doc, which gestures at it but gives no structure.
+Give this shape, not just "I'd listen first":
+
+Days 1-30 — Listen and map: 1:1s with every direct report and key peers, inventory of current state (systems, team health, in-flight commitments), identify the 2-3 things already on fire that can't wait 90 days.
+Days 31-60 — Diagnose and prioritize: synthesize what you heard into a small number of themes, validate your read with the team and your own leadership, pick 1-2 high-leverage bets rather than trying to fix everything.
+Days 61-90 — Commit and show early motion: publish a point of view (even a lightweight one-pager), make one visible decision that demonstrates direction, set the cadence (OKRs, review rhythm) you'll operate on going forward.
+
+The line that make this land: "I don't walk in with a plan already written — but I do walk in with a method, and by day 90 I owe the org a point of view, not just more listening."
+
+6. "Why You / Why This Role" (no material exists)
+Near-certain question, zero coverage in the existing doc.
+Structure:
+
+Name the specific thing about their org/problem that drew you — not "I'm ready for the next level" (that's about you, not them).
+Connect one real piece of your background directly to their stated problem (if you know it from the JD or research) — specificity here is what separates a real answer from a template.
+Close with what you bring that's differentiated, stated plainly rather than through a list of adjectives: e.g., "I've done this exact transition — platform-as-afterthought to governed self-service — once already, so I'm not learning the shape of the problem for the first time."
+
+Avoid: "I'm passionate about..." (says nothing), listing generic leadership traits, or making it about your own career progression rather than their need.
+
+7. Fixing the Authenticity Risk in the Existing Cheat Sheet
+The 30-item architecture cheat sheet's "What they want to hear" one-liners (e.g., "I don't default to microservices. I split based on team autonomy and scaling needs") are well-constructed as content but risky as delivery — if said verbatim, they sound like a memorized line, and experienced panels are specifically listening for that.
+Fix: treat every one of those 30 lines as the thesis, not the quote. Before the interview, rewrite each one in your own words attached to a real example from your background. Compare:
+
+Scripted: "I don't default to microservices. I split based on team autonomy and scaling needs."
+Grounded: "On the IDP work, we kept the catalog service and the CMDB sync as separate repos specifically because they had completely different release cadences and owners — RapDev governs one, platform engineering governs the other. That's the actual test I use: different owner, different cadence, different blast radius — split it. Same owner, same cadence — leave it together."
+
+The second version is longer, but it's unfalsifiable as "rehearsed" because it has a specific system, a specific decision, and a specific reason attached. Do this rewrite exercise for your top 8-10 most likely trade-off questions before the interview — don't try to do all 30, prioritize the ones most relevant to the role.
+
+8. Mapping Material to the Actual Interview Loop
+A typical Director loop has 4-5 distinct rounds, and knowing which material belongs where prevents you from over- or under-preparing for any one of them.
+RoundWhat It TestsPull FromRecruiter / opening screenNarrative fit, comp alignment, basic motivationSection 1 (opening narrative), Section 6 (why you)Behavioral / leadership roundReal judgment under real constraintsSection 2 (story bank) — this round lives or dies on real stories, not frameworksTechnical / architecture roundDepth without being an IC anymoreThe existing system-design + architecture cheat sheet material, delivered via Section 7's grounding techniqueOrg design / cross-functional roundBudget, headcount, vendor, stakeholder managementSection 3 (budget/headcount/vendor) + existing "managing conflicting stakeholders" materialExecutive presence / final roundCan you talk to a CIO/CTO the way you'll need to on the jobThe existing Part 1-2 executive communication framework, plus Section 5 (30-60-90) if asked for a forward plan
+The single biggest tactical takeaway: the existing document over-indexes on the technical and framework rounds (which you're probably already strong in, given your background) and under-indexes on the behavioral round — which is usually the round that actually decides Director offers, since technical competence is assumed to be a threshold, not a differentiator, at this level.

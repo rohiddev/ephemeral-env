@@ -17,7 +17,8 @@ Question: How do you manage a distributed team?
 Answer structure:
 
 I manage distributed teams through clear ownership, strong documentation, async communication,
-and regular checkpoints. I make sure every engineer understands the goal, success criteria,
+and regular checkpoints.
+I make sure every engineer understands the goal, success criteria,
 timeline, and dependencies. I also use metrics and demos to keep the team aligned, not
 just status meetings.
 

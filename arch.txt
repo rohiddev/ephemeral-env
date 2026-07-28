@@ -1,7 +1,11 @@
 Clean way to say it
-TCOE needs the ability to create an ephemeral environment for a specific software version, including the application, its dependent applications, infrastructure, data, MQ, API gateway routes, and non-Kubernetes components such as EC2.
+TCOE needs the ability to create an ephemeral environment for a specific software version,
+including the application, its dependent applications, infrastructure, data, MQ, API gateway routes,
+and non-Kubernetes components such as EC2.
 For example:
-If we test Loan App v1, it may require Person App v2.3, a specific MQ queue/schema version, a matching API gateway route, synced test data, and possibly an EC2-hosted component. This mapping must be defined upfront and provisioned together.
+If we test Loan App v1, it may require Person App v2.3, a specific MQ queue/schema version,
+a matching API gateway route, synced test data, and possibly an EC2-hosted component.
+This mapping must be defined upfront and provisioned together.
 Core architecture
 
 TCOE Request
@@ -67,14 +71,17 @@ Instead:
 Loan App v1 must call the compatible Person App version defined in the manifest.
 That manifest becomes the source of truth.
 Netflix-style idea
-Netflix’s Zuul gateway is known for dynamic routing, and Zuul supports routing based on request properties such as path, query params, and headers.
+Netflix’s Zuul gateway is known for dynamic routing, and Zuul supports routing based on request
+properties such as path, query params, and headers.
 For your case, the same pattern could be:
 
 X-Test-Env: loan-v1-env-123
 
 Then gateway routes traffic to the correct ephemeral stack.
 Executive framing
-TCOE should not be a shared QA environment. It should become an on-demand environment factory that can spin up a complete, isolated, version-aligned ecosystem for testing business flows such as loan processing, person lookup, MQ messaging, gateway APIs, EC2 workloads, and Money EPP integrations.
+TCOE should not be a shared QA environment. It should become an on-demand environment factory that
+can spin up a complete, isolated, version-aligned ecosystem for testing business flows such as
+loan processing, person lookup, MQ messaging, gateway APIs, EC2 workloads, and Money EPP integrations.
 This avoids QA collision, version mismatch, endpoint confusion, and unsafe dependency testing.
 
 turn this into md format
