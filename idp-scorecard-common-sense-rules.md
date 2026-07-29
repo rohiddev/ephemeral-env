@@ -153,3 +153,93 @@ Keep the ask simple:
 > The scorecard tells you exactly which fields are missing."
 
 The 8 checks map to 8 questions every team should be able to answer about their service without looking anything up. If they can't, the catalog is doing its job by making that visible.
+
+---
+
+## Scoping Scorecards — By System or SYSID
+
+### What Harness IDP Supports Natively
+
+Scorecards in the Harness IDP UI are scoped by **Kind + Type only**:
+
+| Scope | Example |
+|---|---|
+| All services | `Kind: Component, Type: service` |
+| All websites | `Kind: Component, Type: website` |
+
+There is no native filter by System or SYSID in the scorecard UI. A scorecard applies to every entity of that kind/type across the entire account.
+
+---
+
+### How to Scope by System or SYSID — Two Approaches
+
+#### Option 1 — Separate Scorecard per System (recommended for high-value systems)
+
+Create a dedicated scorecard with a stricter check set for a specific system. Name it clearly:
+
+```
+Common Sense Minimum    → all services (80% threshold)
+Payments Platform       → payments system only (100% threshold)
+Tier 1 Services         → all tier:1 services (100% threshold)
+```
+
+Apply the stricter scorecard in the pipeline gate only when `entity_ref` belongs to that system. The IDP dashboard will show both scorecards for entities in scope of both.
+
+#### Option 2 — Single Scorecard + OPA Filter by SYSID or Tier (recommended for enforcement)
+
+Use one scorecard for all services. In the governance pipeline, pass the entity's SYSID and tier to OPA. OPA applies different enforcement rules based on those values — stricter for Tier 1, lighter for Tier 3.
+
+```rego
+package idp_scorecard_gate
+
+# Tier 1 — all checks must pass
+deny[msg] {
+  input.tier == "1"
+  check := input.scorecard.checks[_]
+  check.status == "failed"
+  msg := sprintf("BLOCKED (Tier 1): check '%v' is failing for %v.", [check.name, input.entity_ref])
+}
+
+# Tier 2 — only high-weight checks block
+deny[msg] {
+  input.tier == "2"
+  check := input.scorecard.checks[_]
+  check.status == "failed"
+  check.weight >= 15
+  msg := sprintf("BLOCKED (Tier 2): high-priority check '%v' is failing for %v.", [check.name, input.entity_ref])
+}
+
+# Tier 3 — score threshold only, no check-level blocking
+deny[msg] {
+  input.tier == "3"
+  to_number(input.overall_score) < 60
+  msg := sprintf("BLOCKED (Tier 3): score %v%% is below 60%% minimum for %v.", [input.overall_score, input.entity_ref])
+}
+```
+
+Pass tier and SYSID from the catalog entity into OPA via the pipeline:
+
+```yaml
+payload: |
+  {
+    "scorecard":     <+steps.Fetch_Scorecard.output.outputVariables.scorecard_json>,
+    "overall_score": "<+steps.Fetch_Scorecard.output.outputVariables.overall_score>",
+    "entity_ref":    "<+pipeline.variables.entity_ref>",
+    "environment":   "<+pipeline.variables.environment>",
+    "sysid":         "<+steps.Fetch_Entity.output.outputVariables.sysid>",
+    "tier":          "<+steps.Fetch_Entity.output.outputVariables.tier>"
+  }
+```
+
+---
+
+### Which Approach to Use
+
+| Situation | Approach |
+|---|---|
+| Different check sets per system | Option 1 — separate scorecards |
+| Same checks, different thresholds per tier | Option 2 — OPA filter |
+| SYSID-specific override (one app is special) | Option 2 — OPA with SYSID condition |
+| Starting out, one standard for everyone | Single scorecard, no scoping needed yet |
+
+Start with no scoping. Add tier-based OPA rules once you have enough services registered to see which ones need stricter enforcement.
