@@ -1,0 +1,5 @@
+Enterprise Catalog Delivery: The enterprise catalog implementation will place a single catalog-info.yaml file in the master branch to support automatic discovery and ingestion.
+Resource Management Tooling: The platform will provide self-service tooling for adding and managing catalog resources.
+Content-Aware Catalog Tooling: The platform will provide workflow-based tooling to enable and manage content-aware features within the catalog.
+API Team Coordination: The API team may maintain its own catalog-info.yaml file for API-related resources, provided it does not interfere with or impact the primary catalog-info.yaml file used by the enterprise self-service platform.
+Design Review: The overall solution design must be reviewed and approved by both the Harness team and the Architecture Review Board (ARB) before implementation.
