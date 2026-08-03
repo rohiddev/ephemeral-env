@@ -1,0 +1,361 @@
+<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" font-family="Calibri, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrowDark" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#1B5E37"/>
+    </marker>
+    <marker id="arrowMed" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2D7D4F"/>
+    </marker>
+    <marker id="arrowAccent" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#5BA872"/>
+    </marker>
+    <marker id="arrowWarn" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#B03A2E"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="1920" height="1080" fill="#FFFFFF"/>
+  <!-- Top brand accent line -->
+  <rect x="0" y="0" width="1920" height="6" fill="#1B5E37"/>
+
+  <!-- HEADER -->
+  <text x="960" y="52" text-anchor="middle" font-size="40" font-weight="700" fill="#1B5E37">IDP Catalog Architecture</text>
+  <text x="960" y="80" text-anchor="middle" font-size="17" fill="#2D7D4F">System &#8594; SysID &#8594; Repository Hierarchy, with Context-Aware Catalog Views</text>
+  <line x1="40" y1="96" x2="1880" y2="96" stroke="#E8F5EE" stroke-width="2"/>
+
+  <!-- ================= COLUMN A: HIERARCHY ================= -->
+  <text x="210" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#1C3557">Organizational Hierarchy</text>
+
+  <!-- System box -->
+  <rect x="70" y="134" width="280" height="58" rx="8" fill="#1B5E37"/>
+  <text x="210" y="158" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">SYSTEM</text>
+  <text x="210" y="177" text-anchor="middle" font-size="11" fill="#E8F5EE">e.g., Payments Platform</text>
+
+  <line x1="150" y1="192" x2="90" y2="216" stroke="#1B5E37" stroke-width="1.5" marker-end="url(#arrowDark)"/>
+  <line x1="210" y1="192" x2="210" y2="216" stroke="#1B5E37" stroke-width="1.5" marker-end="url(#arrowDark)"/>
+  <line x1="270" y1="192" x2="330" y2="216" stroke="#1B5E37" stroke-width="1.5" marker-end="url(#arrowDark)"/>
+  <text x="360" y="207" font-size="10.5" font-style="italic" fill="#1C3557">1 : N SysIDs</text>
+
+  <!-- SysID row -->
+  <rect x="72" y="218" width="86" height="46" rx="6" fill="#2D7D4F"/>
+  <text x="115" y="236" text-anchor="middle" font-size="9.5" fill="#E8F5EE">SysID</text>
+  <text x="115" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF">SYS-12345</text>
+
+  <rect x="166" y="218" width="86" height="46" rx="6" fill="#2D7D4F"/>
+  <text x="209" y="236" text-anchor="middle" font-size="9.5" fill="#E8F5EE">SysID</text>
+  <text x="209" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF">SYS-67890</text>
+
+  <rect x="260" y="218" width="86" height="46" rx="6" fill="#2D7D4F"/>
+  <text x="303" y="236" text-anchor="middle" font-size="9.5" fill="#E8F5EE">SysID</text>
+  <text x="303" y="252" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF">SYS-11223</text>
+
+  <rect x="354" y="218" width="58" height="46" rx="6" fill="#E8F5EE" stroke="#2D7D4F" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="383" y="245" text-anchor="middle" font-size="11" font-weight="700" fill="#2D7D4F">+N</text>
+
+  <line x1="115" y1="264" x2="90" y2="290" stroke="#2D7D4F" stroke-width="1.5" marker-end="url(#arrowMed)"/>
+  <line x1="140" y1="264" x2="175" y2="290" stroke="#2D7D4F" stroke-width="1.5" marker-end="url(#arrowMed)"/>
+  <text x="270" y="282" font-size="10.5" font-style="italic" fill="#1C3557">1 : N Repos</text>
+
+  <!-- Repo row (under first SysID, representative) -->
+  <rect x="72" y="292" width="82" height="40" rx="6" fill="#5BA872"/>
+  <text x="113" y="309" text-anchor="middle" font-size="9" fill="#E8F5EE">Repo</text>
+  <text x="113" y="323" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF">repo-a</text>
+
+  <rect x="162" y="292" width="82" height="40" rx="6" fill="#5BA872"/>
+  <text x="203" y="309" text-anchor="middle" font-size="9" fill="#E8F5EE">Repo</text>
+  <text x="203" y="323" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF">repo-b</text>
+
+  <rect x="252" y="292" width="98" height="40" rx="6" fill="#E8F5EE" stroke="#5BA872" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="301" y="316" text-anchor="middle" font-size="10" font-weight="700" fill="#2D7D4F">...more repos</text>
+
+  <text x="210" y="356" text-anchor="middle" font-size="11" font-style="italic" fill="#1C3557">Each System spans multiple SysIDs;</text>
+  <text x="210" y="371" text-anchor="middle" font-size="11" font-style="italic" fill="#1C3557">each SysID owns multiple repositories</text>
+
+  <rect x="60" y="392" width="300" height="42" rx="6" fill="#F7F9F8" stroke="#1B5E37" stroke-width="1.5"/>
+  <text x="210" y="418" text-anchor="middle" font-size="12" font-weight="700" fill="#1B5E37">Selected repo enters pipeline &#8594;</text>
+
+  <line x1="360" y1="413" x2="436" y2="413" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowDark)"/>
+
+  <!-- ================= COLUMN B: REPO -> CATALOG PIPELINE ================= -->
+  <text x="735" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#1C3557">Repo &#8594; Central Catalog Pipeline</text>
+
+  <!-- Row B1: main catalog flow -->
+  <rect x="450" y="134" width="170" height="100" rx="8" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="2"/>
+  <text x="535" y="156" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1B5E37">Repo: Master Branch</text>
+  <text x="465" y="180" font-size="11.5" fill="#1C3557">&#128196; catalog-info.yaml</text>
+  <text x="465" y="210" font-size="9.5" font-style="italic" fill="#5BA872">committed to master</text>
+
+  <line x1="620" y1="184" x2="646" y2="184" stroke="#2D7D4F" stroke-width="2" marker-end="url(#arrowMed)"/>
+
+  <rect x="650" y="134" width="185" height="100" rx="8" fill="#E8F5EE" stroke="#1B5E37" stroke-width="2"/>
+  <text x="742" y="153" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1B5E37">Validation &amp; Workflow Engine</text>
+  <text x="742" y="167" text-anchor="middle" font-size="10" fill="#2D7D4F">(GitHub Actions)</text>
+  <text x="660" y="184" font-size="10" fill="#1C3557">&#8226; Schema Validation</text>
+  <text x="660" y="198" font-size="10" fill="#1C3557">&#8226; Policy &amp; Standards</text>
+  <text x="660" y="212" font-size="10" fill="#1C3557">&#8226; Metadata Enrichment</text>
+  <text x="660" y="226" font-size="10" fill="#1C3557">&#8226; Audit &amp; Logging</text>
+
+  <line x1="835" y1="184" x2="861" y2="184" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowDark)"/>
+
+  <rect x="865" y="134" width="165" height="100" rx="8" fill="#1B5E37"/>
+  <text x="947" y="153" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">IDP_Catalog</text>
+  <text x="947" y="167" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Repository</text>
+  <text x="875" y="185" font-size="9.5" fill="#E8F5EE">&#128274; Workflow-Only Writes</text>
+  <text x="875" y="199" font-size="9.5" fill="#E8F5EE">&#8226; Centralized Catalog Data</text>
+  <text x="875" y="213" font-size="9.5" fill="#E8F5EE">&#8226; Version-Controlled Metadata</text>
+  <text x="875" y="227" font-size="9.5" fill="#E8F5EE">&#8226; Immutable History &amp; Audit</text>
+
+  <!-- connector: master branch -> resource files (same repo) -->
+  <line x1="535" y1="234" x2="535" y2="284" stroke="#5BA872" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrowAccent)"/>
+  <text x="545" y="262" font-size="9.5" font-style="italic" fill="#2D7D4F">same repo,</text>
+  <text x="545" y="274" font-size="9.5" font-style="italic" fill="#2D7D4F">resource files</text>
+
+  <!-- Row B2: resource flow -->
+  <rect x="450" y="286" width="170" height="80" rx="8" fill="#FFFFFF" stroke="#5BA872" stroke-width="2"/>
+  <text x="535" y="306" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2D7D4F">Repo: Resource Files</text>
+  <text x="460" y="326" font-size="10" fill="#1C3557">&#8226; Configs &amp; Templates</text>
+  <text x="460" y="340" font-size="10" fill="#1C3557">&#8226; Scripts &amp; Binaries</text>
+  <text x="460" y="354" font-size="10" fill="#1C3557">&#8226; Environment Assets</text>
+
+  <line x1="620" y1="326" x2="646" y2="326" stroke="#5BA872" stroke-width="2" marker-end="url(#arrowAccent)"/>
+
+  <rect x="650" y="286" width="185" height="80" rx="8" fill="#5BA872"/>
+  <text x="742" y="305" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Resource Repo</text>
+  <text x="742" y="319" text-anchor="middle" font-size="10" fill="#E8F5EE">(Workflow-Managed)</text>
+  <text x="660" y="336" font-size="9.5" fill="#FFFFFF">&#8226; 1:1 per Source Repo</text>
+  <text x="660" y="349" font-size="9.5" fill="#FFFFFF">&#8226; Auto-Synced via Workflow</text>
+  <text x="660" y="362" font-size="9.5" fill="#FFFFFF">&#8226; Read via Portal "Resources" Tab</text>
+
+  <!-- dashed governed read link into Portal -->
+  <path d="M 835,326 C 950,326 980,340 1058,352" fill="none" stroke="#5BA872" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowAccent)"/>
+  <text x="900" y="380" font-size="9.5" font-style="italic" fill="#2D7D4F">governed, read-only sync</text>
+
+  <!-- Governance Gate -->
+  <path d="M 742,366 C 742,395 640,400 595,408" fill="none" stroke="#1B5E37" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowDark)"/>
+  <rect x="450" y="410" width="290" height="88" rx="8" fill="#FFFFFF" stroke="#B03A2E" stroke-width="2"/>
+  <text x="595" y="432" text-anchor="middle" font-size="13" font-weight="700" fill="#1B5E37">&#128737; Governance Gate</text>
+  <text x="595" y="452" text-anchor="middle" font-size="11" fill="#1C3557">Compliance &amp; Standards Validation</text>
+  <text x="595" y="474" text-anchor="middle" font-size="11" font-weight="700" fill="#B03A2E">&#9888; Non-Compliant = Workflow Disabled</text>
+
+  <!-- ================= COLUMN C: CATALOG PORTAL ================= -->
+  <text x="1290" y="122" text-anchor="middle" font-size="16" font-weight="700" fill="#1C3557">Catalog Portal &#8212; Context-Aware Views</text>
+
+  <line x1="1030" y1="184" x2="1056" y2="150" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowDark)"/>
+
+  <rect x="1060" y="134" width="460" height="42" rx="6" fill="#1B5E37"/>
+  <text x="1290" y="160" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">IDP Catalog Portal (Developer Portal)</text>
+
+  <text x="1075" y="190" font-size="10.5" font-style="italic" fill="#1C3557">Context Switcher:</text>
+  <rect x="1075" y="196" width="130" height="30" rx="15" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+  <text x="1140" y="216" text-anchor="middle" font-size="11" fill="#1C3557">System View</text>
+  <rect x="1213" y="196" width="115" height="30" rx="15" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+  <text x="1270" y="216" text-anchor="middle" font-size="11" fill="#1C3557">SysID View</text>
+  <rect x="1336" y="196" width="115" height="30" rx="15" fill="#5BA872"/>
+  <text x="1393" y="216" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">Repo View</text>
+
+  <rect x="1060" y="236" width="460" height="28" rx="5" fill="#E8F5EE" stroke="#2D7D4F" stroke-width="1"/>
+  <text x="1290" y="254" text-anchor="middle" font-size="10.5" fill="#1C3557">Overview | Ownership | Dependencies | APIs | Resources | Documents | Activity</text>
+  <text x="1290" y="278" text-anchor="middle" font-size="9.5" font-style="italic" fill="#2D7D4F">&#8593; same tab set, scope changes with context above</text>
+
+  <!-- Mini card: System context -->
+  <rect x="1060" y="286" width="220" height="184" rx="8" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+  <rect x="1060" y="286" width="220" height="26" rx="8" fill="#2D7D4F"/>
+  <rect x="1060" y="299" width="220" height="13" fill="#2D7D4F"/>
+  <text x="1170" y="303" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">System Context</text>
+  <text x="1072" y="332" font-size="10" fill="#1C3557">Rollup across all SysIDs</text>
+  <text x="1072" y="350" font-size="11.5" font-weight="700" fill="#1B5E37">12 SysIDs &#183; 47 Repositories</text>
+  <text x="1072" y="368" font-size="10" fill="#1C3557">Owner: Platform Engineering</text>
+  <text x="1072" y="386" font-size="10.5" font-weight="700" fill="#2D7D4F">&#10003; 96% Compliant</text>
+  <text x="1072" y="404" font-size="10" fill="#1C3557">Last Sync: Today, 10:30 AM</text>
+  <text x="1072" y="422" font-size="10" fill="#1C3557">Dependencies: 214 unique</text>
+  <text x="1072" y="440" font-size="10" fill="#1C3557">APIs Exposed: 63</text>
+  <text x="1072" y="458" font-size="10" fill="#1C3557">Resource Repos Linked: 47</text>
+
+  <!-- Mini card: Repo context -->
+  <rect x="1300" y="286" width="220" height="184" rx="8" fill="#FFFFFF" stroke="#5BA872" stroke-width="1.5"/>
+  <rect x="1300" y="286" width="220" height="26" rx="8" fill="#5BA872"/>
+  <rect x="1300" y="299" width="220" height="13" fill="#5BA872"/>
+  <text x="1410" y="303" text-anchor="middle" font-size="11.5" font-weight="700" fill="#FFFFFF">Repo Context</text>
+  <text x="1312" y="332" font-size="10" fill="#1C3557">Scoped to a single repository</text>
+  <text x="1312" y="350" font-size="11.5" font-weight="700" fill="#1B5E37">repo-a &#183; SYS-12345</text>
+  <text x="1312" y="368" font-size="10" fill="#1C3557">Owner: Platform Team A</text>
+  <text x="1312" y="386" font-size="10.5" font-weight="700" fill="#2D7D4F">&#10003; Compliant</text>
+  <text x="1312" y="404" font-size="10" fill="#1C3557">Environment: Prod</text>
+  <text x="1312" y="422" font-size="10" fill="#1C3557">Last Updated: Jul 14, 2026</text>
+  <text x="1312" y="440" font-size="10" fill="#1C3557">Resource Repo: linked &#10003;</text>
+  <text x="1312" y="458" font-size="10" fill="#1C3557">APIs: 3 provided, 2 consumed</text>
+
+  <text x="1290" y="494" text-anchor="middle" font-size="11" font-style="italic" fill="#1C3557">Same tab set (Overview, Ownership, Dependencies, APIs, Resources, Documents, Activity)</text>
+  <text x="1290" y="510" text-anchor="middle" font-size="11" font-style="italic" fill="#1C3557">dynamically scoped to the selected System, SysID, or Repo context</text>
+
+  <!-- ================= COLUMN D: READ-ONLY INTEGRATIONS ================= -->
+  <text x="1735" y="120" text-anchor="middle" font-size="15" font-weight="700" fill="#1C3557">Read-Only Integration Tabs</text>
+  <text x="1735" y="136" text-anchor="middle" font-size="10" font-style="italic" fill="#2D7D4F">Applicability varies by tab &#8212; not just Repo-scoped</text>
+
+  <line x1="1520" y1="300" x2="1566" y2="300" stroke="#1B5E37" stroke-width="2" marker-end="url(#arrowDark)"/>
+
+  <!-- column headers for S / R badges -->
+  <text x="1826" y="141" text-anchor="middle" font-size="9" font-weight="700" fill="#1C3557">S</text>
+  <text x="1854" y="141" text-anchor="middle" font-size="9" font-weight="700" fill="#1C3557">R</text>
+
+  <!-- integration rows: each with left color bar, label, and System(S) / Repo(R) applicability badges -->
+  <g font-size="11" fill="#1C3557">
+    <!-- 1. System Overview -->
+    <rect x="1570" y="144" width="310" height="32" rx="6" fill="#F7F9F8" stroke="#1B5E37" stroke-width="1.5"/>
+    <rect x="1570" y="144" width="6" height="32" fill="#1B5E37"/>
+    <text x="1590" y="164" font-weight="700">System Overview</text>
+    <rect x="1818" y="152" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="164" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="152" width="16" height="16" rx="3" fill="#FFFFFF" stroke="#C9D9CF" stroke-width="1"/><text x="1854" y="164" text-anchor="middle" font-size="10" fill="#C9D9CF">R</text>
+
+    <!-- 2. Datadog -->
+    <rect x="1570" y="179" width="310" height="32" rx="6" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+    <rect x="1570" y="179" width="6" height="32" fill="#2D7D4F"/>
+    <text x="1590" y="199" font-weight="700">Datadog</text>
+    <rect x="1818" y="187" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="199" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="187" width="16" height="16" rx="3" fill="#5BA872"/><text x="1854" y="199" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">R</text>
+
+    <!-- 3. Wiz -->
+    <rect x="1570" y="214" width="310" height="32" rx="6" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+    <rect x="1570" y="214" width="6" height="32" fill="#2D7D4F"/>
+    <text x="1590" y="234" font-weight="700">Wiz (Security Posture)</text>
+    <rect x="1818" y="222" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="234" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="222" width="16" height="16" rx="3" fill="#5BA872"/><text x="1854" y="234" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">R</text>
+
+    <!-- 4. Kubernetes -->
+    <rect x="1570" y="249" width="310" height="32" rx="6" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+    <rect x="1570" y="249" width="6" height="32" fill="#2D7D4F"/>
+    <text x="1590" y="269" font-weight="700">Kubernetes</text>
+    <rect x="1818" y="257" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="269" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="257" width="16" height="16" rx="3" fill="#5BA872"/><text x="1854" y="269" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">R</text>
+
+    <!-- 5. Chaos Engineering -->
+    <rect x="1570" y="284" width="310" height="32" rx="6" fill="#F7F9F8" stroke="#1B5E37" stroke-width="1.5"/>
+    <rect x="1570" y="284" width="6" height="32" fill="#1B5E37"/>
+    <text x="1590" y="304" font-weight="700">Chaos Engineering</text>
+    <rect x="1818" y="292" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="304" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="292" width="16" height="16" rx="3" fill="#FFFFFF" stroke="#C9D9CF" stroke-width="1"/><text x="1854" y="304" text-anchor="middle" font-size="10" fill="#C9D9CF">R</text>
+
+    <!-- 6. Cost Ownership -->
+    <rect x="1570" y="319" width="310" height="32" rx="6" fill="#F7F9F8" stroke="#1B5E37" stroke-width="1.5"/>
+    <rect x="1570" y="319" width="6" height="32" fill="#1B5E37"/>
+    <text x="1590" y="339" font-weight="700">Cost Ownership (FinOps)</text>
+    <rect x="1818" y="327" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="339" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="327" width="16" height="16" rx="3" fill="#FFFFFF" stroke="#C9D9CF" stroke-width="1"/><text x="1854" y="339" text-anchor="middle" font-size="10" fill="#C9D9CF">R</text>
+
+    <!-- 7. SonarQube -->
+    <rect x="1570" y="354" width="310" height="32" rx="6" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+    <rect x="1570" y="354" width="6" height="32" fill="#2D7D4F"/>
+    <text x="1590" y="374" font-weight="700">SonarQube</text>
+    <rect x="1818" y="362" width="16" height="16" rx="3" fill="#FFFFFF" stroke="#C9D9CF" stroke-width="1"/><text x="1826" y="374" text-anchor="middle" font-size="10" fill="#C9D9CF">S</text>
+    <rect x="1846" y="362" width="16" height="16" rx="3" fill="#5BA872"/><text x="1854" y="374" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">R</text>
+
+    <!-- 8. CI/CD (Harness) -->
+    <rect x="1570" y="389" width="310" height="32" rx="6" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+    <rect x="1570" y="389" width="6" height="32" fill="#2D7D4F"/>
+    <text x="1590" y="409" font-weight="700">CI/CD (Harness)</text>
+    <rect x="1818" y="397" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="409" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="397" width="16" height="16" rx="3" fill="#5BA872"/><text x="1854" y="409" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">R</text>
+
+    <!-- 9. Tech Docs -->
+    <rect x="1570" y="424" width="310" height="32" rx="6" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+    <rect x="1570" y="424" width="6" height="32" fill="#2D7D4F"/>
+    <text x="1590" y="444" font-weight="700">Tech Docs</text>
+    <rect x="1818" y="432" width="16" height="16" rx="3" fill="#1B5E37"/><text x="1826" y="444" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">S</text>
+    <rect x="1846" y="432" width="16" height="16" rx="3" fill="#5BA872"/><text x="1854" y="444" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF">R</text>
+
+  </g>
+
+  <text x="1725" y="538" text-anchor="middle" font-size="9.5" font-style="italic" fill="#2D7D4F">Shaded rows = System-exclusive tabs (no Repo-level equivalent)</text>
+
+  <!-- ================= SECTION DIVIDER ================= -->
+  <line x1="440" y1="562" x2="1880" y2="562" stroke="#E8F5EE" stroke-width="2"/>
+  <text x="1160" y="586" text-anchor="middle" font-size="15" font-weight="700" fill="#1B5E37">Catalog Data Model &#8212; Detail Views (available at both System and Repo context)</text>
+
+  <!-- ================= ROW 2: DETAIL CARDS ================= -->
+  <!-- Card 1: Ownership -->
+  <rect x="450" y="606" width="335" height="230" rx="8" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+  <rect x="450" y="606" width="335" height="34" rx="8" fill="#1B5E37"/>
+  <rect x="450" y="626" width="335" height="14" fill="#1B5E37"/>
+  <text x="617" y="628" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">Ownership &amp; Metadata</text>
+  <g font-size="11" fill="#1C3557">
+    <text x="465" y="662">&#8226; Application Name &amp; Description</text>
+    <text x="465" y="684">&#8226; Business Owner</text>
+    <text x="465" y="706">&#8226; Technical Owner</text>
+    <text x="465" y="728">&#8226; Support Group</text>
+    <text x="465" y="750">&#8226; SYSID / Project Key</text>
+    <text x="465" y="772">&#8226; Environment / Classification</text>
+    <text x="465" y="794">&#8226; Repository / Links</text>
+  </g>
+
+  <!-- Card 2: System Dependencies -->
+  <rect x="815" y="606" width="335" height="230" rx="8" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+  <rect x="815" y="606" width="335" height="34" rx="8" fill="#1B5E37"/>
+  <rect x="815" y="626" width="335" height="14" fill="#1B5E37"/>
+  <text x="982" y="628" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">System Dependencies</text>
+  <g font-size="11" fill="#1C3557">
+    <text x="830" y="662">&#8226; Databases (Oracle, SQL, MongoDB)</text>
+    <text x="830" y="684">&#8226; Messaging (Kafka, IBM MQ, RabbitMQ)</text>
+    <text x="830" y="706">&#8226; File Transfer (FTP, SFTP, MFT)</text>
+    <text x="830" y="728">&#8226; Storage (S3, File Shares)</text>
+    <text x="830" y="750">&#8226; External &amp; Internal Services</text>
+  </g>
+
+  <!-- Card 3: API Discovery -->
+  <rect x="1180" y="606" width="335" height="230" rx="8" fill="#FFFFFF" stroke="#2D7D4F" stroke-width="1.5"/>
+  <rect x="1180" y="606" width="335" height="34" rx="8" fill="#1B5E37"/>
+  <rect x="1180" y="626" width="335" height="14" fill="#1B5E37"/>
+  <text x="1347" y="628" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">API Provider/Consumer Discovery</text>
+  <g font-size="11" fill="#1C3557">
+    <text x="1195" y="662">&#8226; APIs Provided</text>
+    <text x="1195" y="684">&#8226; APIs Consumed</text>
+    <text x="1195" y="706">&#8226; Provider / Consumer Mapping</text>
+    <text x="1195" y="728">&#8226; Swagger / OpenAPI Docs</text>
+    <text x="1195" y="750">&#8226; API Versions &amp; Endpoints</text>
+    <text x="1195" y="772">&#8226; Authentication Details</text>
+    <text x="1195" y="794">&#8226; Impact &amp; Dependency View</text>
+  </g>
+
+  <!-- Card 4: Resource & Artifact Management (NEW) -->
+  <rect x="1545" y="606" width="335" height="230" rx="8" fill="#FFFFFF" stroke="#5BA872" stroke-width="2"/>
+  <rect x="1545" y="606" width="335" height="34" rx="8" fill="#5BA872"/>
+  <rect x="1545" y="626" width="335" height="14" fill="#5BA872"/>
+  <text x="1712" y="628" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">Resource Management</text>
+  <g font-size="11" fill="#1C3557">
+    <text x="1560" y="662">&#8226; Config Files &amp; Templates</text>
+    <text x="1560" y="684">&#8226; Scripts &amp; Binaries</text>
+    <text x="1560" y="706">&#8226; Environment-Specific Assets</text>
+    <text x="1560" y="728">&#8226; Workflow-Managed Sync (1:1/repo)</text>
+    <text x="1560" y="750">&#8226; Version History &amp; Rollback</text>
+    <text x="1560" y="772">&#8226; Linked Source Repo Reference</text>
+  </g>
+
+  <!-- ================= ROW 3: LEGEND + BANNER ================= -->
+  <rect x="40" y="866" width="380" height="168" rx="8" fill="#F7F9F8" stroke="#2D7D4F" stroke-width="1.5"/>
+  <text x="60" y="892" font-size="14" font-weight="700" fill="#1B5E37">Legend</text>
+
+  <line x1="60" y1="912" x2="95" y2="912" stroke="#1B5E37" stroke-width="2"/>
+  <text x="102" y="916" font-size="10.5" fill="#1C3557">Data / Metadata Flow</text>
+
+  <line x1="60" y1="934" x2="95" y2="934" stroke="#1B5E37" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="102" y="938" font-size="10.5" fill="#1C3557">Governance / Enforcement</text>
+
+  <line x1="60" y1="956" x2="95" y2="956" stroke="#5BA872" stroke-width="1.5" stroke-dasharray="5,4"/>
+  <text x="102" y="960" font-size="10.5" fill="#1C3557">Workflow-Managed Sync (Read-Only)</text>
+
+  <rect x="60" y="972" width="35" height="14" fill="#E8F5EE" stroke="#2D7D4F" stroke-width="1"/>
+  <text x="102" y="983" font-size="10.5" fill="#1C3557">Read-Only Views</text>
+
+  <rect x="60" y="994" width="16" height="16" rx="3" fill="#1B5E37"/><text x="68" y="1006" text-anchor="middle" font-size="9" font-weight="700" fill="#FFFFFF">S</text>
+  <rect x="80" y="994" width="16" height="16" rx="3" fill="#5BA872"/><text x="88" y="1006" text-anchor="middle" font-size="9" font-weight="700" fill="#FFFFFF">R</text>
+  <text x="104" y="1006" font-size="10.5" fill="#1C3557">= Available at System / Repo context</text>
+
+  <text x="60" y="1024" font-size="10.5" font-style="italic" fill="#1C3557">"1 : N" &#8212; one-to-many cardinality between levels</text>
+
+  <rect x="440" y="960" width="1440" height="58" rx="6" fill="#1B5E37"/>
+  <text x="1160" y="995" text-anchor="middle" font-size="15" font-weight="700" fill="#FFFFFF">Single Source of Truth &#160; | &#160; Governed Metadata &#160; | &#160; Discoverability &#160; | &#160; Developer Productivity &#160; | &#160; Compliance &amp; Auditability</text>
+
+  <!-- Footer -->
+  <text x="1880" y="1064" text-anchor="end" font-size="10" font-style="italic" fill="#2D7D4F">Internal Developer Platform &#8212; Capstone Presentation</text>
+  <rect x="0" y="1074" width="1920" height="6" fill="#1B5E37"/>
+</svg>
