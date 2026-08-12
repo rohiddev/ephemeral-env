@@ -1,0 +1,68 @@
+apiVersion: harness.io/v1
+kind: API
+identifier: payments_rest_api
+name: payments-rest-api
+type: openapi
+owner: group:account/team-payments
+metadata:
+  title: Payments REST API
+  description: Public REST API for initiating and querying wire payment transactions.
+  annotations:
+    api/endpoint: https://payments.internal.bank.com/api/v1
+  tags:
+    - openapi
+spec:
+  lifecycle: production
+  system:
+    - system:account/payments_platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: Payments REST API
+      version: 1.0.0
+    paths:
+      /transactions:
+        post:
+          summary: Submit a wire payment transaction
+
+2. An async API entity (type: asyncapi) — a Kafka producer:
+
+apiVersion: harness.io/v1
+kind: API
+identifier: payments_events_producer
+name: payments-events-producer
+type: asyncapi
+owner: group:account/team-payments
+metadata:
+  title: Payments Events Producer
+  description: Publishes transaction state-change events for downstream consumers.
+  annotations:
+    kafka/topic: payments.transaction.events
+  tags:
+    - asyncapi
+    - producer
+spec:
+  lifecycle: production
+  system:
+    - system:account/payments_platform
+  definition: "# Replace with actual AsyncAPI specification"
+
+3. How the owning Component references both:
+
+apiVersion: harness.io/v1
+kind: Component
+identifier: payments_service
+name: payments-service
+type: service
+owner: group:account/team-payments
+metadata:
+  title: Payments Service
+spec:
+  lifecycle: production
+  system:
+    - system:account/payments_platform
+  providesApis:
+    - api:account/payments_rest_api
+    - api:account/payments_events_producer
+  consumesApis:
+    - api:account/fraud_check_rest_api
