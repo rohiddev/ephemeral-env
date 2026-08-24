@@ -1,0 +1,1273 @@
+Both solve the same basic problem: getting traffic from outside the Kubernetes cluster to an application inside the cluster.
+
+But they use different Kubernetes/OpenShift mechanisms.
+
+1. Big picture
+
+
+
+
+===
+Router → Route → Service → Pod, you already understand the basic OpenShift
+
+Customer
+    |
+    | "I want bank.com"
+    ↓
+ OpenShift Router
+    |
+    | "bank.com?"
+    |
+    | Route says:
+    | bank.com → Banking Service
+    ↓
+Banking Service
+    |
+    | "Which Banking Pod is available?"
+    |
+    +--------+--------+
+    |        |        |
+    ↓        ↓        ↓
+  Pod 1    Pod 2    Pod 3
+
+
+
+  OPENSHIFT
+
+  Internet
+     ↓
+  Load Balancer
+     ↓
+  OpenShift Router
+     ↓
+  Route
+     ↓
+  Service
+     ↓
+  Pod
+
+
+  EKS
+
+  Internet
+     ↓
+  AWS ALB
+     ↓
+  Ingress Controller
+     ↓
+  Ingress rules
+     ↓
+  Service
+     ↓
+  Pod
+
+
+  ===
+  Internet
+     ↓
+  DNS
+     ↓
+  Load Balancer
+     ↓
+  OpenShift Router
+     ↓
+  Route
+     ↓
+  Service
+     ↓
+  Pod
+  ==
+
+
+                OpenShift Cluster
+                       |
+               OVN-Kubernetes
+                       |
+         +-------------+-------------+
+         |             |             |
+         v             v             v
+       Node 1        Node 2        Node 3
+         |             |             |
+        Pod           Pod           Pod
+     10.128.x.x    10.129.x.x    10.130.x.x
+
+
+     ==
+
+                              INTERNET
+                                 |
+                                 | HTTPS
+                                 v
+                       +-------------------+
+                       | OpenShift Router  |
+                       | Ingress / HAProxy |
+                       +-------------------+
+                                 |
+                                 | Route
+                                 v
+                       +-------------------+
+                       | Kubernetes        |
+                       | Service           |
+                       +-------------------+
+                                 |
+                          Service IP
+                                 |
+                     +-----------+-----------+
+                     |           |           |
+                     v           v           v
+                  Pod A       Pod B       Pod C
+                 10.x.x.x     10.x.x.x     10.x.x.x
+
+
+
+                 L4 — Transport layer
+                 L7 — Application layer
+
+                 L4 = simple traffic forwarding
+                 L7 = intelligent application routing
+
+
+                 Internet
+                    |
+                    v
+                  L4 Load Balancer
+                    |
+                    +------> Server 1
+                    +------> Server 2
+                    +------> Server 3
+
+                    Internet
+                       |
+                       v
+                     L7 Gateway
+                       |
+                       +---- /customers → Customer Service
+                       |
+                       +---- /orders    → Order Service
+                       |
+                       +---- /payments  → Payment Service
+
+
+     A hash map stores data as key → value, such as employeeID → employee details.
+     A hash function takes the key (e.g., 12345) and converts it into a number that determines where in memory to store the value.
+     When you want the value later, the hash function is run on the same key, quickly telling the hash map where to look.
+     This avoids searching through every item one by one, so lookup is typically O(1) — constant time.
+     If two keys produce the same location (collision), the hash map uses techniques such as chaining or probing to find the cor
+
+     ====
+      ## 18. System Design and Architecture
+       │ 586 +
+       │ 587 +  171. **URL shortener.**
+       │ 588 +        - Hash the URL, store it, and redirect. Add caching, analytics, and rate limiting.
+       │ 589 +
+       │ 590 +  172. **Chat application.**
+       │ 591 +        - WebSockets for real-time messages, a database for history, and presence tracking.
+       │ 592 +
+       │ 593 +  173. **File storage service.**
+       │ 594 +        - Upload to object storage, metadata in a database, permissions, and versioning.
+       │ 595 +
+       │ 596 +  174. **Horizontal vs vertical scaling.**
+       │ 597 +        - Horizontal adds more machines. Vertical adds more power to one machine.
+       │ 598 +
+       │ 599 +  175. **Load balancer.**
+       │ 600 +        - Distributes traffic and provides high availability.
+       │ 601 +
+       │ 602 +  176. **Caching.**
+       │ 603 +        - Store frequently accessed data closer to the user to reduce database load.
+       │ 604 +
+       │ 605 +  177. **CDN.**
+       │ 606 +        - A network of servers that serves static content from a location near the user.
+       │ 607 +
+       │ 608 +  178. **Message queue.**
+       │ 609 +        - Decouples services and smooths traffic spikes.
+       │ 610 +
+       │ 611 +  179. **10x traffic spike.**
+       │ 612 +        - Scale horizontally, use caching, queues, and rate limiting.
+       │ 613 +
+       │ 614 +  180. **Strong vs eventual consistency.**
+       │ 615 +        - Strong consistency means all reads see the latest write. Eventual means reads may lag briefly.
+
+==
+
+ ## 18. System Design and Architecture
+  │ 586 +
+  │ 587 +  171. **URL shortener.**
+  │ 588 +        - Hash the URL, store it, and redirect. Add caching, analytics, and rate limiting.
+  │ 589 +
+  │ 590 +  172. **Chat application.**
+  │ 591 +        - WebSockets for real-time messages, a database for history, and presence tracking.
+  │ 592 +
+  │ 593 +  173. **File storage service.**
+  │ 594 +        - Upload to object storage, metadata in a database, permissions, and versioning.
+  │ 595 +
+  │ 596 +  174. **Horizontal vs vertical scaling.**
+  │ 597 +        - Horizontal adds more machines. Vertical adds more power to one machine.
+  │ 598 +
+  │ 599 +  175. **Load balancer.**
+  │ 600 +        - Distributes traffic and provides high availability.
+  │ 601 +
+  │ 602 +  176. **Caching.**
+  │ 603 +        - Store frequently accessed data closer to the user to reduce database load.
+  │ 604 +
+  │ 605 +  177. **CDN.**
+  │ 606 +        - A network of servers that serves static content from a location near the user.
+  │ 607 +
+  │ 608 +  178. **Message queue.**
+  │ 609 +        - Decouples services and smooths traffic spikes.
+  │ 610 +
+  │ 611 +  179. **10x traffic spike.**
+  │ 612 +        - Scale horizontally, use caching, queues, and rate limiting.
+  │ 613 +
+  │ 614 +  180. **Strong vs eventual consistency.**
+  │ 615 +        - Strong consistency means all reads see the latest write. Eventual means reads may lag briefly.
+
+
+171. URL Shortener
+
+Think Bitly.
+
+Long URL
+   ↓
+URL Shortener
+   ↓
+abc123
+   ↓
+Database
+
+When someone visits abc123, the system looks it up and redirects them to the original URL.
+
+Architecture:
+
+User → Load Balancer → API → Cache → Database
+                         ↓
+                     Analytics
+
+Important concepts: hashing/ID generation, database, caching, rate limiting, analytics.
+
+===
+172. Chat Application
+
+Think WhatsApp.
+
+Normal HTTP isn't ideal for instant two-way communication, so use WebSockets.
+
+User A ←── WebSocket ──→ Chat Server
+                              |
+                              ↓
+                           Database
+                              |
+                              ↓
+                         User B
+
+WebSocket keeps a connection open so messages can be pushed immediately.
+
+Key concepts: WebSockets, message storage, presence ("online/offline"), notifications, scaling.
+
+173. File Storage Service
+
+Think Google Drive or Dropbox.
+
+Don't put huge files directly into a normal database.
+
+User
+ ↓
+API
+ ├──→ Object Storage → actual file
+ |
+ └──→ Database → filename, owner, permissions, location
+
+Object storage could be Amazon S3.
+
+The database stores metadata, while object storage stores the actual file.
+
+Key concepts: object storage, metadata, permissions, versioning, encryption.
+
+===
+1. Circuit Breaker ⚡
+Problem
+
+Service A calls Service B, but Service B is down.
+
+Without a circuit breaker:
+
+Service A → Service B ❌
+Service A → Service B ❌
+Service A → Service B ❌
+Service A → Service B ❌
+
+Service A keeps trying and wastes resources.
+
+Circuit breaker
+Service A → Circuit Breaker → Service B ❌
+
+After enough failures, the circuit breaker says:
+
+"Stop calling Service B for now."
+
+Service A → Circuit Breaker 🚫
+                    X
+                 Service B
+
+After some time, it tests Service B again.
+
+Think:
+
+Circuit breaker = stop calling a service that is clearly failing.
+
+Architecture benefit: prevents cascading failures.
+
+2. Rate Limiter 🚦
+Problem
+
+One customer sends:
+
+10,000 requests/second
+
+Your API gets overwhelmed.
+
+A rate limiter says:
+
+"You can only make 100 requests per minute."
+
+User
+ |
+100 requests → ✅
+101st request → ❌
+Example
+Internet
+   |
+   ↓
+Rate Limiter
+   |
+   ↓
+API
+
+Used for:
+
+API protection
+DDoS mitigation
+Preventing abuse
+Protecting backend systems
+Think:
+
+Rate limiter = traffic cop controlling how much traffic enters.
+
+3. Bulkhead 🚢
+
+This is one of the most important resilience patterns.
+
+Imagine a ship has separate compartments.
+
+If one compartment floods:
+
++---------+---------+---------+
+|   OK    | FLOODED |   OK    |
++---------+---------+---------+
+
+The entire ship doesn't sink.
+
+Same idea in software.
+
+Suppose:
+
+Application
+ |
+ +--- Payment
+ |
+ +--- Email
+ |
+ +--- Reporting
+
+If Reporting consumes all the CPU:
+
+Reporting → consumes everything ❌
+Payment → ❌
+Email → ❌
+
+With bulkheads:
+
+Payment    → Resource Pool A
+Email      → Resource Pool B
+Reporting  → Resource Pool C
+
+Reporting can fail without taking down Payment.
+
+Think:
+
+Bulkhead = isolate resources so one problem doesn't bring down everything.
+
+4. Retry 🔄
+
+Sometimes a request fails because of a temporary problem.
+
+Service A → Service B
+             ↓
+           timeout
+
+Instead of immediately giving up:
+
+Try 1 → FAIL
+Try 2 → FAIL
+Try 3 → SUCCESS
+
+But you don't want to retry endlessly.
+
+Usually use exponential backoff:
+
+Retry 1 → wait 1 second
+Retry 2 → wait 2 seconds
+Retry 3 → wait 4 seconds
+Retry 4 → wait 8 seconds
+Think:
+
+Retry = try again because the failure might be temporary.
+
+⚠️ Don't blindly retry every operation—especially non-idempotent operations like charging a credit card.
+
+5. Timeout ⏰
+
+Suppose Service A calls Service B.
+
+Service B never responds.
+
+Without timeout:
+
+Service A
+   |
+   | waiting...
+   | waiting...
+   | waiting...
+   | waiting...
+
+Eventually all your application threads may get stuck.
+
+With timeout:
+
+Call Service B
+     |
+     | wait 3 seconds
+     ↓
+   TIMEOUT
+     |
+     ↓
+Stop waiting
+Think:
+
+Timeout = don't wait forever.
+
+6. Cache Aside 🗄️
+
+This is extremely common with Redis + database.
+
+Suppose you need customer information.
+
+First check cache:
+
+Application
+    |
+    ↓
+ Redis
+    |
+    ↓
+Found? → YES → return data
+
+If not found:
+
+Application
+    |
+    ↓
+ Redis
+    |
+   MISS
+    |
+    ↓
+Database
+    |
+    ↓
+Get data
+    |
+    +----→ Redis
+    |
+    ↓
+Application
+Think:
+
+Cache Aside = check cache first; if missing, get it from the database and put it into cache.
+
+7. Write-Through Cache
+
+Here, when you update data, you update the cache and database together.
+
+Application
+    |
+    ↓
+Cache
+    |
+    ↓
+Database
+
+For example:
+
+Change customer address
+        |
+        +----→ Cache
+        |
+        +----→ Database
+
+The goal is to keep the cache and database synchronized.
+
+Think:
+
+Write-through = update cache and database when you write.
+
+8. Publish-Subscribe 📢
+
+Think of a radio station.
+
+The radio station publishes:
+
+"New payment completed!"
+
+Many listeners receive it.
+
+In software:
+
+                 Kafka
+                   |
+        "PaymentCompleted"
+          /        |        \
+         ↓         ↓         ↓
+      Email     Fraud     Analytics
+      Service   Service    Service
+
+The Payment Service doesn't need to directly call all three services.
+
+It publishes an event.
+
+Think:
+
+Pub/Sub = one event → many interested consumers.
+
+This is very important for Kafka/event-driven architecture.
+
+9. Event Sourcing 📖
+
+Instead of storing only the current state, store every change that happened.
+
+Normal database:
+
+Account balance = $500
+
+Event sourcing:
+
+Deposit $1,000
+Withdraw $200
+Deposit $100
+Withdraw $400
+
+You can reconstruct:
+
+1000 - 200 + 100 - 400 = $500
+
+Why is this powerful?
+
+You have a complete history.
+
+For financial systems:
+
+Transaction 1
+Transaction 2
+Transaction 3
+Transaction 4
+...
+
+You can audit exactly what happened.
+
+Think:
+
+Event sourcing = don't just store the current state; store the history of changes.
+
+10. CQRS
+
+CQRS means:
+
+Command Query Responsibility Segregation
+
+Don't let the complicated name scare you.
+
+It means:
+
+Separate writing from reading.
+
+Normally:
+
+Application
+    |
+    ↓
+One Database
+    ↑
+Read + Write
+
+With CQRS:
+
+             Application
+             /         \
+            ↓           ↓
+        WRITE          READ
+          |              |
+          ↓              ↓
+    Write Model      Read Model
+
+Why?
+
+Suppose your system has:
+
+1 million reads
+10,000 writes
+
+You may want to optimize the read side separately.
+
+Think:
+
+CQRS = separate the system that writes data from the system that reads data.
+
+11. Strangler Fig 🌳
+
+This is a legacy modernization pattern.
+
+Imagine you have a huge old application:
+
+       OLD MONOLITH
++-------------------------+
+| Customer                |
+| Payment                 |
+| Orders                  |
+| Reporting               |
+| Inventory               |
++-------------------------+
+
+Don't rewrite everything at once.
+
+Instead:
+
+OLD MONOLITH
+    |
+    +---- Customer → NEW SERVICE
+    |
+    +---- Payment  → OLD
+    |
+    +---- Orders   → NEW SERVICE
+    |
+    +---- Reporting → OLD
+
+Over time:
+
+Old Monolith
+     ↓
+Smaller
+     ↓
+Smaller
+     ↓
+Eventually retired
+Think:
+
+Strangler Fig = gradually replace the old system instead of doing a risky big-bang rewrite.
+
+This is extremely useful in enterprise architecture.
+
+12. Saga Pattern ✈️🏨🚗
+
+This is probably the hardest one.
+
+Imagine booking a vacation:
+
+1. Book flight
+2. Book hotel
+3. Book rental car
+
+There is no single database transaction across all three systems.
+
+Suppose:
+
+Flight ✅
+Hotel  ✅
+Car    ❌
+
+What do you do?
+
+Saga says:
+
+Undo the successful steps using compensating actions.
+
+Book Flight ✅
+     ↓
+Book Hotel ✅
+     ↓
+Book Car ❌
+     ↓
+Cancel Hotel
+     ↓
+Cancel Flight
+
+The cancellation operations are called compensating transactions.
+
+Think:
+
+Saga = coordinate a multi-step business transaction across multiple services without requiring one giant database transaction.
+
+The 12 patterns — easiest way to remember
+Pattern	Think of it as	Main problem solved
+Circuit Breaker	⚡ Fuse	Failing service
+Rate Limiter	🚦 Traffic cop	Too much traffic
+Bulkhead	🚢 Ship compartments	Failure spreading
+Retry	📞 Call again	Temporary failure
+Timeout	⏰ Hang up	Waiting forever
+Cache Aside	🧊 Check fridge first	Slow database
+Write Through	✍️ Update both	Cache consistency
+Pub/Sub	📢 Radio	Many consumers
+Event Sourcing	📖 Journal	Complete history
+CQRS	🏦 Separate teller windows	Read/write scaling
+Strangler Fig	🌳 Replace gradually	Legacy migration
+Saga	✈️ Trip cancellation	Distributed transactions
+⭐ The 5 I'd prioritize for your architecture interviews
+
+If you're short on time, I'd make sure you can explain these without notes:
+
+1. Circuit Breaker
+
+"Stops calls to a failing downstream service to prevent cascading failures."
+
+2. Retry + Timeout
+
+These usually go together:
+
+Call
+ ↓
+Timeout?
+ ↓
+Retry with exponential backoff
+ ↓
+Still failing?
+ ↓
+Circuit breaker
+3. Cache Aside
+Request
+ ↓
+Cache
+ ↓
+HIT → return
+ ↓
+MISS
+ ↓
+Database
+ ↓
+Cache
+4. Pub/Sub
+Producer
+   ↓
+ Kafka
+ / | \
+↓  ↓  ↓
+A  B  C
+5. Saga
+Service A ✅
+    ↓
+Service B ✅
+    ↓
+Service C ❌
+    ↓
+Compensate A + B
+
+Architect-level thinking: don't say "I would use Circuit Breaker because it's a best practice.
+" Say what failure you're protecting against, what happens without it, and what trade-of
+f the pattern introduces. That's what distinguishes system-design knowledge from architecture
+decision-making.
+
+===
+. Scalability — "How do I handle more users?"
+
+Suppose your application currently handles:
+
+1,000 users
+
+Tomorrow it needs to handle:
+
+1,000,000 users
+
+You need to scale.
+
+Load Balancer
+
+Distributes users across multiple servers:
+
+                 Load Balancer
+                /      |      \
+               ↓       ↓       ↓
+            Server   Server   Server
+
+Think: "Spread the traffic."
+
+Horizontal Scaling
+
+Add more servers:
+
+1 server → 10 servers → 100 servers
+
+Think: "Add more workers."
+
+Caching
+
+Don't repeatedly ask the database for the same information.
+
+User → Cache → Data
+          ↑
+       fast
+
+Think: "Keep frequently used information nearby."
+
+Sharding
+
+Split a huge database into multiple pieces.
+
+             Database
+                |
+       +--------+--------+
+       |        |        |
+    Shard 1  Shard 2  Shard 3
+    Users    Users    Users
+    1-1M     1-1M     1-1M
+
+Think: "Divide the database workload."
+
+Interview sentence
+
+"For scalability, I'd horizontally scale application instances behind a load balancer, use caching to reduce database load, and consider database sharding when the database itself becomes the bottleneck."
+
+2. Reliability — "How do I keep the system running?"
+
+Imagine one service fails.
+
+You don't want the entire application to fail.
+
+Replication
+
+Have multiple copies:
+
+        Application
+        /    |    \
+      Copy Copy Copy
+
+If one fails:
+
+Copy 1 ❌
+Copy 2 ✅
+Copy 3 ✅
+Timeout
+
+Don't wait forever:
+
+Call Service
+     ↓
+Wait 3 seconds
+     ↓
+TIMEOUT
+Retry
+
+Try again if the failure might be temporary:
+
+Try → Fail
+Try → Fail
+Try → Success
+
+Usually with exponential backoff.
+
+Circuit Breaker
+
+If the service is clearly failing:
+
+Service A → Service B ❌
+
+
+Circuit opens
+      ↓
+STOP calling B temporarily
+Bulkhead
+
+Keep failures isolated:
+
+Payment → Resource Pool A
+Email   → Resource Pool B
+Search  → Resource Pool C
+
+If Search has a problem, it doesn't consume all resources needed by Payment.
+
+Interview sentence
+
+"For reliability, I'd use multiple instances for redundancy and combine timeouts, controlled retries, circuit breakers, and bulkheads to prevent cascading failures."
+
+3. Performance — "How do I make it faster?"
+
+Suppose your application takes:
+
+2 seconds
+
+but you want:
+
+100 milliseconds
+CDN
+
+Put static content close to the user:
+
+Phoenix User
+     ↓
+Nearby CDN
+     ↓
+Image
+
+Instead of:
+
+Phoenix User
+     ↓
+Server across the country
+     ↓
+Image
+Caching
+
+Keep frequently requested data in something fast like Redis.
+
+Application → Redis
+
+instead of constantly:
+
+Application → Database
+Database Index
+
+Think of a book.
+
+Without an index:
+
+Search every page.
+
+With an index:
+
+Go directly to the page.
+
+Same idea:
+
+Without index → scan many rows
+With index    → find matching rows quickly
+Read Replicas
+
+If you're doing millions of reads:
+
+             Primary DB
+              /      \
+             ↓        ↓
+        Read Replica Read Replica
+
+Writes go to the primary; reads can be distributed to replicas.
+
+Interview sentence
+
+"For performance, I'd use CDN and caching for frequently accessed content, database indexes for efficient queries, and read replicas to scale read-heavy workloads."
+
+4. Consistency — "Do all users see the same data?"
+
+This becomes important when you have multiple servers/databases.
+
+Suppose you update:
+
+Bank balance = $1,000
+
+Should every server immediately show:
+
+$1,000
+
+or is it acceptable if one server briefly shows:
+
+$900
+
+?
+
+That's a consistency decision.
+
+Strong consistency
+WRITE
+ ↓
+All systems updated
+ ↓
+READ
+ ↓
+Latest value
+
+Useful when correctness is critical.
+
+Example:
+
+Bank transaction.
+
+Eventual consistency
+WRITE
+ ↓
+Some systems updated
+ ↓
+Eventually
+ ↓
+All systems updated
+
+Useful when a small delay is acceptable.
+
+Example:
+
+Social media likes.
+
+You might see:
+
+1,000 likes
+
+while another server briefly shows:
+
+999 likes
+5. CAP Theorem
+
+For distributed systems, CAP is about:
+
+Consistency
+Availability
+Partition tolerance
+
+The important interview idea:
+
+When there's a network partition, you generally have to choose between stronger consistency and availability.
+
+Don't simply say:
+
+"You can only have two of the three."
+
+That's an oversimplification.
+
+Think:
+
+Network problem
+      ↓
+Systems can't communicate
+      ↓
+Do I:
+  A) reject requests to preserve consistency?
+or
+  B) continue serving requests and reconcile later?
+
+That is the architectural decision.
+
+6. Distributed Transactions + Saga
+
+Suppose an order requires:
+
+Order
+ ↓
+Payment
+ ↓
+Inventory
+ ↓
+Shipping
+
+These may be separate microservices.
+
+You can't easily put everything into one traditional database transaction.
+
+Saga breaks it into steps:
+
+Order ✅
+  ↓
+Payment ✅
+  ↓
+Inventory ❌
+  ↓
+Compensate
+  ↓
+Refund Payment
+
+Think:
+
+"If a later step fails, undo the earlier business actions."
+
+7. Communication — "How do services talk?"
+
+You have two broad approaches.
+
+Synchronous
+Service A
+   |
+   | HTTP request
+   ↓
+Service B
+   |
+   ↓
+Response
+
+Service A waits.
+
+Asynchronous
+Service A
+   |
+   ↓
+Queue / Kafka
+   |
+   ↓
+Service B
+
+Service A doesn't have to wait for B to finish.
+
+8. Message Queue
+
+Think:
+
+Waiting line.
+
+Producer
+    ↓
+  Queue
+    ↓
+ Consumer
+
+Good for:
+
+Traffic spikes
+Background jobs
+Decoupling services
+Reliable asynchronous processing
+9. Pub/Sub
+
+Think:
+
+Radio broadcast.
+
+One service publishes:
+
+PaymentCompleted
+
+Multiple services listen:
+
+             Kafka
+               |
+       PaymentCompleted
+        /       |       \
+       ↓        ↓        ↓
+     Email     Fraud   Analytics
+
+One event can have many consumers.
+
+10. Event Sourcing
+
+Instead of only storing:
+
+Balance = $500
+
+store the history:
+
+Deposit $1,000
+Withdraw $200
+Withdraw $300
+
+Then reconstruct:
+
+$1,000 - $200 - $300 = $500
+
+Useful when you need:
+
+Complete history
+Auditing
+Financial transactions
+Ability to reconstruct state
+11. Migration — Strangler Fig
+
+Suppose you have a 15-year-old monolith:
+
+             BIG MONOLITH
++--------------------------------+
+| Customer                       |
+| Orders                         |
+| Payments                       |
+| Inventory                      |
+| Reporting                      |
++--------------------------------+
+
+Don't necessarily rewrite everything.
+
+Instead:
+
+OLD MONOLITH
+     |
+     +---- Customer → NEW SERVICE
+     |
+     +---- Orders → NEW SERVICE
+     |
+     +---- Payment → OLD
+     |
+     +---- Inventory → OLD
+
+Gradually move functionality until:
+
+OLD MONOLITH
+     ↓
+      disappears
+
+Think:
+
+"Replace the legacy system piece by piece rather than doing a risky big-bang rewrite."
+
+⭐ The architecture cheat sheet
+
+When the interviewer gives you a system-design problem, ask:
+
+             SYSTEM DESIGN
+                   |
+       +-----------+-----------+
+       |           |           |
+       ↓           ↓           ↓
+  More users?   Failures?   Too slow?
+       |           |           |
+       ↓           ↓           ↓
+Load Balancer  Replication   Cache
+Horizontal     Timeout       CDN
+Scaling        Retry         Index
+Sharding       Circuit       Read Replica
+               Breaker
+               Bulkhead
+
+Then:
+
+Data questions?
+       |
+       +---- Consistency → CAP / Strong / Eventual
+       |
+       +---- Distributed transaction → Saga
+Service communication?
+       |
+       +---- Immediate response → Synchronous
+       |
+       +---- Don't need immediate response
+                    ↓
+              Queue / Pub-Sub
+Legacy system?
+       |
+       ↓
+Strangler Fig
+🎯 The architect's mental model
+
+Don't memorize:
+
+"Caching is for performance."
+
+Instead think:
+
+"My database is becoming the bottleneck because I'm getting millions of repeated reads. I'll introduce Redis caching to reduce database load."
+
+Don't say:
+
+"Use a circuit breaker."
+
+Say:
+
+"The payment service is failing repeatedly. I don't want those failures to cascade into the order service, so I'll use a timeout, limited retry with backoff, and then a circuit breaker."
+
